@@ -1,10 +1,6 @@
 # Omnitone
-Spatial Audio Decoder in Web Audio API 
 
-
-## Introduction
-
-Omnitone is a robust implementation of FOA (first-order ambisonic) decoder written in Web Audio API.
+Omnitone is a robust implementation of FOA (first-order ambisonic) decoder written in Web Audio API. Its decoding process is based on multiple gain nodes for ambisonic gain matrix and stereo convolutions for HRTF binaural rendering, ensuring the optimum performance. (No JS-based audio processing)
 
 
 ## Installation
