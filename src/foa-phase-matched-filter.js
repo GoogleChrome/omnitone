@@ -53,7 +53,7 @@ function FOAPhaseMatchedFilter (context) {
     this._hpf = this._context.createIIRFilter(
       [0.95204461, -1.9040892, 0.95204461],
       [1, -1.9029109, 0.90526748]
-    );  
+    );
   }
 
   this._splitterLow = this._context.createChannelSplitter(4);
