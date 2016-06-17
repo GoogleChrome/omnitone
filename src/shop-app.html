@@ -221,7 +221,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <app-location route="{{route}}"></app-location>
     <app-route
         route="{{route}}"
-        pattern="/:page"
+        pattern="/omnitone-demo/:page"
         data="{{routeData}}"
         tail="{{subroute}}"></app-route>
 
@@ -410,11 +410,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             this._pageLoaded(Boolean(oldPage));
           // other routes are lazy loaded
           } else {
-            this.importHref(
-              this.resolveUrl('shop-' + page + '.html'),
-              function() {
-                this._pageLoaded(Boolean(oldPage));
-              }, null, true);
+            // this.importHref(
+            //   this.resolveUrl('shop-' + page + '.html'),
+            //   function() {
+            //     this._pageLoaded(Boolean(oldPage));
+            //   }, null, true);
           }
         }
       },

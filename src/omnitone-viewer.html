@@ -143,7 +143,7 @@
 
       if (vrDisplay.capabilities.canPresent && !vrButtonPresent) {
         vrButtonPresent = VRSamplesUtil.addButton(
-          'Enter VR', 'E', 'src/images/cardboard64.png', 
+          'Enter VR', 'E', 'images/cardboard64.png', 
           _onVRRequestPresent);
       }
       
@@ -198,9 +198,9 @@
         
         if (vrDisplay.isPresenting) {
           glContext.viewport(0, 0, canvasElement.width * 0.5, canvasElement.height);
-          renderSceneView(matPose, vrDisplay.getEyeParameters('left'));
+          _renderSceneView(matPose, vrDisplay.getEyeParameters('left'));
           glContext.viewport(canvasElement.width * 0.5, 0, canvasElement.width * 0.5, canvasElement.height);
-          renderSceneView(matPose, vrDisplay.getEyeParameters('right'));
+          _renderSceneView(matPose, vrDisplay.getEyeParameters('right'));
           vrDisplay.submitFrame(pose);
         } else {
           glContext.viewport(0, 0, canvasElement.width, canvasElement.height);
@@ -255,13 +255,13 @@
         if (vrDisplay.capabilities.hasExternalDisplay) {
           VRSamplesUtil.removeButton(vrButtonPresent);
           vrButtonPresent = VRSamplesUtil.addButton(
-            'Exit VR', 'E', 'src/images/cardboard64.png', _onVRExitPresent);
+            'Exit VR', 'E', 'images/cardboard64.png', _onVRExitPresent);
         }
       } else {
         if (vrDisplay.capabilities.hasExternalDisplay) {
           VRSamplesUtil.removeButton(vrButtonPresent);
           vrButtonPresent = VRSamplesUtil.addButton(
-            'Enter VR', 'E', 'src/images/cardboard64.png', _onVRRequestPresent);
+            'Enter VR', 'E', 'images/cardboard64.png', _onVRRequestPresent);
         }
       }
     }
