@@ -9,6 +9,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 -->
 
 <link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/iron-icons/av-icons.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/paper-spinner/paper-spinner-lite.html">
+<link rel="import" href="../bower_components/paper-styles/typography.html">
+
 <link rel="import" href="shop-button.html">
 <link rel="import" href="shop-image.html">
 
@@ -16,102 +21,292 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   <template>
 
-    <style include="shop-button">
-
-      .image-link {
-        outline: none;
-      }
-
-      .image-link > shop-image::after {
-        display: block;
-        content: '';
-        position: absolute;
-        transition-property: opacity;
-        transition-duration: 0s;
-        transition-delay: 90ms;
-        pointer-events: none;
-        opacity: 0;
-        top: 5px;
-        left: 5px;
-        right: 5px;
-        bottom: 5px;
-        outline: #2196F3 auto 5px;
-        outline: -moz-mac-focusring auto 5px;
-        outline: -webkit-focus-ring-color auto 5px;
-      }
-
-      .image-link:focus > shop-image::after {
-        opacity: 1;
-      }
-
-      .item {
-        display: block;
-        text-decoration: none;
-        text-align: center;
-        margin-bottom: 40px;
-      }
-
-      .item:nth-of-type(3),
-      .item:nth-of-type(4) {
-        display: inline-block;
-        width: 50%;
-      }
-
-      shop-image {
-        position: relative;
-        height: 320px;
-        overflow: hidden;
-        --shop-image-img: {
-          position: absolute;
-          top: 0;
-          bottom: 0;
-          left: -9999px;
-          right: -9999px;
-          max-width: none;
-        };
-      }
-
-      h2 {
-        font-size: 1.3em;
-        font-weight: 500;
-        margin: 32px 0;
-      }
-
-      .item:nth-of-type(3) > h2,
-      .item:nth-of-type(4) > h2 {
-        font-size: 1.1em;
-      }
+    <style>
 
       @media (max-width: 767px) {
-        shop-image {
-          height: 240px;
-        }
-
-        h2 {
-          margin: 24px 0;
-        }
-
-        .item:nth-of-type(3) > shop-button > a,
-        .item:nth-of-type(4) > shop-button > a {
-          padding: 8px 24px;
-        }
       }
 
+      .section {
+        margin: 0;
+        padding: 20px 30px;
+        text-align: center;
+      }
+
+      .section.title {
+        color: #FFFFFF;
+        background-color: #263238;
+        /*background: -moz-linear-gradient(top, rgba(84,110,122,1) 0%, rgba(38,50,56,1) 100%);
+        background: -ms-linear-gradient(top, rgba(84,110,122,1) 0%, rgba(38,50,56,1) 100%);
+        background: linear-gradient(to bottom, rgba(84,110,122,1) 0%, rgba(38,50,56,1) 100%);*/
+        text-align: center;
+        padding-top: 50px;
+        padding-bottom: 50px;
+      }
+
+      .section.title h1 {
+        @apply(--paper-font-display3);
+        font-size: 60px;
+        margin: 10px 30px;
+        padding: 0;
+      }
+
+      .section.title h2 {
+        @apply(--paper-font-display2);
+        font-size: 22px;
+        line-height: 30px;
+        margin: 10px 30px;
+        padding: 0;
+      }
+
+      .section.text {
+        max-width: 768px;
+        margin: 0 auto;
+      }
+
+      .section.text p {
+        @apply(--paper-font-subhead);
+        margin: 10px;
+      }
+
+      #browser-support {
+        margin-top: 30px;
+      }
+
+      .browser-support-table {
+        @apply(--layout-horizontal);
+        width: 256px;
+        margin: 10px auto;
+        border-top: 1px solid #78909C;
+      }
+
+      .browser-column {
+        @apply(--layout-flex);
+        @apply(--layout-center-justified);
+        margin: 10px 0;
+      }
+
+      .browser-name {
+        @apply(--paper-font-body2);
+        padding-bottom: 7px;
+      }
+
+      .browser-support-state {
+        margin: 0 auto;
+        height: 40px;
+        width: 40px;
+      }
+
+      .circle-green {
+        border-radius: 20px;
+        background-color: #00E676;
+      }
+
+      .circle-gray {
+        border-radius: 20px;
+        background-color: #B0BEC5;
+      }
+
+      .section.text p.caption {
+        @apply(--paper-font-caption);
+        white-space: normal;
+      }
+
+      .section.demo {
+        @apply(--paper-font-headline);
+        color: #FFFFFF;
+        background-color: #263238;
+        height: 180px;
+        /*background: -moz-linear-gradient(top, rgba(84,110,122,1) 0%, rgba(38,50,56,1) 100%);
+        background: -ms-linear-gradient(top, rgba(84,110,122,1) 0%, rgba(38,50,56,1) 100%);
+        background: linear-gradient(to bottom, rgba(84,110,122,1) 0%, rgba(38,50,56,1) 100%);*/
+        text-align: center;
+        padding-top: 50px;
+        padding-bottom: 50px;
+      }
+
+      .section.demo a {
+        text-decoration: none;
+        color: #FFFFFF;
+      }
+
+      #eSpinnerDemo {
+        padding-top: 50px;
+      }
+
+      #eButtonPlayDemo {
+        display: none;
+      }
+
+      .button-play-demo {
+        height: 180px;
+        animation: pulsate 1.5s ease-out;
+        animation-iteration-count: infinite;
+      }
+
+      .button-play-demo paper-icon-button {
+        width: 128px;
+        height: 128px;
+      }
+
+      @keyframes pulsate {
+        0% { opacity: 0.15; }
+        50% { opacity: 1.0; }
+        100% { opacity: 0.15; }
+      }
+
+      .section.resources {
+        @apply(--layout-horizontal);
+        max-width: 768px;
+        margin: 0 auto;
+      }
+
+      .section.resources .grid {
+        @apply(--layout-horizontal);
+        @apply(--layout-wrap);
+        @apply(--layout-justified);        
+        padding: 0;
+        list-style: none;
+      }
+
+      .section.resources .grid li {
+        -webkit-flex: 1 1;
+        flex: 1 1;
+        -webkit-flex-basis: 50%;
+        flex-basis: 50%;
+        max-width: 50%;
+      }
+
+      @media (max-width: 550px) {
+        .section.resources .grid  li {
+          -webkit-flex-basis: 100%;
+          flex-basis: 100%;
+          max-width: 100%;
+        }
+      }
+      
+      .section.resources h2 {
+        margin: 10px 10px 0 10px;
+      }
+
+      .section.resources p {
+        @apply(--paper-font-body1);
+        display: inline-block;
+        padding: 10px 0;
+        margin: 10px;
+        border-top: 1px solid #B0BEC5;
+        text-align: left;
+      }
+
+      .section.resources a {
+        display: inline-block;
+        text-decoration: none;
+        color: #0091EA;
+        margin: 0;
+      }
+
+      .section.footer {
+        @apply(--paper-font-title);
+        color: #90A4AE;
+      }
+
+      paper-spinner-lite {
+        --paper-spinner-color: #CFD8DC;
+        --paper-spinner-stroke-width: 6px;
+      }
     </style>
 
-    <template is="dom-repeat" items="[[categories]]" strip-whitespace>
-      <div class="item">
-        <a class="image-link" href$="/list/[[item.name]]">
-          <shop-image src="[[item.image]]" alt="[[item.title]]" placeholder-img="[[item.placeholder]]"></shop-image>
-        </a>
-        <h2>[[item.title]]</h2>
-        <shop-button>
-          <a aria-label$="[[item.title]] Shop Now" href$="/list/[[item.name]]">Shop Now</a>
-        </shop-button>
-      </div>
-    </template>
+    <div class="section title">
+      <h1>Omnitone</h1>
+      <h2>YouTube's 360&#176; Audio Decoder on the Web</h2>
+    </div>
 
-  </template>
+    <div class="section text">
+      <p>
+        Omnitone is a JS implementation of a <b>first-order ambisonic</b> decoder.<br>
+        Use <b>headphones</b> to experience the demo with the full-sphere surround effect.
+      </p>
+      <div id="browser-support">
+        <h2>Browser Support<sup>*</sup></h2>
+        <div class="browser-support-table">
+          <div class="browser-column">
+            <div class="browser-name">Chrome</div>
+            <div class="browser-support-state circle-green"></div>
+          </div>
+          <div class="browser-column">
+            <div class="browser-name">FireFox</div>
+            <div class="browser-support-state circle-gray"></div>
+          </div>
+          <div class="browser-column">
+            <div class="browser-name">Edge</div>
+            <div class="browser-support-state circle-gray"></div>
+          </div>
+          <div class="browser-column">
+            <div class="browser-name">Safari</div>
+            <div class="browser-support-state circle-gray"></div>
+          </div>
+        </div>
+      </div>
+      <p class="caption">
+        * You may hear the difference in some browsers due to the incomplete 
+        support of multichannel audio in the Web Audio API implementation.
+      </p>
+    </div>
+
+    <div class="section demo">
+      <div id="eSpinnerDemo">
+        <paper-spinner-lite active></paper-spinner-lite>
+        <p>Initializing Demo...</p>
+      </div>
+      <div id="eButtonPlayDemo" class="button-play-demo">
+        <paper-icon-button icon="av:play-circle-filled" title="play" on-click="_startDemo"></paper-icon-button>
+        <p>Play Demo - "Resonance"</p>
+      </div>
+    </div>
+
+    <div class="section resources">
+      
+      <ul class="grid">
+        
+        <li>
+          <a href="https://github.com/GoogleChrome/omnitone/" target="_blank">
+            <h2>Documentation</h2>
+          </a>
+          <p>Omnitone is designed to be the audio counter part of the 360 video
+            viewer. See how to use Omnitone JS library in your web page.</p>
+        </li>
+
+        <li>
+          <a href="https://github.com/google/spatial-media" target="_blank">
+            <h2>Google Spatial Media</h2>  
+          </a>
+          <p>Some wording here. Daydream and Google-wide effort on VR.</p>
+        </li>
+
+        <li>
+          <a href="https://webaudio.github.io/web-audio-api/">
+            <h2>Web Audio API</h2>  
+          </a>
+          <p>Omnitone is powered by Web Audio API, a JS API for fast audio
+            processing for the interactive web application.</p>
+        </li>
+        
+        <li>
+          <a href="https://webvr.info/">
+            <h2>Web VR</h2>  
+          </a>
+          <p>Use Omnitone for WebVR application. WebVR is an Javascript API for 
+            Virtual Reality devices within your browser.</p>
+        </li>
+
+      </ul>
+
+    </div>
+
+    <div class="section footer">
+      chrome &#9829; VR
+    </div>
+
+  </template> 
 
   <script>
 
@@ -128,8 +323,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         visible: {
           type: Boolean,
           observer: '_visibleChanged'
-        }
+        },
 
+        startDemoCallback: Function
+
+      },
+
+      swapSpinnerToButton: function () {
+        this.$.eSpinnerDemo.style.display = 'none';
+        this.$.eButtonPlayDemo.style.display = 'block';
+      },
+
+      _startDemo: function () {
+        if (this.startDemoCallback)
+          this.startDemoCallback();
       },
 
       _visibleChanged: function(visible) {

@@ -47,12 +47,21 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       overflow: visible;
     }
 
+    #demo-viewport {
+      box-sizing: border-box;
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      left: 0;
+      top: 0;
+      margin: 0;
+      display: none;
+      z-index: 9999;
+    }
   </style>
 
 </head>
 <body>
-
-  <shop-app unresolved>SHOP</shop-app>
 
   <script>
     window.performance && performance.mark && performance.mark('index.html');
@@ -72,6 +81,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
     })();
   </script>
+
+  <div id="demo-viewport"></div>
+  <link rel="import" href="src/omnitone-viewer.html">
+  <shop-app id="eShopAppShell" unresolved>OMNITONE</shop-app>
 
 </body>
 </html>

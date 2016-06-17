@@ -21,6 +21,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="shop-category-data.html">
 <!-- Since 'home' is the default route, eagerly load it. -->
 <link rel="import" href="shop-home.html">
+<link rel="import" href="shop-guide.html">
 
 <dom-module id="shop-app">
 
@@ -212,7 +213,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     </style>
 
-    <shop-analytics key="UA-39334307-16"></shop-analytics>
+    <!-- <shop-analytics key="UA-39334307-16"></shop-analytics> -->
+
     <!--
       app-location and app-route elements provide the state of the URL for the app.
     -->
@@ -234,11 +236,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       shop-cart-data maintains the state of the user's shopping cart (in localstorage) and
       calculates the total amount.
     -->
-    <shop-cart-data
+    <!-- <shop-cart-data
         id="cart"
         cart="{{cart}}"
         num-items="{{numItems}}"
-        total="{{total}}"></shop-cart-data>
+        total="{{total}}"></shop-cart-data> -->
 
     <app-header role="navigation" id="header" effects="waterfall" condenses reveals>
       <app-toolbar>
@@ -253,18 +255,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             <paper-icon-button icon="arrow-back" aria-label="Go back"></paper-icon-button>
           </a>
         </div>
-        <div class="logo" title><a href="/" aria-label="SHOP Home">SHOP</a></div>
-        <div class="cart-btn-container">
+        <div class="logo" title><a href="/" aria-label="OMNITONE Home">OMNITONE</a></div>
+        <!-- <div class="cart-btn-container">
           <a href="/cart" tabindex="-1">
             <paper-icon-button icon="shopping-cart" aria-label$="Shopping cart: [[_computePluralizedQuantity(numItems)]]"></paper-icon-button>
           </a>
           <div class="cart-badge" aria-hidden="true" hidden$="[[!numItems]]">[[numItems]]</div>
-        </div>
+        </div> -->
       </app-toolbar>
 
       <!-- Lazy-create the tabs for larger screen sizes. -->
       <div id="tabContainer" primary$="[[_shouldShowTabs]]" hidden$="[[!_shouldShowTabs]]">
-        <template is="dom-if" if="[[_shouldRenderTabs]]">
+        <!-- <template is="dom-if" if="[[_shouldRenderTabs]]">
           <shop-tabs
               selected="[[categoryName]]"
               attr-for-selected="name">
@@ -274,7 +276,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               </shop-tab>
             </template>
           </shop-tabs>
-        </template>
+        </template> -->
       </div>
     </app-header>
 
@@ -283,29 +285,36 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       <!-- Two-way bind `drawerOpened` since app-drawer can update `opened` itself. -->
       <app-drawer opened="{{drawerOpened}}" swipe-open tabindex="0">
         <iron-selector role="navigation" class="drawer-list" selected="[[categoryName]]" attr-for-selected="name">
+          <a href="">Documentation</a>
+          <a href="">Google Spatial Media</a>
+          <a href="">Web Audio API</a>
+          <a href="">WebVR</a>
+        </iron-selector>
+        <!-- <iron-selector role="navigation" class="drawer-list" selected="[[categoryName]]" attr-for-selected="name">
           <template is="dom-repeat" items="[[categories]]" as="category" initial-count="4">
             <a name="[[category.name]]" href="/list/[[category.name]]">[[category.title]]</a>
           </template>
-        </iron-selector>
+        </iron-selector> -->
       </app-drawer>
     </template>
 
     <iron-pages role="main" selected="[[page]]" attr-for-selected="name" selected-attribute="visible">
       <!-- home view -->
-      <shop-home name="home" categories="[[categories]]"></shop-home>
+      <shop-home id="eShopHome" name="home" categories="[[categories]]"></shop-home>
       <!-- list view of items in a category -->
-      <shop-list name="list" route="[[subroute]]" offline="[[offline]]"></shop-list>
+      <!-- <shop-list name="list" route="[[subroute]]" offline="[[offline]]"></shop-list> -->
       <!-- detail view of one item -->
-      <shop-detail name="detail" route="[[subroute]]" offline="[[offline]]"></shop-detail>
+      <!-- <shop-detail name="detail" route="[[subroute]]" offline="[[offline]]"></shop-detail> -->
       <!-- cart view -->
-      <shop-cart name="cart" cart="[[cart]]" total="[[total]]"></shop-cart>
+      <!-- <shop-cart name="cart" cart="[[cart]]" total="[[total]]"></shop-cart> -->
       <!-- checkout view -->
-      <shop-checkout name="checkout" cart="[[cart]]" total="[[total]]" route="{{subroute}}"></shop-checkout>
+      <!-- <shop-checkout name="checkout" cart="[[cart]]" total="[[total]]" route="{{subroute}}"></shop-checkout> -->
     </iron-pages>
 
-    <footer>
+    <!-- <footer>
       <a href="https://www.polymer-project.org/1.0/toolbox/">Made by Polymer</a>
-    </footer>
+      chrome &#9829; VR
+    </footer> -->
 
     <!-- a11y announcer -->
     <div class="announcer" aria-live="assertive">[[_a11yLabel]]</div>
@@ -360,6 +369,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         'dom-change': '_domChange'
       },
 
+      startDemo: function () {
+        OmnitoneViewer.play();
+      },
+
       created: function() {
         window.performance && performance.mark && performance.mark('shop-app.created');
         // Custom elements polyfill safe way to indicate an element has been upgraded.
@@ -372,6 +385,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           this.listen(window, 'online', '_notifyNetworkStatus');
           this.listen(window, 'offline', '_notifyNetworkStatus');
         });
+      },
+
+      attached: function () {
+        OmnitoneViewer.initialize(this).then(function () {
+          this.$.eShopHome.startDemoCallback = this.startDemo;
+          this.$.eShopHome.swapSpinnerToButton();
+        }.bind(this));
       },
 
       _routePageChanged: function(page) {
@@ -453,7 +473,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         this.categoryName = detail.category || '';
         // Announce the page's title
         if (detail.title) {
-          document.title = detail.title + ' - SHOP';
+          document.title = detail.title + ' - OMNITONE';
           this._announce(detail.title + ', loaded');
         }
       },
