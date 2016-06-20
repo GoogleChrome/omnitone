@@ -33,9 +33,7 @@
       audioElement.src = 'resources/4ch_B_FuMaNorm_FuMaOrd_speech.wav';
 
       // Create a decoder.
-      decoder = Omnitone.createFOADecoder(audioContext, audioElement, {
-        baseResourceUrl: '../build/resources'
-      });
+      decoder = Omnitone.createFOADecoder(audioContext, audioElement);
 
       // Initialize and start playing when it's ready.
       decoder.initialize().then(function () {

@@ -1,11 +1,11 @@
 # Omnitone
 
-Omnitone is a robust implementation of FOA (first-order ambisonic) decoder written in Web Audio API. Its decoding process is based on multiple gain nodes for ambisonic gain matrix and stereo convolutions for HRTF binaural rendering, ensuring the optimum performance. (No JS-based audio processing)
+Omnitone is a robust implementation of [FOA (first-order-ambisonic)](https://en.wikipedia.org/wiki/Ambisonics) decoder written in Web Audio API. Its decoding process is based on multiple gain nodes for ambisonic gain matrix and stereo convolutions for [HRTF](https://en.wikipedia.org/wiki/Head-related_transfer_function) binaural rendering, ensuring the optimum performance. (No JS-based audio processing)
 
 
 ## Installation
 
-The installation via Bower is recommended. NPM works as well.
+Omnitone is designed to be used for the web-facing project, so the installation via [Bower](https://bower.io/) is recommended. NPM works as well.
 
 ```bash
 bower install omnitone
@@ -14,6 +14,12 @@ bower install omnitone
 
 ## How it works
 
+![Omnitone Diagram](https://raw.githubusercontent.com/GoogleChrome/omnitone/master/doc/diagram.png)
+
+Omnitone is a high-level library that abstracts various technical layers of the first-order-ambisonic decoding.
+
+## Browser Compatibility
+
 
 
 
@@ -21,7 +27,7 @@ bower install omnitone
 
 The decoder requires an audio or video element and AudioContext. The following is an example of how to set up the context and the element for FOA decoding. A first-order-ambisonic media file consists of 4 audio channels.
 
-The decoder constructor accepts the context and the element as arguments. Note that Omnitone uses HRTFs from [Google Spatial Media](https://github.com/google/spatial-media) project. from the The initialization of a decoder instance returns a promise which resolves when the resources (i.e. impulse responses) are loaded.
+The decoder constructor accepts the context and the element as arguments. Note that Omnitone uses HRTFs from [Google Spatial Media](https://github.com/google/spatial-media) repository, but you can use a custom set of HRTF files as well. The initialization of a decoder instance returns a promise which resolves when the resources (i.e. impulse responses) are loaded.
 
 ```js
 // Prepare audio element to feed the ambisonic source audio feed.

@@ -98,7 +98,7 @@ Omnitone.createFOAVirtualSpeaker = function (context, options) {
  * @return {FOADecoder}
  */
 Omnitone.createFOADecoder = function (context, videoElement, options) {
-  return new FOADecoder(context, videoElement, baseResourceUrl);
+  return new FOADecoder(context, videoElement, options);
 };
 
 module.exports = Omnitone;

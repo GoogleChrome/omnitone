@@ -47,15 +47,24 @@ function FOADecoder (context, videoElement, options) {
   this._context = context;
   this._videoElement = videoElement;
   this._decodingMode = 'ambisonic';
+  
+  this._baseResourceUrl = HRTF_URL;
+  this._postGain = POST_GAIN;
 
-  var _baseResourceUrl = options.baseResourceUrl || HRTF_URL;
+  if (options) {
+    if (options.baseResourceUrl)
+      this._baseResourceUrl = options.baseResourceUrl;
+
+    if (options.postGain)
+      this._postGain = options.postGain;
+  }
 
   // Rearrange speaker data based on |options.baseResourceUrl|.
   this._speakerData = [];
   for (var i = 0; i < FOASpeakerData.length; ++i) {
     this._speakerData.push({
       name: FOASpeakerData[i].name,
-      url: _baseResourceUrl + '/' + FOASpeakerData[i].url,
+      url: this._baseResourceUrl + '/' + FOASpeakerData[i].url,
       coef: FOASpeakerData[i].coef
     });
   }
@@ -92,7 +101,7 @@ FOADecoder.prototype.initialize = function () {
           me._foaVirtualSpeakers[i] = new FOAVirtualSpeaker(me._context, {
             coefficients: me._speakerData[i].coef,
             IR: buffers.get(me._speakerData[i].name),
-            gain: POST_GAIN
+            gain: me._postGain
           });
 
           me._foaPhaseMatchedFilter.output.connect(
