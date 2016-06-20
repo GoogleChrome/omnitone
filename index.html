@@ -1,8 +1,3 @@
-<!--
-@license
-
--->
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -13,8 +8,7 @@
 
   <title>OMNITONE</title>
 
-  <link rel="import" href="src/shop-app.html" async>
-
+  <link rel="import" href="src/omnitone-landing.html" async>
   <style>
     body {
       margin: 0;
@@ -24,7 +18,7 @@
       min-height: 100vh;
     }
 
-    shop-app[unresolved] {
+    omnitone-landing[unresolved] {
       display: block;
       min-height: 101vh;
       line-height: 68px;
@@ -37,7 +31,7 @@
       overflow: visible;
     }
 
-    #demo-viewport {
+    #vrplayer-viewport {
       box-sizing: border-box;
       position: absolute;
       width: 100%;
@@ -49,13 +43,11 @@
       z-index: 999;
     }
   </style>
-
 </head>
 <body>
   <script>
-    // window.performance && performance.mark && performance.mark('index.html');
+    // Feature detection.
     Polymer = { lazyRegister: true, dom: 'shadow' };
-    
     (function() {
       if ('registerElement' in document
           && 'import' in document.createElement('link')
@@ -70,12 +62,21 @@
     })();
   </script>
 
-  <!-- VR player -->
-  <div id="demo-viewport"></div>
-  <link rel="import" href="src/omnitone-viewer.html">
+  <!-- VR content player -->
+  <div id="vrplayer-viewport"></div>
+  <link rel="import" href="src/vr-player.html">
 
-  <!-- shell element -->
-  <shop-app id="eShopAppShell" unresolved>OMNITONE</shop-app>
+  <!-- shell element (landing page) -->
+  <omnitone-landing unresolved>OMNITONE</omnitone-landing>
 
+  <!-- ganalytics -->
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-57132539-3', 'auto');
+    ga('send', 'pageview');
+  </script>
 </body>
 </html>

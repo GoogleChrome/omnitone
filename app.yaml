@@ -1,4 +1,4 @@
-application: shop
+application: omnitone-demo
 version: 1
 runtime: python27
 api_version: 1
@@ -7,10 +7,6 @@ threadsafe: yes
 handlers:
 - url: /bower_components
   static_dir: bower_components
-  secure: always
-
-- url: /data
-  static_dir: data
   secure: always
 
 - url: /images

@@ -3,28 +3,19 @@ module.exports = {
     '/index.html',
     '/manifest.json',
     '/bower_components/webcomponentsjs/webcomponents-lite.min.js',
+    '/src/third-party/*',
     '/images/*'
   ],
   navigateFallback: '/index.html',
-  navigateFallbackWhitelist: [/^(?!.*\.html$|\/data\/).*/],
+  navigateFallbackWhitelist: [/^(?!.*\.html$).*/],
   runtimeCaching: [
     {
-      urlPattern: /\/data\/images\/.*/,
+      urlPattern: /\/media\/.*/,
       handler: 'cacheFirst',
       options: {
         cache: {
           maxEntries: 200,
           name: 'items-cache'
-        }
-      }
-    },
-    {
-      urlPattern: /\/data\/.*json/,
-      handler: 'fastest',
-      options: {
-        cache: {
-          maxEntries: 100,
-          name: 'data-cache'
         }
       }
     }
