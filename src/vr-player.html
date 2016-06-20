@@ -1,0 +1,295 @@
+<!-- Dependencies -->
+<script>
+  var WebVRConfig = {
+    // Prevents the polyfill from initializing automatically.
+    DEFER_INITIALIZATION: true,
+    // Polyfill optimizations
+    DIRTY_SUBMIT_FRAME_BINDINGS: true,
+    BUFFER_SCALE: 0.75
+  };
+</script>
+<script src="third-party/webvr-polyfill.js"></script>
+<script src="third-party/wglu-url.js"></script>
+<script>
+  // TODO: flip this to utilize WebVRPolyfill.
+  if (!WGLUUrl.getBool('polyfill', false)) {
+    InitializeWebVRPolyfill();
+  }
+</script>
+<script src="third-party/gl-matrix-min.js"></script>
+<script src="third-party/wglu-program.js"></script>
+<script src="third-party/vr-panorama.js"></script>
+<script src="third-party/vr-samples-util.js"></script>
+<script src="third-party/omnitone.min.js"></script>
+
+<script>
+  /* global mat4, vec3, VRPanorama, VRSamplesUtil */
+  var OmnitoneViewer = (function () {
+
+    'use strict';
+
+    // Content-specific constants.
+    var GL_YAW_OFFSET = Math.PI;
+    var AUDIO_YAW_OFFSET = -1.5 * Math.PI;
+
+    // Primary viewport <DIV>.
+    var viewportElement;
+    var videoElement;
+    var canvasElement;
+
+    var vrDisplay;
+    var vrButtonPresent;
+    var vrButtonHome;
+    var vrButtonStart;
+    var vrButtonReplay;
+    var matProj = mat4.create();
+    var matPose = mat4.create();
+    var matView = mat4.create();
+
+    var glContext;
+    var vrPanoramicView;
+
+    var audioContext;
+    var foaDecoder;
+    var quatFOARotation = quat.create();
+    var matFOARotation = mat3.create();
+
+    // External callback.
+    var onInitialized;
+    var onPaused;
+    var onFinished;
+    var landingElement;
+
+    var _nullFunction = new Function();
+
+
+    function _initializeVRDisplay() {
+      if (navigator.getVRDisplays) {
+        navigator.getVRDisplays().then(function (displays) {
+          if (displays.length > 0) {
+            vrDisplay = displays[0];
+            window.addEventListener('vrdisplaypresentchange', _onVRPresentChange, false);
+          } else {
+            VRSamplesUtil.addInfo('WebVR supported, but no VRDisplays found.', 3000);
+          }
+        });
+      } else if (navigator.getVRDevices) {
+        VRSamplesUtil.addError('Your browser supports WebVR but not the latest version. See <a href="http://webvr.info">webvr.info</a> for more info.');
+      } else {
+        VRSamplesUtil.addError('Your browser does not support WebVR. See <a href="http://webvr.info">webvr.info</a> for assistance.');
+      }
+    }
+
+    function _initializeComponents(options) {
+
+      _initializeVRDisplay();
+
+      viewportElement = document.getElementById(options.targetElementID);
+      canvasElement = document.createElement('canvas');
+      viewportElement.appendChild(canvasElement);
+
+      canvasElement.style.boxSizing = 'border-box';
+      canvasElement.style.position = 'relative';
+      canvasElement.style.width = '100%';
+      canvasElement.style.height = '100%';
+      canvasElement.style.left = 0;
+      canvasElement.style.top = 0;
+      canvasElement.style.margin = 0;
+
+      glContext = canvasElement.getContext('webgl', {
+        alpha: false,
+        antialias: false,
+        preserveDrawingBuffer: false
+      });
+      glContext.enable(glContext.DEPTH_TEST);
+      glContext.enable(glContext.CULL_FACE);
+
+      vrPanoramicView = new VRPanorama(glContext);
+      vrPanoramicView.isStereo = true;
+      vrPanoramicView.yawOffset = GL_YAW_OFFSET;
+
+      videoElement = document.createElement('video');
+      videoElement.src = options.videoUrl;
+      videoElement.onended = _onVideoEnded;
+
+      audioContext = new AudioContext();
+      foaDecoder = Omnitone.createFOADecoder(audioContext, videoElement, {
+        baseResourceUrl: 'https://raw.githubusercontent.com/google/spatial-media/master/support/hrtfs/cube/'
+      });
+
+      window.addEventListener('resize', _onResize, false);
+
+      landingElement = options.landingElement;
+
+      return Promise.all([
+        foaDecoder.initialize(),
+        vrPanoramicView.setVideoElement(videoElement)
+      ]).then(function () {
+        videoElement.pause();
+      }, function (errors) {
+        console.error(errors);
+      });
+    }
+
+    function _displayButtons() {
+      if (!vrDisplay)
+        return;
+
+      // if (!vrDisplay.stageParameters) {
+      //   VRSamplesUtil.addButton('Reset Pose', null, null, function () { 
+      //     vrDisplay.resetPose(); 
+      //   });
+      // }
+
+      if (vrDisplay.capabilities.canPresent && !vrButtonPresent) {
+        vrButtonPresent = VRSamplesUtil.addButton(
+          'Enter VR', 'E', 'images/cardboard64.png', 
+          _onVRRequestPresent);
+      }
+      
+      VRSamplesUtil.removeButton(vrButtonHome);
+      vrButtonHome = VRSamplesUtil.addButton('Home', null, null, function () { 
+        viewportElement.style.display = 'none';
+        landingElement.style.display = 'block';
+        vrDisplay.resetPose();
+        videoElement.currentTime = 0;
+        videoElement.pause();
+      });
+    }
+
+    function _getPoseMatrix(out, pose) {
+      var orientation = pose.orientation;
+      if (!orientation)
+        orientation = [0, 0, 0, 1]; 
+      mat4.fromQuat(out, orientation);
+    }
+
+    function _renderSceneView(matPose, eye) {
+      if (eye) {
+        // FYI: When rendering a panorama do NOT offset the views by the IPD!
+        // That will make the viewer feel like their head is trapped in a tiny
+        // ball, which is usually not the desired effect.
+        mat4.perspectiveFromFieldOfView(matProj, eye.fieldOfView, 0.1, 1024.0);
+        mat4.invert(matView, matPose);
+      } else {
+        mat4.perspective(matProj, 0.4 * Math.PI, canvasElement.width / canvasElement.height, 0.1, 1024.0);
+        mat4.invert(matView, matPose);
+      }
+
+      vrPanoramicView.render(matProj, matView, eye);
+    }
+
+    function _updateSoundRotation(poseOrientation) {
+      quat.invert(quatFOARotation, poseOrientation);
+      quat.rotateY(quatFOARotation, quatFOARotation, AUDIO_YAW_OFFSET);
+      mat3.fromQuat(matFOARotation, quatFOARotation);
+      foaDecoder.setRotationMatrix(matFOARotation);
+    }
+
+    function _onAnimationFrame() {
+      glContext.clear(glContext.COLOR_BUFFER_BIT | glContext.DEPTH_BUFFER_BIT);
+      vrDisplay.requestAnimationFrame(_onAnimationFrame);
+
+      if (vrDisplay) {
+        var pose = vrDisplay.getPose();
+        _getPoseMatrix(matPose, pose);
+
+        _updateSoundRotation(pose.orientation);
+        
+        if (vrDisplay.isPresenting) {
+          glContext.viewport(0, 0, canvasElement.width * 0.5, canvasElement.height);
+          _renderSceneView(matPose, vrDisplay.getEyeParameters('left'));
+          glContext.viewport(canvasElement.width * 0.5, 0, canvasElement.width * 0.5, canvasElement.height);
+          _renderSceneView(matPose, vrDisplay.getEyeParameters('right'));
+          vrDisplay.submitFrame(pose);
+        } else {
+          glContext.viewport(0, 0, canvasElement.width, canvasElement.height);
+          _renderSceneView(matPose, null);
+        }
+      } else {
+        glContext.viewport(0, 0, canvasElement.width, canvasElement.height);
+        mat4.perspective(projectionMat, 0.4 * Math.PI, canvasElement.width / canvasElement.height, 0.1, 1024.0);
+        mat4.identity(matView);
+        vrPanoramicView.render(matProj, matView);
+      }
+    }
+
+    function _onResize() {
+      if (vrDisplay && vrDisplay.isPresenting) {
+        var leftEye = vrDisplay.getEyeParameters('left');
+        var rightEye = vrDisplay.getEyeParameters('right');
+        canvasElement.width = Math.max(leftEye.renderWidth, rightEye.renderWidth) * 2;
+        canvasElement.height = Math.max(leftEye.renderHeight, rightEye.renderHeight);
+      } else {
+        canvasElement.width = canvasElement.offsetWidth * window.devicePixelRatio;
+        canvasElement.height = canvasElement.offsetHeight * window.devicePixelRatio;
+      }
+    }
+
+    function _onVideoEnded() {
+      vrButtonReplay = VRSamplesUtil.addButton('Replay', null, null, function () { 
+        vrDisplay.resetPose();
+        videoElement.currentTime = 0;
+        videoElement.play();
+        VRSamplesUtil.removeButton(vrButtonReplay);
+      });
+    }
+
+    function _onVRRequestPresent() {
+      vrDisplay.requestPresent({
+        source: canvasElement
+      }).then(_nullFunction, function () {
+        VRSamplesUtil.addError('VRRequestPresent failed.', 2000);
+      });
+    }
+
+    function _onVRExitPresent() {
+      vrDisplay.exitPresent().then(_nullFunction, function () {
+        VRSamplesUtil.addError('VRExitPresent failed.', 2000);
+      });
+    }
+
+    function _onVRPresentChange() {
+      _onResize();
+      if (vrDisplay.isPresenting) {
+        if (vrDisplay.capabilities.hasExternalDisplay) {
+          VRSamplesUtil.removeButton(vrButtonPresent);
+          vrButtonPresent = VRSamplesUtil.addButton(
+            'Exit VR', 'E', 'images/cardboard64.png', _onVRExitPresent);
+        }
+      } else {
+        if (vrDisplay.capabilities.hasExternalDisplay) {
+          VRSamplesUtil.removeButton(vrButtonPresent);
+          vrButtonPresent = VRSamplesUtil.addButton(
+            'Enter VR', 'E', 'images/cardboard64.png', _onVRRequestPresent);
+        }
+      }
+    }
+
+
+    return {
+
+      initialize: function (landingElement) {
+        VRSamplesUtil.setContainerElementID('vrplayer-viewport');
+        return _initializeComponents({
+          targetElementID: 'vrplayer-viewport',
+          videoUrl: 'media/resonance-h264-aac-1080p-45s.mp4',
+          landingElement: landingElement
+        });
+      },
+
+      play: function () {
+        landingElement.style.display = 'none';
+        viewportElement.style.display = 'block';
+        _onResize();
+        window.requestAnimationFrame(_onAnimationFrame);
+        _displayButtons();
+        vrDisplay.resetPose();
+        videoElement.currentTime = 0;
+        videoElement.play();
+      }
+
+    };
+
+  })();
+</script>

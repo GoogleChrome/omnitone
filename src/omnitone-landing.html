@@ -1,0 +1,282 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/app-layout/app-drawer/app-drawer.html">
+<link rel="import" href="../bower_components/app-layout/app-header/app-header.html">
+<link rel="import" href="../bower_components/app-layout/app-scroll-effects/effects/waterfall.html">
+<link rel="import" href="../bower_components/app-layout/app-toolbar/app-toolbar.html">
+<link rel="import" href="../bower_components/app-layout/helpers/helpers.html">
+<link rel="import" href="../bower_components/app-route/app-location.html">
+<link rel="import" href="../bower_components/app-route/app-route.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="../bower_components/iron-media-query/iron-media-query.html">
+<link rel="import" href="../bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="../bower_components/iron-selector/iron-selector.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+
+<link rel="import" href="omnitone-home.html">
+
+<dom-module id="omnitone-landing">
+  <template>
+    <style>
+      :host {
+        display: block;
+        position: relative;
+        padding-top: 130px;
+        padding-bottom: 64px;
+        min-height: 100vh;
+        --app-primary-color: #202020;
+        --app-secondary-color: #757575;
+        --app-accent-color: #172C50;
+        --paper-button-ink-color: var(--app-accent-color);
+        --paper-icon-button-ink-color: var(--app-accent-color);
+        --paper-spinner-color: var(--app-accent-color);
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+        color: var(--app-primary-color);
+      }
+
+      app-header {
+        @apply(--layout-fixed-top);
+        z-index: 1;
+        background-color: rgba(255, 255, 255, 0.95);
+        --app-header-shadow: {
+          box-shadow: inset 0px 5px 6px -3px rgba(0, 0, 0, 0.2);
+          height: 10px;
+          bottom: -10px;
+        };
+      }
+
+      paper-icon-button {
+        color: var(--app-primary-color);
+      }
+
+      .logo {
+        text-align: center;
+      }
+
+      .logo a {
+        font-size: 16px;
+        font-weight: 600;
+        letter-spacing: 0.3em;
+        color: var(--app-primary-color);
+        text-decoration: none;
+        /* required for IE 11, so this <a> can receive pointer events */
+        display: inline-block;
+        pointer-events: auto;
+      }
+
+      .left-bar-item {
+        width: 40px;
+      }
+
+      [hidden] {
+        display: none !important;
+      }
+
+      .drawer-list {
+        margin: 0 20px;
+      }
+
+      .drawer-list a {
+        font-size: 1.2em;
+        display: block;
+        padding: 0 16px;
+        line-height: 56px;
+        text-decoration: none;
+        color: var(--app-secondary-color);
+      }
+
+      .drawer-list a.iron-selected {
+        color: black;
+        font-weight: bold;
+      }
+
+      /*shop-cart-modal {
+        z-index: 2;
+      }*/
+
+      app-drawer {
+        z-index: 3;
+      }
+
+      iron-pages {
+        max-width: 1440px;
+        margin: 0 auto;
+      }
+
+      footer {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        text-align: center;
+        margin: 20px;
+        line-height: 24px;
+      }
+
+      footer > a {
+        color: var(--app-secondary-color);
+        text-decoration: none;
+      }
+
+      footer > a:hover {
+        text-decoration: underline;
+      }
+
+      /* small screen */
+      @media (max-width: 767px) {
+        :host {
+          padding-top: 64px;
+        }
+      }
+    </style>
+
+    <app-location route="{{route}}"></app-location>
+    <app-route
+        route="{{route}}"
+        pattern="/omnitone/:page"
+        data="{{routeData}}"
+        tail="{{subroute}}"></app-route>
+
+    <iron-media-query query="max-width: 767px" query-matches="{{smallScreen}}"></iron-media-query>
+
+    <app-header role="navigation" id="header" effects="waterfall" condenses reveals>
+      <app-toolbar>
+        <div class="left-bar-item">
+          <paper-icon-button
+              class="menu-btn"
+              icon="menu"
+              on-click="_toggleDrawer">
+          </paper-icon-button>
+        </div>
+        <div class="logo" title><a href="/" aria-label="OMNITONE Home">OMNITONE</a></div>
+      </app-toolbar>
+    </app-header>
+
+    <!-- Lazy-create the drawer for small screen sizes. -->
+    <template is="dom-if" if="[[_shouldRenderDrawer]]">
+      <!-- Two-way bind `drawerOpened` since app-drawer can update `opened` itself. -->
+      <app-drawer opened="{{drawerOpened}}" swipe-open tabindex="0">
+        <iron-selector role="navigation" class="drawer-list" selected="[[categoryName]]" attr-for-selected="name">
+          <a href="https://github.com/GoogleChrome/omnitone/">Documentation</a>
+          <a href="https://github.com/google/spatial-media">Google Spatial Media</a>
+          <a href="https://webaudio.github.io/web-audio-api/">Web Audio API</a>
+          <a href="https://webvr.info/">WebVR</a>
+        </iron-selector>
+      </app-drawer>
+    </template>
+
+    <iron-pages role="main" selected="[[page]]" attr-for-selected="name" selected-attribute="visible">
+      <omnitone-home id="eHome" name="home"></omnitone-home>
+    </iron-pages>
+
+    <!-- <footer>
+      <a href="https://www.polymer-project.org/1.0/toolbox/">Made by Polymer</a>
+      chrome &#9829; VR
+    </footer> -->
+  </template>
+
+  <script>
+    Polymer({
+
+      is: 'omnitone-landing',
+
+      properties: {
+
+        page: {
+          type: String,
+          reflectToAttribute: true,
+          observer: '_pageChanged'
+        },
+
+        numItems: {
+          type: Number,
+          value: 0
+        },
+
+        _shouldRenderDrawer: {
+          computed: '_computeShouldRenderDrawer(smallScreen, loadComplete)'
+        }
+      },
+
+      observers: [
+        '_routePageChanged(routeData.page)'
+      ],
+
+      listeners: {
+        'change-section': '_onChangeSection',
+        'announce': '_onAnnounce'
+      },
+
+      startDemo: function () {
+        OmnitoneViewer.play();
+      },
+
+      created: function() {
+        // Custom elements polyfill safe way to indicate an element has been upgraded.
+        this.removeAttribute('unresolved');
+      },
+
+      ready: function() {
+        // listen for online/offline
+        Polymer.RenderStatus.afterNextRender(this, function() {
+          this.listen(window, 'online', '_notifyNetworkStatus');
+          this.listen(window, 'offline', '_notifyNetworkStatus');
+        });
+      },
+
+      attached: function () {
+        // Initialize Omnitone library.
+        OmnitoneViewer.initialize(this).then(function () {
+          this.$.eHome.startDemoCallback = this.startDemo;
+          this.$.eHome.swapSpinnerToButton();
+        }.bind(this));
+      },
+
+      _routePageChanged: function(page) {
+        this.page = page || 'home';
+        // Scroll to the top of the page on every *route* change. Use `Polymer.AppLayout.scroll`
+        // with `behavior: 'silent'` to disable header scroll effects during the scroll.
+        Polymer.AppLayout.scroll({ top: 0, behavior: 'silent' });
+        // Close the drawer - in case the *route* change came from a link in the drawer.
+        this.drawerOpened = false;
+      },
+
+      _pageChanged: function(page, oldPage) {
+        if (page != null && page == 'home')
+          this._pageLoaded(Boolean(oldPage));
+      },
+
+      _pageLoaded: function(shouldResetLayout) {
+        if (shouldResetLayout) {
+          // The size of the header depends on the page (e.g. on some pages the tabs
+          // do not appear), so reset the header's layout only when switching pages.
+          this.async(function() {
+            this.$.header.resetLayout();
+          }, 1);
+        }
+      },
+
+      _notifyNetworkStatus: function() {
+        // Due to the streaming, this demo page does not provide offline-access.
+      },
+
+      _toggleDrawer: function() {
+        this.drawerOpened = !this.drawerOpened;
+      },
+
+      // Elements in the app can notify section changes.
+      // Response by a11y announcing the section and syncronizing the category.
+      _onChangeSection: function(event) {
+        var detail = event.detail;
+        // Announce the page's title
+        if (detail.title) {
+          document.title = detail.title + ' | OMNITONE';
+        }
+      },
+
+      _computeShouldRenderDrawer: function(smallScreen, loadComplete) {
+        return smallScreen && loadComplete;
+      }
+    });
+  </script>
+
+</dom-module>
