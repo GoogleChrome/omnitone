@@ -23,7 +23,7 @@ The decode constructor accepts the context and the element as arguments along wi
 var audioElement = document.createElement('audio');
 audioElement.src = 'resources/4ch-spatial-audio-file.wav';
 
-// Create an AudioContext and an Omniton decoder.
+// Create an AudioContext and an Omnitone decoder.
 var audioContext = new AudioContext();
 var decoder = Omnitone.createFOADecoder(audioContext, audioElement, {
   baseResourceUrl: 'PATH/TO/HRTF_DIRECTORY'
