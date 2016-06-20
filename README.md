@@ -55,6 +55,9 @@ decoder.setMode('plain');
 
 // Ambisonically decoded audio stream.
 decoder.setMode('ambisonic');
+
+// Disable encoding completely. (no audio processing)
+decoder.setMode('none');
 ```
 
 
