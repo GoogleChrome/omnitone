@@ -114,9 +114,7 @@
       videoElement.onended = _onVideoEnded;
 
       audioContext = new AudioContext();
-      foaDecoder = Omnitone.createFOADecoder(audioContext, videoElement, {
-        baseResourceUrl: 'https://raw.githubusercontent.com/google/spatial-media/master/support/hrtfs/cube/'
-      });
+      foaDecoder = Omnitone.createFOADecoder(audioContext, videoElement);
 
       window.addEventListener('resize', _onResize, false);
 
