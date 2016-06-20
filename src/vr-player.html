@@ -48,6 +48,7 @@
 
     var glContext;
     var vrPanoramicView;
+    var animationRequestId;
 
     var audioContext;
     var foaDecoder;
@@ -148,13 +149,7 @@
       }
       
       VRSamplesUtil.removeButton(vrButtonHome);
-      vrButtonHome = VRSamplesUtil.addButton('Home', null, null, function () { 
-        viewportElement.style.display = 'none';
-        landingElement.style.display = 'block';
-        vrDisplay.resetPose();
-        videoElement.currentTime = 0;
-        videoElement.pause();
-      });
+      vrButtonHome = VRSamplesUtil.addButton('Home', null, null, _onBackToHome);
     }
 
     function _getPoseMatrix(out, pose) {
@@ -188,7 +183,7 @@
 
     function _onAnimationFrame() {
       glContext.clear(glContext.COLOR_BUFFER_BIT | glContext.DEPTH_BUFFER_BIT);
-      vrDisplay.requestAnimationFrame(_onAnimationFrame);
+      animationRequestId = vrDisplay.requestAnimationFrame(_onAnimationFrame);
 
       if (vrDisplay) {
         var pose = vrDisplay.getPose();
@@ -266,6 +261,34 @@
       }
     }
 
+    function _onBackToHome() {
+      viewportElement.style.display = 'none';
+      landingElement.style.display = 'block';
+      _onResize();
+
+      window.cancelAnimationFrame(animationRequestId);
+      animationRequestId = null;
+
+      foaDecoder.setMode('none');
+      vrDisplay.resetPose();
+      videoElement.currentTime = 0;
+      videoElement.pause();
+    }
+
+    function _onPlay() {
+      landingElement.style.display = 'none';
+      viewportElement.style.display = 'block';
+      _onResize();
+      _displayButtons();
+
+      animationRequestId = window.requestAnimationFrame(_onAnimationFrame);
+
+      foaDecoder.setMode('ambisonic');
+      vrDisplay.resetPose();
+      videoElement.currentTime = 0;
+      videoElement.play();
+    }
+
 
     return {
 
@@ -278,16 +301,7 @@
         });
       },
 
-      play: function () {
-        landingElement.style.display = 'none';
-        viewportElement.style.display = 'block';
-        _onResize();
-        window.requestAnimationFrame(_onAnimationFrame);
-        _displayButtons();
-        vrDisplay.resetPose();
-        videoElement.currentTime = 0;
-        videoElement.play();
-      }
+      play: _onPlay
 
     };
 

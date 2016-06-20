@@ -63,10 +63,6 @@
         pointer-events: auto;
       }
 
-      .left-bar-item {
-        width: 40px;
-      }
-
       [hidden] {
         display: none !important;
       }
@@ -87,14 +83,6 @@
       .drawer-list a.iron-selected {
         color: black;
         font-weight: bold;
-      }
-
-      /*shop-cart-modal {
-        z-index: 2;
-      }*/
-
-      app-drawer {
-        z-index: 3;
       }
 
       iron-pages {
@@ -140,29 +128,9 @@
 
     <app-header role="navigation" id="header" effects="waterfall" condenses reveals>
       <app-toolbar>
-        <div class="left-bar-item">
-          <paper-icon-button
-              class="menu-btn"
-              icon="menu"
-              on-click="_toggleDrawer">
-          </paper-icon-button>
-        </div>
         <div class="logo" title><a href="/" aria-label="OMNITONE Home">OMNITONE</a></div>
       </app-toolbar>
     </app-header>
-
-    <!-- Lazy-create the drawer for small screen sizes. -->
-    <template is="dom-if" if="[[_shouldRenderDrawer]]">
-      <!-- Two-way bind `drawerOpened` since app-drawer can update `opened` itself. -->
-      <app-drawer opened="{{drawerOpened}}" swipe-open tabindex="0">
-        <iron-selector role="navigation" class="drawer-list" selected="[[categoryName]]" attr-for-selected="name">
-          <a href="https://github.com/GoogleChrome/omnitone/">Documentation</a>
-          <a href="https://github.com/google/spatial-media">Google Spatial Media</a>
-          <a href="https://webaudio.github.io/web-audio-api/">Web Audio API</a>
-          <a href="https://webvr.info/">WebVR</a>
-        </iron-selector>
-      </app-drawer>
-    </template>
 
     <iron-pages role="main" selected="[[page]]" attr-for-selected="name" selected-attribute="visible">
       <omnitone-home id="eHome" name="home"></omnitone-home>
