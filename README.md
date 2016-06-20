@@ -16,11 +16,12 @@ bower install omnitone
 
 ![Omnitone Diagram](https://raw.githubusercontent.com/GoogleChrome/omnitone/master/doc/diagram.png)
 
-Omnitone is a high-level library that abstracts various technical layers of the first-order-ambisonic decoding.
-
-## Browser Compatibility
+Omnitone is a high-level library that abstracts various technical layers of the first-order-ambisonic decoding. The input audio stream can be either a media element (video or audio tags) or a multichannel web audio source. The rotation of sound field also can be easily updated by the mobile phone's sensor or the on-screen user interaction.
 
 
+## Browser Compatibility for Multichannel Audio Streaming
+
+In order to use Omnitone with `<audio>` or `<video>` element for streaming a large media file, MediaElementSourceNode in Web Audio API is required to support more than 4 channels. At the time of writing, the majority of browsers lacks the support of multichannel audio streaming. For the complete functionality, Chrome Desktop or Chrome for Android is recommended.
 
 
 ## Usage
@@ -55,7 +56,6 @@ Find the example code to see how to extract the rotation matrix from the quatern
 decoder.setRotationMatrix(rotationMatrix);
 ```
 
-
 Use `setMode` method to change the setting of the ambisonic decoder. This is useful when the media source it is not ambisonically decoded (e.g. stereo or mono) or when you want to save the CPU usage or the power consumption by stopping the decoder.
 
 ```js
@@ -84,7 +84,7 @@ npm run build-all   # build a minified library and copy static resources.
 
 ## Related Resources
 
-* [Google Spatial Media Repository](https://github.com/google/spatial-media)
+* [Google Spatial Media](https://github.com/google/spatial-media)
 * [Web Audio API](https://webaudio.github.io/web-audio-api/)
 * [WebVR](https://webvr.info/)
 
