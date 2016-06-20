@@ -124,6 +124,9 @@ FOADecoder.prototype.setRotationMatrix = function (rotationMatrix) {
  *                                    the decoder is disabled and bypass the
  *                                    input stream to the output. Setting the
  *                                    mode to 'ambisonic' activates the decoder.
+ *                                    When the mode is 'none', all the
+ *                                    processing is completely turned off saving
+ *                                    the CPU power.
  */
 FOADecoder.prototype.setMode = function (mode) {
   if (mode === this._decodingMode)
@@ -142,6 +145,13 @@ FOADecoder.prototype.setMode = function (mode) {
       this._decodingMode = 'ambisonic';
       for (var i = 0; i < this._foaVirtualSpeakers.length; ++i)
         this._foaVirtualSpeakers[i].enable();
+      this._bypass.disconnect();
+      break;
+
+    case 'none':
+      this._decodingMode = 'none';
+      for (var i = 0; i < this._foaVirtualSpeakers.length; ++i)
+        this._foaVirtualSpeakers[i].disable();
       this._bypass.disconnect();
       break;
 
