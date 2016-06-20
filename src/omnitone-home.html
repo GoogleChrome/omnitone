@@ -207,7 +207,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     <div class="section title">
       <h1>Omnitone</h1>
-      <h2>YouTube's 360&#176; Audio Decoder on the Web</h2>
+      <h2>360&#176; Audio on the Web</h2>
     </div>
 
     <div class="section text">
@@ -215,42 +215,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         Omnitone is a JS implementation of a <b>first-order ambisonic</b> decoder.<br>
         Use <b>headphones</b> to experience the demo with the full-sphere surround effect.
       </p>
-      <div id="browser-support">
-        <h2>Browser Support<sup>*</sup></h2>
-        <div class="browser-support-table">
-          <div class="browser-column">
-            <div class="browser-name">Chrome</div>
-            <div class="browser-support-state circle-green"></div>
-          </div>
-          <div class="browser-column">
-            <div class="browser-name">FireFox</div>
-            <div class="browser-support-state circle-gray"></div>
-          </div>
-          <div class="browser-column">
-            <div class="browser-name">Edge</div>
-            <div class="browser-support-state circle-gray"></div>
-          </div>
-          <div class="browser-column">
-            <div class="browser-name">Safari</div>
-            <div class="browser-support-state circle-gray"></div>
-          </div>
-        </div>
-      </div>
-      <p class="caption">
-        * You may hear the difference in some browsers due to the incomplete 
-        support of multichannel audio in the Web Audio API implementation.
-      </p>
-    </div>
-
-    <div class="section demo">
-      <div id="eSpinnerDemo">
-        <paper-spinner-lite active></paper-spinner-lite>
-        <p>Initializing Demo...</p>
-      </div>
-      <div id="eButtonPlayDemo" class="button-play-demo">
-        <paper-icon-button icon="av:play-circle-filled" title="play" on-click="_startDemo"></paper-icon-button>
-        <p>Play Demo - "Resonance"</p>
-      </div>
     </div>
 
     <div class="section resources">
@@ -289,6 +253,49 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         </li>
 
       </ul>
+
+    </div>
+
+    <div class="section demo">
+      <div id="eSpinnerDemo">
+        <paper-spinner-lite active></paper-spinner-lite>
+        <p>Initializing Demo...</p>
+      </div>
+      <div id="eButtonPlayDemo" class="button-play-demo">
+        <paper-icon-button icon="av:play-circle-filled" title="play" on-click="_startDemo"></paper-icon-button>
+        <p>Play Demo - "Resonance"</p>
+      </div>
+    </div>
+
+    
+    <div class="section text">
+    
+      <div id="browser-support">
+          <h2>Browser Support<sup>*</sup></h2>
+          <div class="browser-support-table">
+            <div class="browser-column">
+              <div class="browser-name">Chrome</div>
+              <div class="browser-support-state circle-green"></div>
+            </div>
+            <div class="browser-column">
+              <div class="browser-name">FireFox</div>
+              <div class="browser-support-state circle-gray"></div>
+            </div>
+            <div class="browser-column">
+              <div class="browser-name">Edge</div>
+              <div class="browser-support-state circle-gray"></div>
+            </div>
+            <div class="browser-column">
+              <div class="browser-name">Safari</div>
+              <div class="browser-support-state circle-gray"></div>
+            </div>
+          </div>
+        </div>
+        
+        <p class="caption">
+          * You may hear the difference in some browsers due to the incomplete 
+          support of multichannel audio in the Web Audio API implementation.
+        </p>
 
     </div>
 

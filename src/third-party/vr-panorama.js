@@ -139,6 +139,9 @@ window.VRPanorama = (function () {
         console.log(videoElement.error);
         reject(videoElement.error);
       }, false);
+
+      videoElement.crossorigin = 'anonymous';
+      videoElement.setAttribute('webkit-playsinline', '');
     });
   };
 
