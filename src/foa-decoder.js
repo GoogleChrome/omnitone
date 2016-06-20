@@ -22,6 +22,7 @@
 
 // Post gain compensation value, empirically determined.
 var POST_GAIN = 26.0;
+var HRTF_URL = 'https://raw.githubusercontent.com/google/spatial-media/master/support/hrtfs/cube/';
 
 // Dependencies.
 var AudioBufferManager = require('./audiobuffer-manager.js');
@@ -47,7 +48,7 @@ function FOADecoder (context, videoElement, options) {
   this._videoElement = videoElement;
   this._decodingMode = 'ambisonic';
 
-  var _baseResourceUrl = options.baseResourceUrl || '';
+  var _baseResourceUrl = options.baseResourceUrl || HRTF_URL;
 
   // Rearrange speaker data based on |options.baseResourceUrl|.
   this._speakerData = [];

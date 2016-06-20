@@ -12,11 +12,16 @@ bower install omnitone
 ```
 
 
+## How it works
+
+
+
+
 ## Usage
 
 The decoder requires an audio or video element and AudioContext. The following is an example of how to set up the context and the element for FOA decoding. A first-order-ambisonic media file consists of 4 audio channels.
 
-The decode constructor accepts the context and the element as arguments along with the path to the HRTF IRs. (originally located in `build/resources`) The initialization of a decoder instance returns a promise which resolves when the resources (i.e. impulse responses) are loaded.
+The decoder constructor accepts the context and the element as arguments. Note that Omnitone uses HRTFs from [Google Spatial Media](https://github.com/google/spatial-media) project. from the The initialization of a decoder instance returns a promise which resolves when the resources (i.e. impulse responses) are loaded.
 
 ```js
 // Prepare audio element to feed the ambisonic source audio feed.
@@ -25,9 +30,7 @@ audioElement.src = 'resources/4ch-spatial-audio-file.wav';
 
 // Create an AudioContext and an Omnitone decoder.
 var audioContext = new AudioContext();
-var decoder = Omnitone.createFOADecoder(audioContext, audioElement, {
-  baseResourceUrl: 'PATH/TO/HRTF_DIRECTORY'
-});
+var decoder = Omnitone.createFOADecoder(audioContext, audioElement);
 
 // Initialize and then start playing the audio element.
 decoder.initialize().then(function () {
@@ -47,7 +50,7 @@ decoder.setRotationMatrix(rotationMatrix);
 ```
 
 
-Use `setMode` method to change the setting of the ambisonic decoder. This is useful when the media source it is not ambisonically decoded. (e.g. stereo or mono).
+Use `setMode` method to change the setting of the ambisonic decoder. This is useful when the media source it is not ambisonically decoded (e.g. stereo or mono) or when you want to save the CPU usage or the power consumption by stopping the decoder.
 
 ```js
 // Mono or regular multi-channel layouts.
@@ -71,6 +74,13 @@ npm run build       # build a non-minified library.
 npm run watch       # recompile whenever any source file changes.
 npm run build-all   # build a minified library and copy static resources.
 ```
+
+
+## Related Resources
+
+* [Google Spatial Media Repository](https://github.com/google/spatial-media)
+* [Web Audio API](https://webaudio.github.io/web-audio-api/)
+* [WebVR](https://webvr.info/)
 
 
 ## Support

@@ -90,10 +90,14 @@ Omnitone.createFOAVirtualSpeaker = function (context, options) {
  * Create a singleton FOADecoder instance.
  * @param {AudioContext} context      Associated AudioContext.
  * @param {DOMElement} videoElement   Video or Audio DOM element to be streamed.
- * @param {String} baseResourceUrl    Base URL for resources. (HRTF IR files)
+ * @param {Object} options            Options for FOA decoder.
+ * @param {String} options.baseResourceUrl  Base URL for resources.
+ *                                          (HRTF IR files)
+ * @param {Number} options.postGain   Post-decoding gain compensation.
+ *                                    (Default = 26.0)
  * @return {FOADecoder}
  */
-Omnitone.createFOADecoder = function (context, videoElement, baseResourceUrl) {
+Omnitone.createFOADecoder = function (context, videoElement, options) {
   return new FOADecoder(context, videoElement, baseResourceUrl);
 };
 

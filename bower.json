@@ -7,16 +7,11 @@
   ],
   "license": "Apache-2.0",
   "keywords": [
-    "spatial",
-    "audio",
     "ambisonic",
-    "VR",
-    "audio",
-    "360",
-    "audio",
-    "Web",
-    "Audio",
-    "API"
+    "VR audio",
+    "360 audio",
+    "spatial audio",    
+    "Web Audio API"
   ],
   "homepage": "https://github.com/GoogleChrome/omnitone",
   "ignore": [
