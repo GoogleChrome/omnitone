@@ -1,6 +1,6 @@
 # Omnitone
 
-Omnitone is a robust implementation of [FOA (first-order-ambisonic)](https://en.wikipedia.org/wiki/Ambisonics) decoder written in Web Audio API. Its decoding process is based on multiple gain nodes for ambisonic gain matrix and stereo convolutions for [HRTF](https://en.wikipedia.org/wiki/Head-related_transfer_function) binaural rendering, ensuring the optimum performance. (No JS-based audio processing)
+Omnitone is a robust implementation of [FOA (first-order-ambisonic)](https://en.wikipedia.org/wiki/Ambisonics) decoder written in Web Audio API. Its decoding process is based on multiple gain nodes for ambisonic gain matrix and stereo convolutions for [HRTF](https://en.wikipedia.org/wiki/Head-related_transfer_function) binaural rendering, ensuring the optimum performance. (The native audio processing is done by Web Audio API.)
 
 
 ## Installation
@@ -16,19 +16,19 @@ bower install omnitone
 
 ![Omnitone Diagram](https://raw.githubusercontent.com/GoogleChrome/omnitone/master/doc/diagram.png)
 
-Omnitone is a high-level library that abstracts various technical layers of the first-order-ambisonic decoding. The input audio stream can be either a media element (video or audio tags) or a multichannel web audio source. The rotation of sound field also can be easily updated by the mobile phone's sensor or the on-screen user interaction.
+Omnitone is a high-level library that abstracts various technical layers of the first-order-ambisonic decoding. The input audio stream can be either a media element (video or audio tags) or a multichannel web audio source. The rotation of the sound field also can be easily updated by the mobile phone's sensor or the on-screen user interaction.
 
 
 ## Browser Compatibility for Multichannel Audio Streaming
 
-In order to use Omnitone with `<audio>` or `<video>` element for streaming a large media file, MediaElementSourceNode in Web Audio API is required to support more than 4 channels. At the time of writing, the majority of browsers lacks the support of multichannel audio streaming. For the complete functionality, Chrome Desktop or Chrome for Android is recommended.
+In order to use Omnitone with an `<audio>` or `<video>` element for streaming a large media file, MediaElementSourceNode in Web Audio API is required to support more than 4 channels. At the time of writing, the majority of browsers lacks the support of multichannel audio streaming. For the complete functionality, Chrome Desktop or Chrome for Android is recommended.
 
 
 ## Usage
 
 The decoder requires an audio or video element and AudioContext. The following is an example of how to set up the context and the element for FOA decoding. A first-order-ambisonic media file consists of 4 audio channels.
 
-The decoder constructor accepts the context and the element as arguments. Note that Omnitone uses HRTFs from [Google Spatial Media](https://github.com/google/spatial-media) repository, but you can use a custom set of HRTF files as well. The initialization of a decoder instance returns a promise which resolves when the resources (i.e. impulse responses) are loaded.
+The decoder constructor accepts the context and the element as arguments. Note that Omnitone uses HRTFs from [Google spatial media](https://github.com/google/spatial-media) repository, but you can use a custom set of HRTF files as well. The initialization of a decoder instance returns a promise which resolves when the resources (i.e. impulse responses) are loaded.
 
 ```js
 // Prepare audio element to feed the ambisonic source audio feed.
@@ -56,7 +56,7 @@ Find the example code to see how to extract the rotation matrix from the quatern
 decoder.setRotationMatrix(rotationMatrix);
 ```
 
-Use `setMode` method to change the setting of the ambisonic decoder. This is useful when the media source it is not ambisonically decoded (e.g. stereo or mono) or when you want to save the CPU usage or the power consumption by stopping the decoder.
+Use `setMode` method to change the setting of the ambisonic decoder. This is useful when the media source it is not ambisonically decoded (e.g. stereo or mono) or when you want to reduce the CPU usage or the power consumption by stopping the decoder.
 
 ```js
 // Mono or regular multi-channel layouts.
@@ -65,7 +65,7 @@ decoder.setMode('plain');
 // Ambisonically decoded audio stream.
 decoder.setMode('ambisonic');
 
-// Disable encoding completely. (no audio processing)
+// Disable encoding completely. (audio processing disabled)
 decoder.setMode('none');
 ```
 
