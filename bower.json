@@ -1,8 +1,8 @@
 {
-  "name": "SHOP",
-  "version": "1.0",
+  "name": "Omnitone",
+  "version": "0.0.1",
   "authors": [
-    "The Polymer Authors"
+    "Chromium Authors"
   ],
   "private": true,
   "dependencies": {

@@ -1,7 +1,7 @@
 {
-  "name": "SHOP",
-  "short_name": "SHOP",
-  "start_url": "/",
+  "name": "Omnitone",
+  "short_name": "Omnitone",
+  "start_url": "omnitone/",
   "background_color": "#fff",
   "display": "standalone",
   "theme_color": "#fff"
