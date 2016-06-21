@@ -142,6 +142,7 @@ window.VRPanorama = (function () {
 
       videoElement.crossorigin = 'anonymous';
       videoElement.setAttribute('webkit-playsinline', '');
+      console.log('[DEMO] VR Panoviewer initialized.');
     });
   };
 
