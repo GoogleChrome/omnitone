@@ -194,7 +194,6 @@
       attached: function () {
         // Initialize Omnitone library.
         OmnitoneViewer.initialize(this).then(function () {
-          console.log('***** (landing-attached)');
           this.$.eHome.startDemoCallback = this.startDemo;
           this.$.eHome.swapSpinnerToButton();
         }.bind(this));
