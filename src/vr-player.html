@@ -132,6 +132,7 @@
         foaDecoder.initialize(),
         vrPanoramicView.setVideoElement(videoElement)
       ]).then(function () {
+        console.log('[DEMO] Ambisonic decoder and VR Pano viewer initialized.');
         videoElement.pause();
       }, function (errors) {
         console.error(errors);
