@@ -132,6 +132,7 @@
         foaDecoder.initialize(),
         vrPanoramicView.setVideoElement(videoElement)
       ]).then(function () {
+        console.log('_initializeComponents');
         videoElement.pause();
       }, function (errors) {
         console.error(errors);
@@ -300,7 +301,6 @@
 
       initialize: function (landingElement) {
         VRSamplesUtil.setContainerElementID('vrplayer-viewport');
-        console.log('DemoViewer is ready.');
         return _initializeComponents({
           targetElementID: 'vrplayer-viewport',
           videoUrl: 'media/resonance-h264-aac-1080p-45s.mp4',
