@@ -131,8 +131,8 @@
       return Promise.all([
         foaDecoder.initialize(),
         vrPanoramicView.setVideoElement(videoElement)
-      ]).then(function (values) {
-        console.log('[DEMO] initialized ', values);
+      ]).then(function () {
+        console.log('[DEMO] initialized.');
         videoElement.pause();
       }, function (errors) {
         console.log(errors);

@@ -121,10 +121,10 @@ window.VRPanorama = (function () {
 
     // NOTE: 'canplay' will never be fired on iOS Safari.
     return new Promise(function(resolve, reject) {
-      videoElement.addEventListener('canplay', function() {
-        self.videoElement = videoElement;
-        self.imgElement = null;
+      self.videoElement = videoElement;
+      self.imgElement = null;
 
+      videoElement.addEventListener('canplay', function() {
         gl.bindTexture(gl.TEXTURE_2D, self.texture);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, self.videoElement);
 
@@ -133,7 +133,6 @@ window.VRPanorama = (function () {
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
-        console.log('[DEMO] panoview canplay');
         resolve(self.videoElement);
       });
 
@@ -147,7 +146,11 @@ window.VRPanorama = (function () {
     });
 
     // NOTE: this is a hack for iOS Safari.
-    videoElement.dispatchEvent(new Event('canplay'));
+    var userAgent = window.navigator.userAgent;
+    if (userAgent.match(/iPad/i) || userAgent.match(/iPhone/i)) {
+      console.log('[DEMO] panoview: forced resolution.');
+      resolve(self.videoElement);
+    }
   };
 
   Panorama.prototype.setImage = function (url) {
