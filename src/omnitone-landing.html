@@ -194,6 +194,7 @@
       attached: function () {
         // Initialize Omnitone library.
         OmnitoneViewer.initialize(this).then(function () {
+          console.log('[DEMO] Ambisonic decoder and VR Pano viewer initialized.');
           this.$.eHome.startDemoCallback = this.startDemo;
           this.$.eHome.swapSpinnerToButton();
         }.bind(this));
