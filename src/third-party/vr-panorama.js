@@ -133,7 +133,7 @@ window.VRPanorama = (function () {
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
         resolve(self.videoElement);
-        console.log('[DEMO]');
+        console.log('[DEMO] panoview canplay');
       });
 
       videoElement.addEventListener('error', function () {
