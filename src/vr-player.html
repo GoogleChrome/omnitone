@@ -5,7 +5,7 @@
     DEFER_INITIALIZATION: true,
     // Polyfill optimizations
     DIRTY_SUBMIT_FRAME_BINDINGS: true,
-    BUFFER_SCALE: 0.75
+    BUFFER_SCALE: 0.6
   };
 </script>
 <script src="third-party/webvr-polyfill.js"></script>
@@ -131,11 +131,11 @@
       return Promise.all([
         foaDecoder.initialize(),
         vrPanoramicView.setVideoElement(videoElement)
-      ]).then(function () {
-        console.log('[DEMO] Ambisonic decoder and VR Panoviewer initialized.');
+      ]).then(function (values) {
+        console.log('[DEMO] initialized ', values);
         videoElement.pause();
       }, function (errors) {
-        console.error(errors);
+        console.log(errors);
       });
     }
 

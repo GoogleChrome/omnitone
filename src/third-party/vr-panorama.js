@@ -133,6 +133,7 @@ window.VRPanorama = (function () {
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
         resolve(self.videoElement);
+        console.log('[DEMO]');
       });
 
       videoElement.addEventListener('error', function () {
@@ -142,7 +143,6 @@ window.VRPanorama = (function () {
 
       videoElement.crossorigin = 'anonymous';
       videoElement.setAttribute('webkit-playsinline', '');
-      console.log('[DEMO] VR Panoviewer initialized.');
     });
   };
 
