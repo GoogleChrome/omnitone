@@ -143,14 +143,14 @@ window.VRPanorama = (function () {
 
       videoElement.crossOrigin = 'anonymous';
       videoElement.setAttribute('webkit-playsinline', '');
-    });
 
-    // NOTE: this is a hack for iOS Safari.
-    var userAgent = window.navigator.userAgent;
-    if (userAgent.match(/iPad/i) || userAgent.match(/iPhone/i)) {
-      console.log('[DEMO] panoview: forced resolution.');
-      resolve(self.videoElement);
-    }
+      // NOTE: this is a hack for iOS Safari.
+      var userAgent = window.navigator.userAgent;
+      if (userAgent.match(/iPad/i) || userAgent.match(/iPhone/i)) {
+        console.log('[DEMO] panoview: forced resolution.');
+        resolve(self.videoElement);
+      }
+    });
   };
 
   Panorama.prototype.setImage = function (url) {
