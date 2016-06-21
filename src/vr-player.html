@@ -129,8 +129,8 @@
       landingElement = options.landingElement;
 
       return Promise.all([
-        foaDecoder.initialize(),
-        // vrPanoramicView.setVideoElement(videoElement)
+        // foaDecoder.initialize(),
+        vrPanoramicView.setVideoElement(videoElement)
       ]).then(function () {
         console.log('[DEMO] Ambisonic decoder and VR Pano viewer initialized.');
         videoElement.pause();
