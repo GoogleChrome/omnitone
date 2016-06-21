@@ -50,6 +50,7 @@
     var vrPanoramicView;
     var animationRequestId;
 
+    var platform = window.AudioContext ? 'Chrome' : 'iOS';
     var audioContext;
     var foaDecoder;
     var quatFOARotation = quat.create();
@@ -113,8 +114,15 @@
       videoElement.src = options.videoUrl;
       videoElement.onended = _onVideoEnded;
 
-      audioContext = new AudioContext();
-      foaDecoder = Omnitone.createFOADecoder(audioContext, videoElement);
+      if (platform === 'Chrome') {
+        audioContext = new AudioContext();
+        foaDecoder = Omnitone.createFOADecoder(audioContext, videoElement);
+      } else if (platform === 'iOS') {
+        audioContext = new webkitAudioContext();
+        foaDecoder = Omnitone.createFOADecoder(audioContext, videoElement, {
+          routingDestination: [2, 0, 1, 3]
+        });
+      }
 
       window.addEventListener('resize', _onResize, false);
 
@@ -135,17 +143,17 @@
         return;
 
       // if (!vrDisplay.stageParameters) {
-      //   VRSamplesUtil.addButton('Reset Pose', null, null, function () { 
-      //     vrDisplay.resetPose(); 
+      //   VRSamplesUtil.addButton('Reset Pose', null, null, function () {
+      //     vrDisplay.resetPose();
       //   });
       // }
 
       if (vrDisplay.capabilities.canPresent && !vrButtonPresent) {
         vrButtonPresent = VRSamplesUtil.addButton(
-          'Enter VR', 'E', 'images/cardboard64.png', 
+          'Enter VR', 'E', 'images/cardboard64.png',
           _onVRRequestPresent);
       }
-      
+
       VRSamplesUtil.removeButton(vrButtonHome);
       vrButtonHome = VRSamplesUtil.addButton('Home', null, null, _onBackToHome);
     }
@@ -153,7 +161,7 @@
     function _getPoseMatrix(out, pose) {
       var orientation = pose.orientation;
       if (!orientation)
-        orientation = [0, 0, 0, 1]; 
+        orientation = [0, 0, 0, 1];
       mat4.fromQuat(out, orientation);
     }
 
@@ -188,7 +196,7 @@
         _getPoseMatrix(matPose, pose);
 
         _updateSoundRotation(pose.orientation);
-        
+
         if (vrDisplay.isPresenting) {
           glContext.viewport(0, 0, canvasElement.width * 0.5, canvasElement.height);
           _renderSceneView(matPose, vrDisplay.getEyeParameters('left'));
@@ -220,7 +228,7 @@
     }
 
     function _onVideoEnded() {
-      vrButtonReplay = VRSamplesUtil.addButton('Replay', null, null, function () { 
+      vrButtonReplay = VRSamplesUtil.addButton('Replay', null, null, function () {
         vrDisplay.resetPose();
         videoElement.currentTime = 0;
         videoElement.play();
