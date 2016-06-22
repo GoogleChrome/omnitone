@@ -1,21 +1,11 @@
-<!--
-@license
-Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
-This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
-The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
-The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
-Code distributed by Google as part of the polymer project is also
-subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
--->
-
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/iron-icons/av-icons.html">
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
-<link rel="import" href="../bower_components/paper-spinner/paper-spinner-lite.html">
 <link rel="import" href="../bower_components/paper-styles/typography.html">
 
 <dom-module id="omnitone-home">
   <template>
+
     <style>
       p {
         line-height: 28px;
@@ -64,49 +54,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         font-size: 16px;
       }
 
-      /*#browser-support {
-        margin-top: 30px;
-      }
-
-      .browser-support-table {
-        @apply(--layout-horizontal);
-        width: 256px;
-        margin: 10px auto;
-        border-top: 1px solid #78909C;
-      }
-
-      .browser-column {
-        @apply(--layout-flex);
-        @apply(--layout-center-justified);
-        margin: 10px 0;
-      }
-
-      .browser-name {
-        @apply(--paper-font-body2);
-        padding-bottom: 7px;
-      }
-
-      .browser-support-state {
-        margin: 0 auto;
-        height: 40px;
-        width: 40px;
-      }
-
-      .circle-green {
-        border-radius: 20px;
-        background-color: #00E676;
-      }
-
-      .circle-gray {
-        border-radius: 20px;
-        background-color: #B0BEC5;
-      }*/
-
-      /*.section.text p.caption {
-        @apply(--paper-font-caption);
-        white-space: normal;
-      }*/
-
       .section.jumbo {
         @apply(--layout-horizontal);
         @apply(--layout-wrap);
@@ -133,23 +80,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         @apply(--paper-font-subhead);
         font-size: 16px;
       }
-
-      /*.button-play-demo {
-        height: 180px;
-        animation: pulsate 1.5s ease-out;
-        animation-iteration-count: infinite;
-      }
-
-      .section.jumbo paper-icon-button {
-        width: 128px;
-        height: 128px;
-      }*/
-
-      /*@keyframes pulsate {
-        0% { opacity: 0.15; }
-        50% { opacity: 1.0; }
-        100% { opacity: 0.15; }
-      }*/
 
       .section.resources {
         @apply(--layout-horizontal);
@@ -216,11 +146,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         color: #90A4AE;
       }
 
-      paper-spinner-lite {
-        --paper-spinner-color: #CFD8DC;
-        --paper-spinner-stroke-width: 6px;
-      }
-
       paper-button {
         background-color: #039be5;
         color: white;
@@ -241,16 +166,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </div>
 
     <div class="section text">
-      <p><strong>SAR</strong> (Spatial Audio Renderer) is a Javascript implementation of a
-        <strong>first-order ambisonic</strong> decoder <br> that allows you to
-        <strong>binaurally render</strong> an ambisonic recording directly on the browser.
-        </p>
+      <p><strong>SAR</strong> (Spatial Audio Renderer) for Web is a Javascript 
+        implementation of a <strong>first-order ambisonic</strong> decoder <br> 
+        that allows you to <strong>binaurally render</strong> an ambisonic 
+        recording directly on the browser.</p>
     </div>
 
     <div class="section jumbo">
       <div class="jumbo-item">
-        <paper-button id="eButtonPlayDemo" raised><iron-icon icon="av:play-circle-filled">
-          </iron-icon>Play Demo</paper-button>
+        <a href="demo-player.html">
+          <paper-button id="eButtonPlayDemo" raised><iron-icon icon="av:play-circle-filled">
+            </iron-icon>Play Demo</paper-button>
+        </a>
         <p id="eText">Use <strong>headphones</strong> to experience the demo
           with the <em>full-sphere surround</em> effect.</p>
       </div>
@@ -304,15 +231,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       properties: {
 
-        visible: {
-          type: Boolean,
-          observer: '_visibleChanged'
-        },
-
         systemInfo: {
           type: Object,
           value: {}
         }
+
       },
 
       _initialize: function () {
@@ -346,8 +269,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         }
 
         console.log('[LANDING] system info: ', this.systemInfo);
-
-        // this._verifySystemForDemo();
       },
 
       // _verifySystemForDemo: function () {
@@ -364,12 +285,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       attached: function () {
         this._initialize();
-      },
-
-      _visibleChanged: function(visible) {
-        if (visible) {
-          this.fire('change-section', { title: 'Home' });
-        }
       }
 
     });

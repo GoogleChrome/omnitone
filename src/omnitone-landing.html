@@ -1,15 +1,6 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
-<link rel="import" href="../bower_components/app-layout/app-drawer/app-drawer.html">
-<link rel="import" href="../bower_components/app-layout/app-header/app-header.html">
-<!-- <link rel="import" href="../bower_components/app-layout/app-scroll-effects/app-scroll-effects.html"> -->
-<!-- <link rel="import" href="../bower_components/app-layout/app-toolbar/app-toolbar.html"> -->
-<link rel="import" href="../bower_components/app-layout/helpers/helpers.html">
-<link rel="import" href="../bower_components/app-route/app-location.html">
-<link rel="import" href="../bower_components/app-route/app-route.html">
 <link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout.html">
 <link rel="import" href="../bower_components/iron-media-query/iron-media-query.html">
-<link rel="import" href="../bower_components/iron-pages/iron-pages.html">
-<link rel="import" href="../bower_components/iron-selector/iron-selector.html">
 <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
 
 <link rel="import" href="omnitone-home.html">
@@ -33,21 +24,6 @@
         color: var(--app-primary-color);
       }
 
-      /*app-header {
-        @apply(--layout-fixed-top);
-        z-index: 1;
-        height: 212px;
-        color: #FFFFFF;
-        background: #546e7a;
-        background: radial-gradient(ellipse farthest-side at 50% 0, #546e7a 0%,#263238 100%);
-        text-align: center;
-        --app-header-shadow: {
-          box-shadow: inset 0px 5px 6px -3px rgba(0, 0, 0, 0.2);
-          height: 10px;
-          bottom: -10px;
-        };
-      }*/
-
       paper-icon-button {
         color: var(--app-primary-color);
       }
@@ -62,12 +38,8 @@
       }
 
       footer {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
         text-align: center;
-        margin: 40px;
+        margin: 60px 0;
         line-height: 24px;
         @apply(--paper-font-title);
         color: #90A4AE;
@@ -88,28 +60,8 @@
       }
     </style>
 
-    <app-location route="{{route}}"></app-location>
-    <app-route
-        route="{{route}}"
-        pattern="/omnitone/:page"
-        data="{{routeData}}"
-        tail="{{subroute}}"></app-route>
-
     <iron-media-query query="max-width: 767px" query-matches="{{smallScreen}}"></iron-media-query>
-
-    <!-- <app-header role="navigation" id="header" condenses reveals effects="waterfall resize-title">
-      <app-toolbar>
-        <h1>Omnitone</h1>
-      </app-toolbar>
-      <app-toolbar class="tall">
-        <h1>Omnitone</h1>
-        <h2>360&#176; Audio on the Web</h2>
-      </app-toolbar>
-    </app-header> -->
-
-    <iron-pages role="main" selected="[[page]]" attr-for-selected="name" selected-attribute="visible">
-      <omnitone-home id="eHome" name="home"></omnitone-home>
-    </iron-pages>
+    <omnitone-home id="eHome" name="home"></omnitone-home>
 
     <footer>
       chrome &#9829; VR
@@ -121,103 +73,10 @@
 
       is: 'omnitone-landing',
 
-      properties: {
-
-        page: {
-          type: String,
-          reflectToAttribute: true,
-          observer: '_pageChanged'
-        },
-
-        numItems: {
-          type: Number,
-          value: 0
-        },
-
-        _shouldRenderDrawer: {
-          computed: '_computeShouldRenderDrawer(smallScreen, loadComplete)'
-        }
-      },
-
-      observers: [
-        '_routePageChanged(routeData.page)'
-      ],
-
-      listeners: {
-        'change-section': '_onChangeSection',
-        'announce': '_onAnnounce'
-      },
-
-      startDemo: function () {
-        OmnitoneViewer.play();
-      },
-
-      created: function() {
-        // Custom elements polyfill safe way to indicate an element has been upgraded.
+      attached: function() {
         this.removeAttribute('unresolved');
-      },
-
-      ready: function() {
-        // listen for online/offline
-        Polymer.RenderStatus.afterNextRender(this, function() {
-          this.listen(window, 'online', '_notifyNetworkStatus');
-          this.listen(window, 'offline', '_notifyNetworkStatus');
-        });
-      },
-
-      attached: function () {
-        // Initialize Omnitone library.
-        // OmnitoneViewer.initialize(this).then(function () {
-        //   this.$.eHome.startDemoCallback = this.startDemo;
-        //   this.$.eHome.swapSpinnerToButton();
-        // }.bind(this));
-      },
-
-      _routePageChanged: function(page) {
-        this.page = page || 'home';
-        // Scroll to the top of the page on every *route* change. Use `Polymer.AppLayout.scroll`
-        // with `behavior: 'silent'` to disable header scroll effects during the scroll.
-        Polymer.AppLayout.scroll({ top: 0, behavior: 'silent' });
-        // Close the drawer - in case the *route* change came from a link in the drawer.
-        this.drawerOpened = false;
-      },
-
-      _pageChanged: function(page, oldPage) {
-        if (page != null && page == 'home')
-          this._pageLoaded(Boolean(oldPage));
-      },
-
-      _pageLoaded: function(shouldResetLayout) {
-        if (shouldResetLayout) {
-          // The size of the header depends on the page (e.g. on some pages the tabs
-          // do not appear), so reset the header's layout only when switching pages.
-          this.async(function() {
-            this.$.header.resetLayout();
-          }, 1);
-        }
-      },
-
-      _notifyNetworkStatus: function() {
-        // Due to the streaming, this demo page does not provide offline-access.
-      },
-
-      _toggleDrawer: function() {
-        this.drawerOpened = !this.drawerOpened;
-      },
-
-      // Elements in the app can notify section changes.
-      // Response by a11y announcing the section and syncronizing the category.
-      _onChangeSection: function(event) {
-        var detail = event.detail;
-        // Announce the page's title
-        if (detail.title) {
-          document.title = detail.title + ' | OMNITONE';
-        }
-      },
-
-      _computeShouldRenderDrawer: function(smallScreen, loadComplete) {
-        return smallScreen && loadComplete;
       }
+      
     });
   </script>
 

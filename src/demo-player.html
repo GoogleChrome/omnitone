@@ -3,20 +3,60 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
-  <link rel="manifest" href="manifest.json">
-  <link rel="shortcut icon" href="images/favicon.ico">
+  <link rel="shortcut icon" href="../images/favicon.ico">
 
   <title>Resonance by Tim Fain | OMNITONE DEMO</title>
 
-  <link rel="import" href="src/omnitone-landing.html" async>
   <style>
     body {
       margin: 0;
+      width: 100%;
       min-height: 100vh;
     }
+
+    #demo-player-viewport {
+      box-sizing: border-box;
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      left: 0;
+      top: 0;
+      margin: 0;
+    }
   </style>
+
+  <script>
+    var WebVRConfig = {
+      DEFER_INITIALIZATION: true,
+      DIRTY_SUBMIT_FRAME_BINDINGS: true,
+      BUFFER_SCALE: 0.5 // 0.5 ~ 0.75
+    };
+  </script>
+  <script src="third-party/webvr-polyfill.js"></script>
+  <script src="third-party/wglu-url.js"></script>
+  <script>
+    if (!WGLUUrl.getBool('polyfill', false)) {
+      InitializeWebVRPolyfill();
+    }
+  </script>
+  <script src="third-party/gl-matrix-min.js"></script>
+  <script src="third-party/wglu-program.js"></script>
+  <script src="third-party/vr-panorama.js"></script>
+  <script src="third-party/vr-samples-util.js"></script>
+  <script src="third-party/omnitone.min.js"></script>
+  <script src="js/demo-player.js"></script>
 </head>
+
 <body>
+
+  <div id="demo-player-viewport"></div>
+  <script>
+    DemoPlayer.initialize({
+      viewportElementID: 'demo-player-viewport',
+      videoUrl: '../media/resonance-h264-aac-1080p-45s.mp4',
+      // videoUrl: 'https://storage.googleapis.com/omnitone-demo.google.com.a.appspot.com/resonance-h264-aac-1080p.mp4'
+    });
+  </script>
 
   <!-- ganalytics -->
   <script>
