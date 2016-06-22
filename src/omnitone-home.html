@@ -10,16 +10,22 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/iron-icons/av-icons.html">
-<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../bower_components/paper-spinner/paper-spinner-lite.html">
 <link rel="import" href="../bower_components/paper-styles/typography.html">
 
 <dom-module id="omnitone-home">
   <template>
     <style>
+      p {
+        line-height: 28px;
+        margin: 0 10px 10px;
+        padding: 0;
+      }
+
       .section {
-        margin: 0;
-        padding: 20px 30px;
+        margin: 30px auto;
+        padding: 0;
         text-align: center;
       }
 
@@ -28,36 +34,37 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         background: #546e7a;
         background: radial-gradient(ellipse farthest-side at 50% 0, #546e7a 0%,#263238 100%);
         text-align: center;
-        padding-top: 50px;
-        padding-bottom: 50px;
+        margin: 0;
+        padding-top: 70px;
+        padding-bottom: 80px;
       }
 
       .section.title h1 {
         @apply(--paper-font-display3);
-        font-size: 60px;
+        font-size: 52px;
         margin: 15px 0;
         padding: 0;
       }
 
       .section.title h2 {
         @apply(--paper-font-display2);
-        font-size: 22px;
+        font-size: 28px;
+        font-weight: 200;
         line-height: 30px;
-        margin: 10px 30px;
+        margin: 15px 0;
         padding: 0;
       }
 
       .section.text {
         max-width: 768px;
-        margin: 0 auto;
       }
 
       .section.text p {
         @apply(--paper-font-subhead);
-        margin: 10px;
+        font-size: 16px;
       }
 
-      #browser-support {
+      /*#browser-support {
         margin-top: 30px;
       }
 
@@ -93,96 +100,106 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       .circle-gray {
         border-radius: 20px;
         background-color: #B0BEC5;
-      }
+      }*/
 
-      .section.text p.caption {
+      /*.section.text p.caption {
         @apply(--paper-font-caption);
         white-space: normal;
+      }*/
+
+      .section.jumbo {
+        @apply(--layout-horizontal);
+        @apply(--layout-wrap);
+        @apply(--layout-justified);
+        max-width: 768px;
       }
 
-      .section.demo {
-        @apply(--paper-font-headline);
-        color: #FFFFFF;
-        background-color: #03A9F4;
-        height: 180px;
-        /*background: -moz-linear-gradient(top, rgba(84,110,122,1) 0%, rgba(38,50,56,1) 100%);
-        background: -ms-linear-gradient(top, rgba(84,110,122,1) 0%, rgba(38,50,56,1) 100%);
-        background: linear-gradient(to bottom, rgba(84,110,122,1) 0%, rgba(38,50,56,1) 100%);*/
-        text-align: center;
-        padding-top: 50px;
-        padding-bottom: 50px;
-      }
-
-      .section.demo a {
+      .section.jumbo a {
         text-decoration: none;
         color: #FFFFFF;
       }
 
-      #eSpinnerDemo {
-        padding-top: 50px;
-      }
-
-      #eButtonPlayDemo {
-        display: none;
-      }
-
-      .button-play-demo {
-        height: 180px;
-        animation: pulsate 1.5s ease-out;
-        animation-iteration-count: infinite;
-      }
-
-      .button-play-demo paper-icon-button {
-        width: 128px;
-        height: 128px;
-      }
-
-      @keyframes pulsate {
-        0% { opacity: 0.15; }
-        50% { opacity: 1.0; }
-        100% { opacity: 0.15; }
-      }
-
-      .section.resources {
-        @apply(--layout-horizontal);
-        max-width: 768px;
-        margin: 0 auto;
-      }
-
-      .section.resources .grid {
-        @apply(--layout-horizontal);
-        @apply(--layout-wrap);
-        @apply(--layout-justified);        
-        padding: 0;
-        list-style: none;
-      }
-
-      .section.resources .grid li {
+      .section.jumbo .jumbo-item {
+        @apply(--layout-flex);
         -webkit-flex: 1 1;
         flex: 1 1;
         -webkit-flex-basis: 50%;
         flex-basis: 50%;
         max-width: 50%;
+        margin: 10px 0;
+      }
+
+      .section.jumbo .jumbo-item p {
+        @apply(--paper-font-subhead);
+        font-size: 16px;
+      }
+
+      /*.button-play-demo {
+        height: 180px;
+        animation: pulsate 1.5s ease-out;
+        animation-iteration-count: infinite;
+      }
+
+      .section.jumbo paper-icon-button {
+        width: 128px;
+        height: 128px;
+      }*/
+
+      /*@keyframes pulsate {
+        0% { opacity: 0.15; }
+        50% { opacity: 1.0; }
+        100% { opacity: 0.15; }
+      }*/
+
+      .section.resources {
+        @apply(--layout-horizontal);
+        max-width: 768px;
+      }
+
+      .section .grid {
+        @apply(--layout-horizontal);
+        @apply(--layout-wrap);
+        @apply(--layout-justified);
+        padding: 0;
+        list-style: none;
+      }
+
+      .section .grid li {
+        -webkit-flex: 1 1;
+        flex: 1 1;
+        -webkit-flex-basis: 50%;
+        flex-basis: 50%;
+        max-width: 50%;
+        margin-bottom: 20px;
       }
 
       @media (max-width: 550px) {
-        .section.resources .grid  li {
+        .section.jumbo .jumbo-item {
+          -webkit-flex-basis: 100%;
+          flex-basis: 100%;
+          max-width: 100%;
+        }
+
+        .section .grid  li {
           -webkit-flex-basis: 100%;
           flex-basis: 100%;
           max-width: 100%;
         }
       }
-      
+
       .section.resources h2 {
-        margin: 10px 10px 0 10px;
         font-weight: 400;
+        font-size: 22px;
+        margin: 0;
       }
 
       .section.resources p {
         @apply(--paper-font-body1);
+        font-size: 14px;
+        line-height: 22px;
         display: inline-block;
-        padding: 10px 0;
-        margin: 10px;
+        margin: 20px;
+        padding-top: 20px;
         border-top: 1px solid #B0BEC5;
         text-align: left;
       }
@@ -203,107 +220,79 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         --paper-spinner-color: #CFD8DC;
         --paper-spinner-stroke-width: 6px;
       }
+
+      paper-button {
+        background-color: #039be5;
+        color: white;
+        font-size: 16px;
+        font-weight: 700;
+        padding: 20px;
+        margin: 20px 0;
+      }
+
+      paper-button iron-icon {
+        margin-right: 12px;
+      }
     </style>
 
     <div class="section title">
-      <h1>Omnitone</h1>
+      <h1>Spatial Audio Renderer</h1>
       <h2>360&#176; Audio on the Web</h2>
     </div>
 
     <div class="section text">
-      <p>
-        Omnitone is a JS implementation of a <b>first-order ambisonic</b> decoder.<br>
-        Use <b>headphones</b> to experience the demo with the full-sphere surround effect.
-      </p>
+      <p><strong>SAR</strong> (Spatial Audio Renderer) is a Javascript implementation of a 
+        <strong>first-order ambisonic</strong> decoder <br> that allows you to 
+        <strong>binaurally render</strong> an ambisonic recording directly on the browser.
+        </p>
+    </div>
+
+    <div class="section jumbo">
+      <div class="jumbo-item">
+        <paper-button id="eButtonPlayDemo" raised><iron-icon icon="av:play-circle-filled">
+          </iron-icon>Play Demo</paper-button>
+        <p id="eText">Use <strong>headphones</strong> to experience the demo
+          with the <em>full-sphere surround</em> effect.</p>
+      </div>
+      <div class="jumbo-item">
+        <a href="https://github.com/GoogleChrome/omnitone/" target="_blank">
+          <paper-button raised><iron-icon icon="av:library-books"></iron-icon>
+            Documentation</paper-button>
+        </a>
+        <p>Learn how to use <strong>SAR</strong> in your web page.</p>
+      </div>
     </div>
 
     <div class="section resources">
-      
       <ul class="grid">
-        
         <li>
-          <a href="https://github.com/GoogleChrome/omnitone/" target="_blank">
-            <h2>Documentation</h2>
-          </a>
-          <p>Omnitone is designed to be the audio counter part of the 360 video
-            viewer. See how to use Omnitone JS library in your web page.</p>
+          <h2>Spatial Media</h2>
+          <p>A collection of industry standards and tools for 360 video and
+            spatial audio. Learn more about spatial media
+            <a href="https://github.com/google/spatial-media/" target="_blank">
+            here</a>.</p>
         </li>
-
         <li>
-          <a href="https://github.com/google/spatial-media" target="_blank">
-            <h2>Google Spatial Media</h2>  
-          </a>
-          <p>Some wording here. Daydream and Google-wide effort on VR.</p>
+          <h2>VR view</h2>
+          <p><a href="https://developers.google.com/vr/concepts/vrview/" target="_blank">VR view</a> 
+            allows you to embed 360 degree VR media into websites on desktop and
+            mobile, and native apps on Android and iOS.</p>
         </li>
-
+        <li>          
+          <h2>Web Audio API</h2>
+          <p>Omnitone is written with <a href="https://webaudio.github.io/web-audio-api/" target="_blank">
+            Web Audio API</a> for the optimum audio processing in the interactive web apps.</p>
+        </li>
         <li>
-          <a href="https://webaudio.github.io/web-audio-api/">
-            <h2>Web Audio API</h2>  
-          </a>
-          <p>Omnitone is powered by Web Audio API, a JS API for fast audio
-            processing for the interactive web application.</p>
+          <h2>Web VR</h2>
+          <p><a href="https://webvr.info/" target="_blank">Web VR</a> is an experimental
+            Javascript API that provides access to Virtual Reality devices, such
+            as the Oculus Rift or GoogleCardboard, in your browser.</p>
         </li>
-        
-        <li>
-          <a href="https://webvr.info/">
-            <h2>Web VR</h2>  
-          </a>
-          <p>Use Omnitone for WebVR application. WebVR is an Javascript API for 
-            Virtual Reality devices within your browser.</p>
-        </li>
-
       </ul>
-
     </div>
 
-    <div class="section demo">
-      <div id="eSpinnerDemo">
-        <paper-spinner-lite active></paper-spinner-lite>
-        <p>Initializing Demo...</p>
-      </div>
-      <div id="eButtonPlayDemo" class="button-play-demo">
-        <paper-icon-button icon="av:play-circle-filled" title="play" on-click="_startDemo"></paper-icon-button>
-        <p>Play Demo - "Resonance"</p>
-      </div>
-    </div>
-
-    
-    <div class="section text">
-    
-      <div id="browser-support">
-          <h2>Browser Support<sup>*</sup></h2>
-          <div class="browser-support-table">
-            <div class="browser-column">
-              <div class="browser-name">Chrome</div>
-              <div class="browser-support-state circle-green"></div>
-            </div>
-            <div class="browser-column">
-              <div class="browser-name">FireFox</div>
-              <div class="browser-support-state circle-gray"></div>
-            </div>
-            <div class="browser-column">
-              <div class="browser-name">Edge</div>
-              <div class="browser-support-state circle-gray"></div>
-            </div>
-            <div class="browser-column">
-              <div class="browser-name">Safari</div>
-              <div class="browser-support-state circle-gray"></div>
-            </div>
-          </div>
-        </div>
-        
-        <p class="caption">
-          * You may hear the difference in some browsers due to the incomplete 
-          support of multichannel audio in the Web Audio API implementation.
-        </p>
-
-    </div>
-
-    <div class="section footer">
-      chrome &#9829; VR
-    </div>
-
-  </template> 
+  </template>
 
   <script>
     Polymer({
@@ -312,27 +301,66 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       properties: {
 
-        categories: {
-          type: Array
-        },
-
         visible: {
           type: Boolean,
           observer: '_visibleChanged'
         },
 
-        startDemoCallback: Function
-
+        systemInfo: {
+          type: Object,
+          value: {}
+        }
       },
 
-      swapSpinnerToButton: function () {
-        this.$.eSpinnerDemo.style.display = 'none';
-        this.$.eButtonPlayDemo.style.display = 'block';
+      _initialize: function () {
+        // detect browser and platform.
+        var ua = navigator.userAgent, tem,
+        M = ua.match(/(opera|chrome|safari|firefox|edge(?=\/))\/?\s*(\d+)/i) || [];
+        if (/trident/i.test(M[1])) {
+          tem = /\brv[ :]+(\d+)/g.exec(ua) || [];
+          return 'IE ' + (tem[1] || '');
+        }
+        if (M[1] === 'Chrome') {
+          tem = ua.match(/\bOPR\/(\d+)/);
+          if (tem !== null)
+            return 'Opera '+ tem[1];
+        }
+        M = M[2] ? [M[1], M[2]] : [navigator.appName, navigator.appVersion, '-?'];
+        if ((tem = ua.match(/version\/(\d+)/i)) !== null)
+          M.splice(1, 1, tem[1]);
+
+        this.systemInfo.browser = M[0];
+        this.systemInfo.browserVersion = M[1];
+
+        if (ua.match(/iPad/i) || ua.match(/iPhone/i)) {
+          this.systemInfo.platform = 'iOS';
+        } else if (ua.match(/Mac OS X/i)) {
+          this.systemInfo.platform = 'OSX';
+        } else if (ua.match(/Android/i)) {
+          this.systemInfo.platform = 'Android';
+        } else if (ua.match(/Win/i)) {
+          this.systemInfo.platform = 'Windows';
+        }
+
+        console.log('[LANDING] system info: ', this.systemInfo);
+
+        // this._verifySystemForDemo();
       },
 
-      _startDemo: function () {
-        if (this.startDemoCallback)
-          this.startDemoCallback();
+      // _verifySystemForDemo: function () {
+      //   var info = this.systemInfo;
+      //   if (info.platform === 'iOS')
+      //     return;
+
+      //   if (info.browser === 'Firefox' || info.browser === 'Edge')
+      //     return;
+
+      //   // Passed the test, activate the demo link.
+      //   this.$.eButtonPlayDemo.disabled = false;
+      // },
+
+      attached: function () {
+        this._initialize();
       },
 
       _visibleChanged: function(visible) {
@@ -340,6 +368,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           this.fire('change-section', { title: 'Home' });
         }
       }
+
     });
   </script>
 
