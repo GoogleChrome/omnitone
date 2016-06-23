@@ -88,22 +88,22 @@ var DemoPlayer = (function () {
 
     console.log('[DEMO-PLAYER] System info: ', systemInfo);
 
-    if (systemInfo.platform === 'iOS') {
-      VRSamplesUtil.addError('Your browser cannot decode this video or audio format.');
-      return;
-    }
+    // if (systemInfo.platform === 'iOS') {
+    //   VRSamplesUtil.addError('Your browser cannot decode this video or audio format.');
+    //   return;
+    // }
 
     if (systemInfo.browser === 'Firefox' || systemInfo.browser === 'Edge') {
       VRSamplesUtil.addError('Your browser cannot decode this video or audio format.');
       return;
     }
 
-    if (systemInfo.browser === 'Safari') {
-      VRSamplesUtil.addError('The demo cannot be played due to Safari`s WebGL '
-        + 'CORS issue. For more info, see '
-        + '<a href="https://bugs.webkit.org/show_bug.cgi?id=135379">here</a>.');
-      return;
-    }
+    // if (systemInfo.browser === 'Safari') {
+    //   VRSamplesUtil.addError('The demo cannot be played due to Safari`s WebGL '
+    //     + 'CORS issue. For more info, see '
+    //     + '<a href="https://bugs.webkit.org/show_bug.cgi?id=135379">here</a>.');
+    //   return;
+    // }
 
     _initializeComponents();
   }
@@ -195,12 +195,11 @@ var DemoPlayer = (function () {
       _displayButtons();
     }, function (error) {
       console.log('[DEMO-PLAYER] ERROR: ', error);
-
-      if (error.code === 3)
+      if (error.code === 3) {
         VRSamplesUtil.addError('The media file cannot be decoded.');
-
-      if (error.code === 4)
+      } else if (error.code === 4) {
         VRSamplesUtil.addError('The media file is not supported.');      
+      }
     });
   }
 
