@@ -171,6 +171,8 @@ var DemoPlayer = (function () {
       videoElement.src = playerOptions.video_url_1080_remote;
     }
 
+    console.log('[DEMO-PLAYER] video src: ' + videoElement.src);
+
     if (systemInfo.browser === 'Chrome') {
       audioContext = new AudioContext();
       foaDecoder = Omnitone.createFOADecoder(audioContext, videoElement);
