@@ -88,10 +88,10 @@ var DemoPlayer = (function () {
 
     console.log('[DEMO-PLAYER] System info: ', systemInfo);
 
-    // if (systemInfo.platform === 'iOS') {
-    //   VRSamplesUtil.addError('Your browser cannot decode this video or audio format.');
-    //   return;
-    // }
+    if (systemInfo.platform === 'iOS') {
+      VRSamplesUtil.addError('Your browser cannot decode this video or audio format.');
+      return;
+    }
 
     if (systemInfo.browser === 'Firefox' || systemInfo.browser === 'Edge') {
       VRSamplesUtil.addError('Your browser cannot decode this video or audio format.');
