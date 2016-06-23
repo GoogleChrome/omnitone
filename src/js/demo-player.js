@@ -96,10 +96,10 @@ var DemoPlayer = (function () {
       return;
     }
 
-    if (systemInfo.browser === 'Firefox') {
-      VRSamplesUtil.addError('Your browser cannot decode this video or audio format.');
-      return;
-    }
+    // if (systemInfo.browser === 'Firefox') {
+    //   VRSamplesUtil.addError('Your browser cannot decode this video or audio format.');
+    //   return;
+    // }
 
     // if (systemInfo.browser === 'Safari') {
     //   VRSamplesUtil.addError('The demo cannot be played due to Safari`s WebGL '
@@ -173,6 +173,8 @@ var DemoPlayer = (function () {
     } else if (systemInfo.browser === 'Safari') {
       // Due to the WebGL CORS bug.
       videoElement.src = playerOptions.video_url_1080_local;
+    } else if (systemInfo.browser === 'Firefox') {
+      videoElement.src = playerOptions.video_url_1080_local_webm;
     } else {
       videoElement.src = playerOptions.video_url_1080_remote;
     }
