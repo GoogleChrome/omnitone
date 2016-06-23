@@ -98,6 +98,13 @@ var DemoPlayer = (function () {
       return;
     }
 
+    if (systemInfo.browser === 'Safari') {
+      VRSamplesUtil.addError('The demo cannot be played due to Safari`s WebGL '
+        + 'CORS issue. For more info, see '
+        + '<a href="https://bugs.webkit.org/show_bug.cgi?id=135379">here</a>.');
+      return;
+    }
+
     _initializeComponents();
   }
 
@@ -149,8 +156,13 @@ var DemoPlayer = (function () {
     vrPanoramicView.yawOffset = GL_YAW_OFFSET;
 
     videoElement = document.createElement('video');
-    videoElement.src = playerOptions.videoUrl;
     videoElement.onended = _onVideoEnded;
+
+    if (systemInfo.platform === 'iOS' || systemInfo.platform === 'Android') {
+      videoElement.src = playerOptions.videoUrlMobile;
+    } else {
+      videoElement.src = playerOptions.videoUrl;
+    }
 
     if (systemInfo.browser === 'Chrome') {
       audioContext = new AudioContext();
