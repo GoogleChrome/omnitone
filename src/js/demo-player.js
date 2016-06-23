@@ -338,14 +338,14 @@ var DemoPlayer = (function () {
   function _onVRRequestPresent() {
     vrDisplay.requestPresent({
       source: canvasElement
-    }).then(_nullFunction, function () {
+    }).then(___nullFn__, function () {
       VRSamplesUtil.addError('VRRequestPresent failed.', 2000);
     });
   }
 
 
   function _onVRExitPresent() {
-    vrDisplay.exitPresent().then(_nullFunction, function () {
+    vrDisplay.exitPresent().then(___nullFn__, function () {
       VRSamplesUtil.addError('VRExitPresent failed.', 2000);
     });
   }
