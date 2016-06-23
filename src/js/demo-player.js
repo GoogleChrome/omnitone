@@ -96,7 +96,7 @@ var DemoPlayer = (function () {
       return;
     }
 
-    if (systemInfo.browser === 'Firefox' || systemInfo.browser === 'Edge') {
+    if (systemInfo.browser === 'Firefox') {
       VRSamplesUtil.addError('Your browser cannot decode this video or audio format.');
       return;
     }
