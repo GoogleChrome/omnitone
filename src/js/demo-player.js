@@ -143,7 +143,10 @@ var DemoPlayer = (function () {
     canvasElement.style.top = 0;
     canvasElement.style.margin = 0;
 
-    glContext = canvasElement.getContext('webgl', {
+    var glContextString = systemInfo.browser === 'Edge' 
+      ? 'experimental-webgl' 
+      : 'webgl';
+    glContext = canvasElement.getContext(glContextString, {
       alpha: false,
       antialias: false,
       preserveDrawingBuffer: false
