@@ -179,10 +179,10 @@ var DemoPlayer = (function () {
 
     console.log('[DEMO-PLAYER] video src: ' + videoElement.src);
 
-    if (systemInfo.browser === 'Chrome') {
+    if (systemInfo.browser !== 'Safari') {
       audioContext = new AudioContext();
       foaDecoder = Omnitone.createFOADecoder(audioContext, videoElement);
-    } else if (systemInfo.browser === 'Safari') {
+    } else {
       audioContext = new webkitAudioContext();
       foaDecoder = Omnitone.createFOADecoder(audioContext, videoElement, {
         routingDestination: [2, 0, 1, 3]
