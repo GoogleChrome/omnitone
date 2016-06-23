@@ -104,7 +104,6 @@ var DemoPlayer = (function () {
       return;
     }
 
-    _displayGuide();
     _initializeComponents();
   }
 
@@ -187,9 +186,16 @@ var DemoPlayer = (function () {
     ]).then(function () {
       console.log('[DEMO-PLAYER] Initialized.');
       videoElement.pause();
+      _displayGuide();
       _displayButtons();
-    }, function (errors) {
-      console.log(errors);
+    }, function (error) {
+      console.log('[DEMO-PLAYER] ERROR: ', error);
+
+      if (error.code === 3)
+        VRSamplesUtil.addError('The media file cannot be decoded.');
+
+      if (error.code === 4)
+        VRSamplesUtil.addError('The media file is not supported.');      
     });
   }
 
