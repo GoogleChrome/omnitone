@@ -161,12 +161,12 @@ var DemoPlayer = (function () {
     if (systemInfo.platform === 'iOS') {
       // Due to iOS H264 Profile. It should be baseline-3.0.
       videoElement.src = playerOptions.video_url_720_local;
-    } else if (systemInfo.platform === 'OSX') {
-      // Due to the WebGL CORS bug.
-      videoElement.src = playerOptions.video_url_1080_local;
     } else if (systemInfo.platform === 'Android') {
       // To address stuttering in N5X, N6P.
       videoElement.src = playerOptions.video_url_720_remote;
+    } else if (systemInfo.browser === 'Safari') {
+      // Due to the WebGL CORS bug.
+      videoElement.src = playerOptions.video_url_1080_local;
     } else {
       videoElement.src = playerOptions.video_url_1080_remote;
     }
