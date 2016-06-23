@@ -47,6 +47,7 @@
 
       .section.text {
         max-width: 768px;
+        padding: 0 20px;
       }
 
       .section.text p {
@@ -103,20 +104,6 @@
         margin-bottom: 20px;
       }
 
-      @media (max-width: 550px) {
-        .section.jumbo .jumbo-item {
-          -webkit-flex-basis: 100%;
-          flex-basis: 100%;
-          max-width: 100%;
-        }
-
-        .section .grid  li {
-          -webkit-flex-basis: 100%;
-          flex-basis: 100%;
-          max-width: 100%;
-        }
-      }
-
       .section.resources h2 {
         font-weight: 400;
         font-size: 22px;
@@ -129,7 +116,7 @@
         line-height: 22px;
         display: inline-block;
         margin: 20px;
-        padding-top: 20px;
+        padding: 20px 10px 0;
         border-top: 1px solid #B0BEC5;
         text-align: left;
       }
@@ -158,6 +145,37 @@
       paper-button iron-icon {
         margin-right: 12px;
       }
+
+      @media (max-width: 550px) {
+
+        .section.title {
+          padding-top: 35px;
+          padding-bottom: 40px;
+        }
+
+        .section.title h1 {
+          font-size: 38px;
+          margin: 8px 0;
+        }
+
+        .section.title h2 {
+          font-size: 24px;
+          margin: 8px 0;
+        }
+
+        .section.jumbo .jumbo-item {
+          -webkit-flex-basis: 100%;
+          flex-basis: 100%;
+          max-width: 100%;
+        }
+
+        .section .grid  li {
+          -webkit-flex-basis: 100%;
+          flex-basis: 100%;
+          max-width: 100%;
+        }
+
+      }
     </style>
 
     <div class="section title">
@@ -167,9 +185,9 @@
 
     <div class="section text">
       <p><strong>SAR</strong> (Spatial Audio Renderer) for Web is a Javascript 
-        implementation of a <strong>first-order ambisonic</strong> decoder <br> 
-        that allows you to <strong>binaurally render</strong> an ambisonic 
-        recording directly on the browser.</p>
+        implementation of a <strong>first-order ambisonic</strong> decoder that 
+        allows you to <strong>binaurally render</strong> an ambisonic recording
+        directly on the browser.</p>
     </div>
 
     <div class="section jumbo">

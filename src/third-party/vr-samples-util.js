@@ -29,7 +29,7 @@ window.VRSamplesUtil = (function () {
       messageContainer.style.left = "0";
       messageContainer.style.top = "0";
       messageContainer.style.right = "0";
-      messageContainer.style.margin = "0";
+      messageContainer.style.margin = "10px";
       messageContainer.style.padding = "0";
       messageContainer.align = "center";
       containerElement.appendChild(messageContainer);
@@ -70,7 +70,7 @@ window.VRSamplesUtil = (function () {
   }
 
   function addError (message, timeout) {
-    var element = addMessageElement("<b>ERROR:</b> " + message, "#D33");
+    var element = addMessageElement("<b>ERROR:</b> " + message, "#F44336");
 
     if (timeout) {
       makeToast(element, timeout);
@@ -80,7 +80,7 @@ window.VRSamplesUtil = (function () {
   }
 
   function addInfo (message, timeout) {
-    var element = addMessageElement(message, "#22A");
+    var element = addMessageElement(message, "#3F51B5");
 
     if (timeout) {
       makeToast(element, timeout);
@@ -98,11 +98,11 @@ window.VRSamplesUtil = (function () {
       buttonContainer.style.position = "absolute";
       buttonContainer.style.zIndex = "999";
       buttonContainer.style.left = "0";
-      buttonContainer.style.top = "0";
+      buttonContainer.style.bottom = "0";
       buttonContainer.style.right = "0";
-      buttonContainer.style.margin = "0";
+      buttonContainer.style.margin = "20px";
       buttonContainer.style.padding = "0";
-      buttonContainer.align = "left";
+      buttonContainer.align = "center";
       containerElement.appendChild(buttonContainer);
     }
     return buttonContainer;

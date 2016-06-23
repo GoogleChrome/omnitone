@@ -56,12 +56,6 @@ var DemoPlayer = (function () {
    */
 
 
-  function _onPageLoaded () {
-    console.log('[DEMO-PLAYER] Page loaded.');
-    _checkCompatibility();
-  }
-
-
   function _checkCompatibility() {
     // detect browser and platform.
     var ua = navigator.userAgent, tem,
@@ -95,26 +89,16 @@ var DemoPlayer = (function () {
     console.log('[DEMO-PLAYER] System info: ', systemInfo);
 
     if (systemInfo.platform === 'iOS') {
-      _displayError('Your browser cannot decode this video or audio format.');
+      VRSamplesUtil.addError('Your browser cannot decode this video or audio format.');
       return;
     }
 
     if (systemInfo.browser === 'Firefox' || systemInfo.browser === 'Edge') {
-      _displayError('Your browser cannot decode this video or audio format.');
+      VRSamplesUtil.addError('Your browser cannot decode this video or audio format.');
       return;
     }
 
     _initializeComponents();
-  }
-
-
-  function _displayError(message) {
-    VRSamplesUtil.addError(message);
-  }
-
-
-  function _displayGuide(message) {
-    VRSamplesUtil.addInfo('Drag the screen to hear the spatial audio effect.', 3000);
   }
 
 
@@ -184,9 +168,11 @@ var DemoPlayer = (function () {
       foaDecoder.initialize(),
       vrPanoramicView.setVideoElement(videoElement)
     ]).then(function () {
-      console.log('[DEMO-PLAYER] Initialized.');
+      // Demo player is ready to play.
+      console.log('[DEMO-PLAYER] Ready to play.');
       videoElement.pause();
-      _displayGuide();
+      VRSamplesUtil.addInfo('Drag the screen to hear the spatial audio effect.'
+        + '<br> Press "Play" to start the video.', 3000);
       _displayButtons();
     }, function (error) {
       console.log('[DEMO-PLAYER] ERROR: ', error);
@@ -210,14 +196,14 @@ var DemoPlayer = (function () {
     //   });
     // }
 
-    if (vrDisplay.capabilities.canPresent && !btnPresent) {
-      btnPresent = VRSamplesUtil.addButton(
-        'Enter VR', 'E', '../images/cardboard64.png',
-        _onVRRequestPresent);
-    }
-
     VRSamplesUtil.removeButton(btnHome);
     btnHome = VRSamplesUtil.addButton('Home', null, null, _onHome);
+
+    if (vrDisplay.capabilities.canPresent && !btnPresent) {
+      btnPresent = VRSamplesUtil.addButton(
+        'Enter VR', null, '../images/cardboard64.png',
+        _onVRRequestPresent);
+    }
 
     VRSamplesUtil.removeButton(btnPlay);
     btnPlay = VRSamplesUtil.addButton('Play', null, null, _onPlay);
@@ -291,6 +277,9 @@ var DemoPlayer = (function () {
 
 
   function _onPlay() {
+    if (btnReplay)
+      VRSamplesUtil.removeButton(btnReplay);
+
     _onResize();
 
     animationRequestId = window.requestAnimationFrame(_onAnimationFrame);
@@ -316,6 +305,7 @@ var DemoPlayer = (function () {
 
 
   function _onVideoEnded() {
+    VRSamplesUtil.removeButton(btnPlay);
     btnReplay = VRSamplesUtil.addButton('Replay', null, null, function () {
       vrDisplay.resetPose();
       videoElement.currentTime = 0;
@@ -347,13 +337,13 @@ var DemoPlayer = (function () {
       if (vrDisplay.capabilities.hasExternalDisplay) {
         VRSamplesUtil.removeButton(vrButtonPresent);
         vrButtonPresent = VRSamplesUtil.addButton(
-          'Exit VR', 'E', '../images/cardboard64.png', _onVRExitPresent);
+          'Exit VR', null, '../images/cardboard64.png', _onVRExitPresent);
       }
     } else {
       if (vrDisplay.capabilities.hasExternalDisplay) {
         VRSamplesUtil.removeButton(vrButtonPresent);
         vrButtonPresent = VRSamplesUtil.addButton(
-          'Enter VR', 'E', '../images/cardboard64.png', _onVRRequestPresent);
+          'Enter VR', null, '../images/cardboard64.png', _onVRRequestPresent);
       }
     }
   }
