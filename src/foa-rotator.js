@@ -23,9 +23,6 @@
 /**
  * @class First-order-ambisonic decoder based on gain node network.
  * @param {AudioContext} context    Associated AudioContext.
- * @param {AudioNode} source        FOA ambisonic stream source.
- *                                  (i.e. MediaElementSourceNode with
- *                                  ambisonic audio stream.)
  */
 function FOARotator (context) {
   this._context = context;

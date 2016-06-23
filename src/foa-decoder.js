@@ -23,9 +23,11 @@
 // Post gain compensation value, empirically determined.
 var POST_GAIN = 26.0;
 var HRTF_URL = 'https://raw.githubusercontent.com/google/spatial-media/master/support/hrtfs/cube/';
+var ROUTING_DESTINATION = [0, 1, 2, 3];
 
 // Dependencies.
 var AudioBufferManager = require('./audiobuffer-manager.js');
+var FOARouter = require('./foa-router.js');
 var FOARotator = require('./foa-rotator.js');
 var FOAPhaseMatchedFilter = require('./foa-phase-matched-filter.js');
 var FOAVirtualSpeaker = require('./foa-virtual-speaker.js');
@@ -37,10 +39,11 @@ var FOASpeakerData = require('./foa-speaker-data.js');
  * @param {VideoElement} videoElement Target video (or audio) element for
  *                                    streaming.
  * @param {Object} options
- * @param {String} options.baseResourceUrl  Base URL for resources.
- *                                          (HRTF IR files)
- * @param {Number} options.postGain   Post-decoding gain compensation.
- *                                    (By default, this is 26.0.)
+ * @param {String} options.baseResourceUrl    Base URL for resources.
+ *                                            (HRTF IR files)
+ * @param {Number} options.postGain           Post-decoding gain compensation.
+ *                                            (By default, this is 26.0.)
+ * @param {Array} options.routingDestination  Custom channel layout.
  */
 function FOADecoder (context, videoElement, options) {
   this._isDecoderReady = false;
@@ -50,6 +53,7 @@ function FOADecoder (context, videoElement, options) {
   
   this._baseResourceUrl = HRTF_URL;
   this._postGain = POST_GAIN;
+  this._routingDestination = ROUTING_DESTINATION;
 
   if (options) {
     if (options.baseResourceUrl)
@@ -57,6 +61,9 @@ function FOADecoder (context, videoElement, options) {
 
     if (options.postGain)
       this._postGain = options.postGain;
+
+    if (options.routingDestination)
+      this._routingDestination = options.routingDestination;
   }
 
   // Rearrange speaker data based on |options.baseResourceUrl|.
@@ -78,12 +85,21 @@ FOADecoder.prototype.initialize = function () {
 
   Omnitone.LOG('Initializing... (mode: ' + this._decodingMode + ')');
 
+  // Rerouting channels if necessary.
+  var routingDestinationString = this._routingDestination.toString();
+  if (routingDestinationString !== ROUTING_DESTINATION.toString()) {
+    Omnitone.LOG('Rerouting channels ([0,1,2,3] -> [' 
+      + routingDestinationString + '])');  
+  }  
+
   this._audioElementSource = this._context.createMediaElementSource(
     this._videoElement);
+  this._foaRouter = new FOARouter(this._context, this._routingDestination);
   this._foaRotator = new FOARotator(this._context);
   this._foaPhaseMatchedFilter = new FOAPhaseMatchedFilter(this._context);
 
-  this._audioElementSource.connect(this._foaRotator.input);
+  this._audioElementSource.connect(this._foaRouter.input);
+  this._foaRouter.output.connect(this._foaRotator.input);
   this._foaRotator.output.connect(this._foaPhaseMatchedFilter.input);
 
   this._foaVirtualSpeakers = [];
@@ -111,8 +127,7 @@ FOADecoder.prototype.initialize = function () {
         // Set the decoding mode.
         me.setMode(me._decodingMode);
         me._isDecoderReady = true;
-
-        Omnitone.LOG('Initialized and active.');
+        Omnitone.LOG('HRTF IRs are loaded successfully. The decoder is ready.');
 
         resolve();
       }, reject);

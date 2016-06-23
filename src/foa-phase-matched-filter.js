@@ -40,6 +40,7 @@ function FOAPhaseMatchedFilter (context) {
 
   // TODO: calculate the freq/reso based on the context sample rate.
   if (!this._context.createIIRFilter) {
+    Omnitone.LOG('IIR filter is missing. Using Biquad filter instead.');
     this._lpf = this._context.createBiquadFilter();
     this._hpf = this._context.createBiquadFilter();
     this._lpf.frequency.value = FREQUENCY;

@@ -26,6 +26,7 @@
 var Omnitone = {};
 
 // Internal dependencies.
+var FOARouter = require('./foa-router.js');
 var FOARotator = require('./foa-rotator.js');
 var FOAPhaseMatchedFilter = require('./foa-phase-matched-filter.js');
 var FOAVirtualSpeaker = require('./foa-virtual-speaker.js');
@@ -48,6 +49,15 @@ Omnitone.LOG = function () {
     'font-weight: 400',
     'color: #AAA'
   ]);
+};
+
+/**
+ * Create an instance of FOA Router. For parameters, refer the definition of
+ * Router class.
+ * @return {Object}
+ */
+Omnitone.createFOARouter = function (context, options) {
+  return new FOARouter(context, options);
 };
 
 /**
@@ -91,10 +101,11 @@ Omnitone.createFOAVirtualSpeaker = function (context, options) {
  * @param {AudioContext} context      Associated AudioContext.
  * @param {DOMElement} videoElement   Video or Audio DOM element to be streamed.
  * @param {Object} options            Options for FOA decoder.
- * @param {String} options.baseResourceUrl  Base URL for resources.
- *                                          (HRTF IR files)
- * @param {Number} options.postGain   Post-decoding gain compensation.
- *                                    (Default = 26.0)
+ * @param {String} options.baseResourceUrl    Base URL for resources.
+ *                                            (HRTF IR files)
+ * @param {Number} options.postGain           Post-decoding gain compensation.
+ *                                            (Default = 26.0)
+ * @param {Array} options.routingDestination  Custom channel layout.
  * @return {FOADecoder}
  */
 Omnitone.createFOADecoder = function (context, videoElement, options) {

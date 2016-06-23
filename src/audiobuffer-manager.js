@@ -64,7 +64,7 @@ AudioBufferManager.prototype._loadAudioFile = function (fileInfo) {
     if (xhr.status === 200) {
       that._context.decodeAudioData(xhr.response,
         function (buffer) {
-          Omnitone.LOG('File loaded: ' + fileInfo.url);
+          // Omnitone.LOG('File loaded: ' + fileInfo.url);
           that._done(fileInfo.name, buffer);
         },
         function (message) {
