@@ -259,22 +259,25 @@
       _initialize: function () {
         // detect browser and platform.
         var ua = navigator.userAgent, tem,
-        M = ua.match(/(opera|chrome|safari|firefox|edge(?=\/))\/?\s*(\d+)/i) || [];
-        if (/trident/i.test(M[1])) {
-          tem = /\brv[ :]+(\d+)/g.exec(ua) || [];
-          return 'IE ' + (tem[1] || '');
-        }
-        if (M[1] === 'Chrome') {
-          tem = ua.match(/\bOPR\/(\d+)/);
-          if (tem !== null)
-            return 'Opera '+ tem[1];
-        }
+        M = ua.match(/(chrome|safari|firefox|edge(?=\/))\/?\s*(\d+)/i) || [];
+        // if (/trident/i.test(M[1])) {
+        //   tem = /\brv[ :]+(\d+)/g.exec(ua) || [];
+        //   return 'IE ' + (tem[1] || '');
+        // }
+        // if (M[1] === 'Chrome') {
+        //   tem = ua.match(/\bEdge\/\d+/);
+        //   if (tem !== null)
+        //     return 'Opera '+ tem[1];
+        // }
         M = M[2] ? [M[1], M[2]] : [navigator.appName, navigator.appVersion, '-?'];
         if ((tem = ua.match(/version\/(\d+)/i)) !== null)
           M.splice(1, 1, tem[1]);
 
         this.systemInfo.browser = M[0];
         this.systemInfo.browserVersion = M[1];
+
+        if (ua.match(/Edge/i))
+          this.systemInfo.browser = 'Edge';
 
         if (ua.match(/iPad/i) || ua.match(/iPhone/i)) {
           this.systemInfo.platform = 'iOS';

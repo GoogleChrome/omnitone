@@ -59,22 +59,25 @@ var DemoPlayer = (function () {
   function _checkCompatibility() {
     // detect browser and platform.
     var ua = navigator.userAgent, tem,
-    M = ua.match(/(opera|chrome|safari|firefox|edge(?=\/))\/?\s*(\d+)/i) || [];
+    M = ua.match(/(chrome|safari|firefox|edge(?=\/))\/?\s*(\d+)/i) || [];
     if (/trident/i.test(M[1])) {
       tem = /\brv[ :]+(\d+)/g.exec(ua) || [];
       return 'IE ' + (tem[1] || '');
     }
-    if (M[1] === 'Chrome') {
-      tem = ua.match(/\bOPR\/(\d+)/);
-      if (tem !== null)
-        return 'Opera '+ tem[1];
-    }
+    // if (M[1] === 'Chrome') {
+    //   tem = ua.match(/\bOPR\/(\d+)/);
+    //   if (tem !== null)
+    //     return 'Opera '+ tem[1];
+    // }
     M = M[2] ? [M[1], M[2]] : [navigator.appName, navigator.appVersion, '-?'];
     if ((tem = ua.match(/version\/(\d+)/i)) !== null)
       M.splice(1, 1, tem[1]);
 
     systemInfo.browser = M[0];
     systemInfo.version = M[1];
+
+    if (ua.match(/Edge/i))
+      systemInfo.browser = 'Edge';
 
     if (ua.match(/iPad/i) || ua.match(/iPhone/i)) {
       systemInfo.platform = 'iOS';
@@ -143,7 +146,7 @@ var DemoPlayer = (function () {
     canvasElement.style.top = 0;
     canvasElement.style.margin = 0;
 
-    var glContextString = systemInfo.browser === 'Edge' 
+    var glContextString = (systemInfo.browser === 'Edge')
       ? 'experimental-webgl' 
       : 'webgl';
     glContext = canvasElement.getContext(glContextString, {
