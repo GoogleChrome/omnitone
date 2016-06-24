@@ -169,6 +169,7 @@ var DemoPlayer = (function () {
 
     console.log('[DEMO-PLAYER] video src: ', videoElement.src);
 
+    // Safari's AAC decoder has different channel layout.
     if (systemInfo.browser !== 'Safari') {
       audioContext = new AudioContext();
       foaDecoder = Omnitone.createFOADecoder(audioContext, videoElement);
@@ -335,14 +336,14 @@ var DemoPlayer = (function () {
   function _onVRRequestPresent() {
     vrDisplay.requestPresent({
       source: canvasElement
-    }).then(___nullFn__, function () {
+    }).then(__nullFn__, function () {
       VRSamplesUtil.addError('VRRequestPresent failed.', 2000);
     });
   }
 
 
   function _onVRExitPresent() {
-    vrDisplay.exitPresent().then(___nullFn__, function () {
+    vrDisplay.exitPresent().then(__nullFn__, function () {
       VRSamplesUtil.addError('VRExitPresent failed.', 2000);
     });
   }
