@@ -51,16 +51,20 @@
 
 <body>
 
+<!-- demo player -->
   <div id="demo-player-viewport"></div>
   <script>
-    DemoPlayer.initialize({
-      viewportElementID: 'demo-player-viewport',
-      video_url_1080_local: '../media/resonance-1080p-h264-aac-excerpt.mp4',
-      video_url_720_local: '../media/resonance-720p-h264-aac-excerpt.mp4',
-      video_url_720_local_webm: '../media/resonance-1080p-vp9-vorbis-excerpt.webm',
-      video_url_1080_remote: 'https://storage.googleapis.com/omnitone-demo.google.com.a.appspot.com/resonance-1080p-h264-aac.mp4',
-      video_url_720_remote: 'https://storage.googleapis.com/omnitone-demo.google.com.a.appspot.com/resonance-720p-h264-aac.mp4'
-    });
+    (function () {
+      DemoPlayer.initialize({
+        viewportElementID: 'demo-player-viewport',
+        video_url_1080_local: '../media/resonance-1080p-h264-aac-excerpt.mp4',
+        video_url_720_local: '../media/resonance-720p-h264-aac-excerpt.mp4',
+        video_url_1080_local_webm: '../media/resonance-1080p-vp9-vorbis-excerpt.webm',
+        video_url_1080_remote: 'https://storage.googleapis.com/omnitone-demo.google.com.a.appspot.com/resonance-1080p-h264-aac.mp4',
+        video_url_720_remote: 'https://storage.googleapis.com/omnitone-demo.google.com.a.appspot.com/resonance-720p-h264-aac.mp4'
+      });
+    })();
+    
   </script>
 
   <!-- ganalytics -->

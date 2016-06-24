@@ -3,6 +3,8 @@ var DemoPlayer = (function () {
 
   'use strict';
 
+  var VERSION = '0.0.4.0029';
+
   // "Resonance-specific" constants.
   var GL_YAW_OFFSET = Math.PI;
   var AUDIO_YAW_OFFSET = -1.5 * Math.PI;
@@ -27,7 +29,6 @@ var DemoPlayer = (function () {
   var btnHome;
   var btnPlay;
   var btnReplay;
-  var divMessage;
 
   var glContext;
   var vrPanoramicView;
@@ -64,11 +65,6 @@ var DemoPlayer = (function () {
       tem = /\brv[ :]+(\d+)/g.exec(ua) || [];
       return 'IE ' + (tem[1] || '');
     }
-    // if (M[1] === 'Chrome') {
-    //   tem = ua.match(/\bOPR\/(\d+)/);
-    //   if (tem !== null)
-    //     return 'Opera '+ tem[1];
-    // }
     M = M[2] ? [M[1], M[2]] : [navigator.appName, navigator.appVersion, '-?'];
     if ((tem = ua.match(/version\/(\d+)/i)) !== null)
       M.splice(1, 1, tem[1]);
@@ -89,31 +85,22 @@ var DemoPlayer = (function () {
       systemInfo.platform = 'Windows';
     }
 
-    console.log('[DEMO-PLAYER] System info: ', systemInfo);
-
+    // iOS Safari cannot decode the multichannel audio file.
     if (systemInfo.platform === 'iOS') {
       VRSamplesUtil.addError('Your browser cannot decode this video or audio format.');
       return;
     }
 
-    // if (systemInfo.browser === 'Firefox') {
-    //   VRSamplesUtil.addError('Your browser cannot decode this video or audio format.');
-    //   return;
-    // }
-
-    // if (systemInfo.browser === 'Safari') {
-    //   VRSamplesUtil.addError('The demo cannot be played due to Safari`s WebGL '
-    //     + 'CORS issue. For more info, see '
-    //     + '<a href="https://bugs.webkit.org/show_bug.cgi?id=135379">here</a>.');
-    //   return;
-    // }
+    console.log('[DEMO-PLAYER] System info: ', systemInfo);
 
     _initializeComponents();
   }
 
 
   function _initializeComponents() {
+    console.log('[DEMO-PLAYER] Player Version: ' + VERSION);
     console.log('[DEMO-PLAYER] Initializing demo...');
+    var infoMessage = VRSamplesUtil.addInfo('Initializing demo player...');
 
     // Initialize VR display.
     if (navigator.getVRDisplays) {
@@ -134,6 +121,7 @@ var DemoPlayer = (function () {
         + '<a href="http://webvr.info">webvr.info</a> for assistance.');
     }
 
+    // Create elements and initialize them.
     viewportElement = document.getElementById(playerOptions.viewportElementID);
     canvasElement = document.createElement('canvas');
     viewportElement.appendChild(canvasElement);
@@ -149,6 +137,7 @@ var DemoPlayer = (function () {
     var glContextString = (systemInfo.browser === 'Edge')
       ? 'experimental-webgl' 
       : 'webgl';
+    
     glContext = canvasElement.getContext(glContextString, {
       alpha: false,
       antialias: false,
@@ -164,22 +153,21 @@ var DemoPlayer = (function () {
     videoElement = document.createElement('video');
     videoElement.onended = _onVideoEnded;
 
-    if (systemInfo.platform === 'iOS') {
-      // Due to iOS H264 Profile. It should be baseline-3.0.
-      videoElement.src = playerOptions.video_url_720_local;
-    } else if (systemInfo.platform === 'Android') {
+    if (systemInfo.platform === 'Android') {
       // To address stuttering in N5X, N6P.
       videoElement.src = playerOptions.video_url_720_remote;
     } else if (systemInfo.browser === 'Safari') {
-      // Due to the WebGL CORS bug.
+      // Due to the WebGL CORS bug, Safari cannot use the remote video.
       videoElement.src = playerOptions.video_url_1080_local;
     } else if (systemInfo.browser === 'Firefox') {
+      // FireFox only can decode VP/Vorbis (WebM)
       videoElement.src = playerOptions.video_url_1080_local_webm;
     } else {
+      // All is good, go for the highest quality video.
       videoElement.src = playerOptions.video_url_1080_remote;
     }
 
-    console.log('[DEMO-PLAYER] video src: ' + videoElement.src);
+    console.log('[DEMO-PLAYER] video src: ', videoElement.src);
 
     if (systemInfo.browser !== 'Safari') {
       audioContext = new AudioContext();
@@ -200,6 +188,7 @@ var DemoPlayer = (function () {
       // Demo player is ready to play.
       console.log('[DEMO-PLAYER] Ready to play.');
       videoElement.pause();
+      VRSamplesUtil.makeToast(infoMessage, 1);
       VRSamplesUtil.addInfo('Drag the screen to hear the spatial audio effect.'
         + '<br> Press "Play" to start the video.', 3000);
       _displayButtons();
