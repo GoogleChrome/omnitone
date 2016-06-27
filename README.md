@@ -5,7 +5,7 @@ SAR (Spatial Audio Renderer) is a robust implementation of [FOA (first-order-amb
 
 ## Installation
 
-SAR is designed to be used for the web-facing project, so the installation via [Bower](https://bower.io/) is recommended. NPM works as well.
+SAR is designed to be used for the web-facing project, so the installation via [Bower](https://bower.io/) is recommended.
 
 ```bash
 bower install spatial-audio-renderer
@@ -55,7 +55,7 @@ Use `setMode` method to change the setting of the ambisonic decoder. This is use
 
 ```js
 // Mono or regular multi-channel layouts.
-decoder.setMode('plain');
+decoder.setMode('bypass');
 
 // Ambisonically decoded audio stream.
 decoder.setMode('ambisonic');
