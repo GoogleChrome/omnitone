@@ -5,7 +5,7 @@ SAR (Spatial Audio Renderer) is a robust implementation of [FOA (first-order-amb
 
 ## Installation
 
-SAR is designed to be used for the web-facing project, so the installation via [Bower](https://bower.io/) is recommended.
+SAR is designed to be used for the web-facing project, so the installation via [Bower](https://bower.io/) is recommended. Alternative, you clone or download this repository and use the library file as usual.
 
 ```bash
 bower install spatial-audio-renderer
@@ -20,6 +20,12 @@ SAR is a high-level library that abstracts various technical layers of the first
 
 
 ## Usage
+
+The first step is to include the library file in an HTML document.
+
+```html
+<script src="omnitone.min.js"></script>
+```
 
 The decoder requires an audio or video element and AudioContext. The following is an example of how to set up the context and the element for FOA decoding. A first-order-ambisonic media file consists of 4 audio channels.
 
@@ -64,10 +70,12 @@ decoder.setMode('ambisonic');
 decoder.setMode('none');
 ```
 
+See [this example]() to learn how to use Omnitone with a graphical counterpart.
+
 
 ## Building
 
-SAR project uses WebPack to build the minified library and to manage dependencies.
+SAR project uses [WebPack](https://webpack.github.io/) to build the minified library and to manage dependencies.
 
 ```bash
 npm run install     # install dependencies.
