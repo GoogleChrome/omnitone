@@ -145,11 +145,11 @@ FOADecoder.prototype.setRotationMatrix = function (rotationMatrix) {
 
 /**
  * Set the decoding mode.
- * @param {String} mode               Decoding mode. When the mode is 'plain'
+ * @param {String} mode               Decoding mode. When the mode is 'bypass'
  *                                    the decoder is disabled and bypass the
  *                                    input stream to the output. Setting the
  *                                    mode to 'ambisonic' activates the decoder.
- *                                    When the mode is 'none', all the
+ *                                    When the mode is 'off', all the
  *                                    processing is completely turned off saving
  *                                    the CPU power.
  */
@@ -159,8 +159,8 @@ FOADecoder.prototype.setMode = function (mode) {
 
   switch (mode) {
 
-    case 'plain':
-      this._decodingMode = 'plain';
+    case 'bypass':
+      this._decodingMode = 'bypass';
       for (var i = 0; i < this._foaVirtualSpeakers.length; ++i)
         this._foaVirtualSpeakers[i].disable();
       this._bypass.connect(this._context.destination);
@@ -173,8 +173,8 @@ FOADecoder.prototype.setMode = function (mode) {
       this._bypass.disconnect();
       break;
 
-    case 'none':
-      this._decodingMode = 'none';
+    case 'off':
+      this._decodingMode = 'off';
       for (var i = 0; i < this._foaVirtualSpeakers.length; ++i)
         this._foaVirtualSpeakers[i].disable();
       this._bypass.disconnect();

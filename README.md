@@ -1,6 +1,6 @@
 # Spatial Audio Renderer for Web
 
-SAR(Spatial Audio Renderer) is a robust implementation of [FOA (first-order-ambisonic)](https://en.wikipedia.org/wiki/Ambisonics) decoder written in Web Audio API. Its decoding process is based on multiple gain nodes for ambisonic gain matrix and stereo convolutions for [HRTF](https://en.wikipedia.org/wiki/Head-related_transfer_function) binaural rendering, ensuring the optimum performance. (The native audio processing is done by Web Audio API.)
+SAR (Spatial Audio Renderer) is a robust implementation of [FOA (first-order-ambisonic)](https://en.wikipedia.org/wiki/Ambisonics) decoder written in Web Audio API. Its decoding process is based on multiple gain nodes for ambisonic gain matrix and stereo convolutions for [HRTF](https://en.wikipedia.org/wiki/Head-related_transfer_function) binaural rendering, ensuring the optimum performance. (The native audio processing is done by Web Audio API.)
 
 
 ## Installation
@@ -16,7 +16,7 @@ bower install spatial-audio-renderer
 
 ![SAR Diagram](https://raw.githubusercontent.com/GoogleChrome/omnitone/master/doc/diagram.png)
 
-SAR is a high-level library that abstracts various technical layers of the first-order-ambisonic decoding. The input audio stream can be either a media element (video or audio tags) or a multichannel web audio source. The rotation of the sound field also can be easily updated by the mobile phone's sensor or the on-screen user interaction.
+SAR is a high-level library that abstracts various technical layers of the first-order-ambisonic decoding. The input audio stream can be either a media element (video or audio tags) or a multichannel web audio source. The rotation of the sound field also can be easily linked to the mobile phone's sensor or the on-screen user interaction.
 
 
 ## Usage
