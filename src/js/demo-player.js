@@ -41,21 +41,6 @@ var DemoPlayer = (function () {
 
   var __nullFn__ = new Function();
 
-  /**
-   * Demo Workflow
-   *
-   * 1) page loaded
-   * 2) check platform
-   *    - compat check pass: 3)
-   *    - compat check fail: A)
-   * 3) display guide + play button
-   *    - button pressed: 4)
-   * 4) initialize decoder/glviwer and start play
-   * 5) when finished: replay button, home button
-   *
-   * A) display error message: home button
-   */
-
 
   function _checkCompatibility() {
     // detect browser and platform.
@@ -90,6 +75,12 @@ var DemoPlayer = (function () {
       VRSamplesUtil.addError('Your browser cannot decode this video or audio format.');
       return;
     }
+
+    // Android is not fully ready yet.
+    // if (systemInfo.platform === 'Android') {
+    //   VRSamplesUtil.addError('Chrome on Android is not capable of decoding multichannel audio.');
+    //   return;
+    // }
 
     console.log('[DEMO-PLAYER] System info: ', systemInfo);
 
@@ -154,7 +145,7 @@ var DemoPlayer = (function () {
     videoElement.onended = _onVideoEnded;
 
     if (systemInfo.platform === 'Android') {
-      // To address stuttering in N5X, N6P.
+      // 1080p is not good for lower-end devices.
       videoElement.src = playerOptions.video_url_720_remote;
     } else if (systemInfo.browser === 'Safari') {
       // Due to the WebGL CORS bug, Safari cannot use the remote video.
@@ -179,6 +170,8 @@ var DemoPlayer = (function () {
         routingDestination: [2, 0, 1, 3]
       });
     }
+
+    console.log('[DEMO-PLAYER] audio sample rate: ', audioContext.sampleRate)
 
     window.addEventListener('resize', _onResize, false);
 

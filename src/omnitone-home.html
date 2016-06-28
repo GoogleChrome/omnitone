@@ -31,8 +31,8 @@
 
       .section.title h1 {
         @apply(--paper-font-display3);
-        font-size: 52px;
-        margin: 15px 0;
+        font-size: 64px;
+        margin: 20px 0;
         padding: 0;
       }
 
@@ -82,9 +82,23 @@
         font-size: 16px;
       }
 
+      .section.jumbo .jumbo-item p.caption {
+        @apply(--paper-font-body1);
+        font-size: 12px;
+      }
+
+      .section.jumbo .jumbo-item p.caption a {
+        color: #039be5;
+      }
+
       .section.resources {
-        @apply(--layout-horizontal);
         max-width: 768px;
+      }
+
+      .section.resources h1 {
+        font-size: 38px;
+        font-weight: 400;
+        padding: 20px 0;
       }
 
       .section .grid {
@@ -154,12 +168,12 @@
         }
 
         .section.title h1 {
-          font-size: 38px;
+          font-size: 54px;
           margin: 8px 0;
         }
 
         .section.title h2 {
-          font-size: 24px;
+          font-size: 30px;
           margin: 8px 0;
         }
 
@@ -175,41 +189,56 @@
           max-width: 100%;
         }
 
+        .section.resources p {
+          font-size: 16px;
+          line-height: 24px;
+        }
+
       }
     </style>
 
     <div class="section title">
-      <h1>Spatial Audio Renderer</h1>
+      <h1>Omnitone</h1>
       <h2>360&#176; Audio on the Web</h2>
     </div>
 
     <div class="section text">
-      <p><strong>SAR</strong> (Spatial Audio Renderer) for Web is a Javascript 
-        implementation of a <strong>first-order ambisonic</strong> decoder that 
-        allows you to <strong>binaurally render</strong> an ambisonic recording
-        directly on the browser.</p>
+      <p><strong>Omnitone</strong> is a Javascript implementation of a 
+        <strong>first-order ambisonic</strong> decoder that allows you to
+        <strong>binaurally render</strong> an ambisonic recording directly on
+        the browser.</p>
     </div>
 
     <div class="section jumbo">
       <div class="jumbo-item">
         <a href="demo-player.html">
           <paper-button id="eButtonPlayDemo" raised><iron-icon icon="av:play-circle-filled">
-            </iron-icon>Play Demo</paper-button>
+            </iron-icon>Demo</paper-button>
         </a>
-        <p id="eText">Use <strong>headphones</strong> to experience the demo
-          with the <em>full-sphere surround</em> effect.</p>
+        <p id="eText">Use <strong>headphones</strong> for the <em>full-sphere 
+          surround</em> effect.</p>
+        <p class="caption">"Resonance" by <a href="http://timfain.com/" target="_blank">
+          Tim Fain</a>.</p>
       </div>
       <div class="jumbo-item">
         <a href="https://github.com/GoogleChrome/omnitone/#omnitone" target="_blank">
           <paper-button raised><iron-icon icon="av:library-books"></iron-icon>
-            Documentation</paper-button>
+            Docs</paper-button>
         </a>
-        <p>Learn how to use <strong>SAR</strong> in your web page.</p>
+        <p>Learn how to use <strong>Omnitone</strong> in your web page.</p>
       </div>
     </div>
 
     <div class="section resources">
+      <h1>Related Works</h1>
       <ul class="grid">
+        <li>
+          <h2>Web Audio API</h2>
+          <p><strong>Omnitone</strong> is written with
+            <a href="https://webaudio.github.io/web-audio-api/" target="_blank">
+            Web Audio API</a> for the optimum audio processing in the
+            interactive web apps.</p>
+        </li>
         <li>
           <h2>Spatial Media</h2>
           <p>A collection of industry standards and tools for 360 video and
@@ -224,18 +253,10 @@
             mobile, and native apps on Android and iOS.</p>
         </li>
         <li>
-          <h2>Web Audio API</h2>
-          <p><strong>SAR</strong> is written with
-            <a href="https://webaudio.github.io/web-audio-api/" target="_blank">
-            Web Audio API</a> for the optimum audio processing in the
-            interactive web apps.</p>
-        </li>
-        <li>
           <h2>Web VR</h2>
           <p><a href="https://webvr.info/" target="_blank">Web VR</a> is an
             experimental Javascript API that provides access to Virtual Reality
-            devices, such as the Oculus Rift or GoogleCardboard, in your
-            browser.</p>
+            devices, such as the GoogleCardboard, in your browser.</p>
         </li>
       </ul>
     </div>
