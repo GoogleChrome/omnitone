@@ -1,22 +1,27 @@
-# Spatial Audio Renderer for Web
+# Omnitone: 360 Audio on the Web
 
-SAR (Spatial Audio Renderer) is a robust implementation of [FOA (first-order-ambisonic)](https://en.wikipedia.org/wiki/Ambisonics) decoder written in Web Audio API. Its decoding process is based on multiple gain nodes for ambisonic gain matrix and stereo convolutions for [HRTF](https://en.wikipedia.org/wiki/Head-related_transfer_function) binaural rendering, ensuring the optimum performance. (The native audio processing is done by Web Audio API.)
+Omnitone is a robust implementation of [FOA (first-order-ambisonic)](https://en.wikipedia.org/wiki/Ambisonics) decoder written in Web Audio API. Its decoding process is based on multiple gain nodes for ambisonic gain matrix and stereo convolutions for [HRTF](https://en.wikipedia.org/wiki/Head-related_transfer_function) binaural rendering, ensuring the optimum performance. (The native audio processing is done by Web Audio API.)
 
 
 ## Installation
 
-SAR is designed to be used for the web-facing project, so the installation via [Bower](https://bower.io/) is recommended. Alternative, you clone or download this repository and use the library file as usual.
+Omnitone is designed to be used for the web-facing project, so the installation via [Bower](https://bower.io/) is recommended. Alternatively, you clone or download this repository and use the library file as usual.
 
 ```bash
-bower install spatial-audio-renderer
+bower install omnitone
 ```
 
 
 ## How it works
 
-![SAR Diagram](https://raw.githubusercontent.com/GoogleChrome/omnitone/master/doc/diagram.png)
+![Omnitone Diagram](https://raw.githubusercontent.com/GoogleChrome/omnitone/master/doc/diagram.png)
 
-SAR is a high-level library that abstracts various technical layers of the first-order-ambisonic decoding. The input audio stream can be either a media element (video or audio tags) or a multichannel web audio source. The rotation of the sound field also can be easily linked to the mobile phone's sensor or the on-screen user interaction.
+Omnitone is a high-level library that abstracts various technical layers of the first-order-ambisonic decoding. The input audio stream can be either a media element (video or audio tags) or a multichannel web audio source. The rotation of the sound field also can be easily linked to the mobile phone's sensor or the on-screen user interaction.
+
+
+## Mobile-platform Compatibility
+
+Omnitone is designed to run any browser that supports Web Audio API. However, there are several issues around the inconsistent result from the audio/video codec in the browser. At the time of writing, the decoding of compressed multichannel audio stream via `<video>` or `<audio>` elements is not fully supported by the majority of mobile web browsers.
 
 
 ## Usage
@@ -29,7 +34,7 @@ The first step is to include the library file in an HTML document.
 
 The decoder requires an audio or video element and AudioContext. The following is an example of how to set up the context and the element for FOA decoding. A first-order-ambisonic media file consists of 4 audio channels.
 
-The decoder constructor accepts the context and the element as arguments. Note that SAR uses HRTFs from [Google spatial media](https://github.com/google/spatial-media) repository, but you can use a custom set of HRTF files as well. The initialization of a decoder instance returns a promise which resolves when the resources (i.e. impulse responses) are loaded.
+The decoder constructor accepts the context and the element as arguments. Note that Omnitone uses HRTFs from [Google spatial media](https://github.com/google/spatial-media) repository, but you can use a custom set of HRTF files as well. The initialization of a decoder instance returns a promise which resolves when the resources (i.e. impulse responses) are loaded.
 
 ```js
 // Prepare audio element to feed the ambisonic source audio feed.
@@ -50,7 +55,7 @@ decoder.initialize().then(function () {
 
 The rotation matrix (3x3, row-major) of the decoder can be updated inside of the graphics render loop. This operation rotates the entire sound field. The matrix commonly is derived from the orientation quaternion of the head-mounted display.
 
-Find the example code to see how to extract the rotation matrix from the quaternion. Also SAR converts the coordinate system from WebGL space to the audio space internally, so you need not to transform the matrix manually.
+Find the example code to see how to extract the rotation matrix from the quaternion. Also Omnitone converts the coordinate system from WebGL space to the audio space internally, so you need not to transform the matrix manually.
 
 ```js
 // Rotate the sound field.
@@ -70,7 +75,77 @@ decoder.setMode('ambisonic');
 decoder.setMode('none');
 ```
 
-See [this example]() to learn how to use Omnitone with a graphical counterpart.
+
+## Advanced Usage
+
+Omnitone also provides building blocks for the first-order-ambisonic decoding and the binaural rendering. The `FOADecoder` is just a ready-made object built with those components. You can create them and connect together build your own decoding mechanism. 
+
+### FOARouter
+
+`FOARouter` is useful when you need to change the channel layout of the incoming multichannel audio stream. This is necessary because the channel layout changes depending on the audio codec in the browser.
+
+```js
+var router = Omnitone.createFOARouter(context, routingDestination);
+```
+
+* context (AudioContext): an AudioContext object.
+* routingDestination (Array): an array represents the target channel layout.
+
+#### Methods
+
+```js
+router.setRoutingDestination([0, 1, 2, 3]); // 4-ch AAC in Chrome (default).
+router.setRoutingDestination([1, 2, 0, 3]); // 4-ch AAC in Safari.
+```
+
+### FOARotator
+
+`FOARotator` is a sound field rotator for the first-order-ambisonic decoding. It also performs the coordinate transformation between the world space and the audio space.
+
+```js
+var rotator = Omnitone.createFOARotator(context);
+```
+
+* context (AudioContext): an AudioContext object.
+
+#### Methods
+
+```js
+rotator.setRotationMatrix([1, 0, 0, 0, 1, 0, 0, 0, 1]); // 3x3 row-major matrix.
+```
+
+### FOAPhaseMatchedFilter
+
+`FOAPhaseMatchedFilter` is a pair of pass filters (LP/HP) with a crossover frequency to compensate the gain of high frequency contents without a phase difference.
+
+```js
+var filter = Omnitone.createFOAPhaseMatchedFilter(context);
+```
+
+* context (AudioContext): an AudioContext object.
+
+### FOAVirtualSpeaker
+
+`FOAVirtualSpeaker` is a virtual speaker abstraction with the decoding gain coefficients and HRTF convolution for the first-order-ambisonic audio stream. Note that the speaker instance directly connects to AudioContext's destination.
+
+```js
+var speaker = Omnitone.createFOAVirtualSpeaker(context, options);
+```
+
+* context (AudioContext): an AudioContext object.
+* options (Object): options for speaker.
+    - coefficients: decoding coefficients for (W,X,Y,Z).
+    - IR: stereo IR buffer for HRTF convolution.
+    - gain: post-gain for the speaker.
+
+#### Methods
+
+```js
+speaker.enable();   // activate the speaker.
+speaker.disable();  // deactivate the speaker.
+```
+
+Deactivating a virtual speaker can save CPU powers. Running multiple HRTF convolvers can be computationally expensive, so disabling a speaker might be helpful when the binaural rendering is not necessary.
 
 
 ## Building
@@ -95,7 +170,7 @@ npm run build-all   # build a minified library and copy static resources.
 
 ## Support
 
-If you have found an error in this library, please file an issue at: https://github.com/GoogleChrome/spatial-audio-renderer/issues.
+If you have found an error in this library, please file an issue at: https://github.com/GoogleChrome/omnitone/issues.
 
 Patches are encouraged, and may be submitted by forking this project and submitting a pull request through GitHub. See CONTRIBUTING for more detail.
 

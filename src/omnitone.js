@@ -36,7 +36,7 @@ var FOADecoder = require('./foa-decoder.js');
  * Omnitone library version
  * @type {String}
  */
-Omnitone.VERSION = '0.1.0';
+Omnitone.VERSION = '0.1.2';
 
 // Omnitone library-wide log utility.
 // @param {any}                       Messages to be printed out.
@@ -64,15 +64,6 @@ Omnitone.createFOARouter = function (context, options) {
  * Create an instance of FOA Rotator. For parameters, refer the definition of
  * Rotator class.
  * @return {Object}
- */
-Omnitone.createFOARotator = function (context) {
-  return new FOARotator(context);
-};
-
-/**
- * Create an instance of FOARotator. For parameters, refer the definition of
- * Rotator class.
- * @return {FOARotator}
  */
 Omnitone.createFOARotator = function (context) {
   return new FOARotator(context);
