@@ -5,10 +5,12 @@ Omnitone is a robust implementation of [FOA (first-order-ambisonic)](https://en.
 
 ## Installation
 
-Omnitone is designed to be used for the web-facing project, so the installation via [Bower](https://bower.io/) is recommended. Alternatively, you clone or download this repository and use the library file as usual.
+Omnitone is designed to be used for the web-facing project, so the installation via [Bower](https://bower.io/) or [NPM](https://www.npmjs.com/) is recommended. Alternatively, you clone or download this repository and use the library file as usual.
 
 ```bash
 bower install omnitone
+// Or
+npm install omnitone
 ```
 
 
