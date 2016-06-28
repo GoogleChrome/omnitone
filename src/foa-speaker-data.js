@@ -15,18 +15,9 @@
  */
 
 /**
-NOTES
-=====
-sampling rate: 48kHz
-bit depth: 16
-length: 512 samples
-normalization: -3.76 dBFS peak
-tapering: half-hann (128 samples)
-subject: gorzel@
-microphones: Audio Technica BMC-10 (open ear canal)
-loudspeakers: Equator D5
-venue: Interactive Media Lab, TFTV, University of York, UK
-remarks: Low frequencies re-modelled below 500Hz.
+
+This is from -
+https://github.com/google/spatial-media/tree/master/support/hrtfs/cube
 
 FOA Decoding coefficients 
 =========================
@@ -41,7 +32,6 @@ FOA Decoding coefficients
 8   -35.26  135   0.125000000000000 0.216494623077544  -0.216529812402237 -0.216494623077545
 */
 
-// TODO: why these are different from the coefs above?
 var FOASpeakerData = [{
   name: 'E35.26_A45',  // <0.5774,0.5774,-0.5774>
   url: 'E35.26_A45_D1.4.wav',
