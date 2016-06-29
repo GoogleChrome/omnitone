@@ -18,7 +18,7 @@ var DemoPlayer = (function () {
 
   'use strict';
 
-  var VERSION = '0.0.4.0029';
+  var VERSION = '0.1.2.0002';
 
   // "Resonance-specific" constants.
   var GL_YAW_OFFSET = Math.PI;
@@ -43,7 +43,8 @@ var DemoPlayer = (function () {
   var btnPresent;
   var btnHome;
   var btnPlay;
-  var btnReplay;
+  var btnPause;
+  var btnRewind;
 
   var glContext;
   var vrPanoramicView;
@@ -85,17 +86,17 @@ var DemoPlayer = (function () {
       systemInfo.platform = 'Windows';
     }
 
-    // iOS Safari cannot decode the multichannel audio file.
+    // TODO: iOS Safari cannot decode the multichannel audio file.
     if (systemInfo.platform === 'iOS') {
       VRSamplesUtil.addError('Your browser cannot decode this video or audio format.');
       return;
     }
 
-    // Android is not fully ready yet.
-    // if (systemInfo.platform === 'Android') {
-    //   VRSamplesUtil.addError('Chrome on Android is not capable of decoding multichannel audio.');
-    //   return;
-    // }
+    // TODO: Android is not fully ready yet.
+    if (systemInfo.platform === 'Android') {
+      VRSamplesUtil.addError('Chrome on Android is not capable of decoding multichannel audio.');
+      return;
+    }
 
     console.log('[DEMO-PLAYER] System info: ', systemInfo);
 
@@ -157,7 +158,6 @@ var DemoPlayer = (function () {
     vrPanoramicView.yawOffset = GL_YAW_OFFSET;
 
     videoElement = document.createElement('video');
-    videoElement.onended = _onVideoEnded;
 
     if (systemInfo.platform === 'Android') {
       // 1080p is not good for lower-end devices.
@@ -200,7 +200,7 @@ var DemoPlayer = (function () {
       VRSamplesUtil.makeToast(infoMessage, 1);
       VRSamplesUtil.addInfo('Drag the screen to hear the spatial audio effect.'
         + '<br> Press "Play" to start the video.', 3000);
-      _displayButtons();
+      _preparePlayer();
     }, function (error) {
       console.log('[DEMO-PLAYER] ERROR: ', error);
       if (error.code === 3) {
@@ -209,30 +209,6 @@ var DemoPlayer = (function () {
         VRSamplesUtil.addError('The media file is not supported.');      
       }
     });
-  }
-
-
-  function _displayButtons() {
-    if (!vrDisplay)
-      return;
-
-    // if (!vrDisplay.stageParameters) {
-    //   VRSamplesUtil.addButton('Reset Pose', null, null, function () {
-    //     vrDisplay.resetPose();
-    //   });
-    // }
-
-    VRSamplesUtil.removeButton(btnHome);
-    btnHome = VRSamplesUtil.addButton('Home', null, null, _onHome);
-
-    if (vrDisplay.capabilities.canPresent && !btnPresent) {
-      btnPresent = VRSamplesUtil.addButton(
-        'Enter VR', null, '../images/cardboard64.png',
-        _onVRRequestPresent);
-    }
-
-    VRSamplesUtil.removeButton(btnPlay);
-    btnPlay = VRSamplesUtil.addButton('Play', null, null, _onPlay);
   }
 
 
@@ -297,23 +273,56 @@ var DemoPlayer = (function () {
   }
 
 
+  function _preparePlayer() {
+    if (!vrDisplay)
+      return;
+
+    videoElement.currentTime = 0;
+    vrDisplay.resetPose();
+    foaDecoder.setMode('ambisonic');
+    _onResize();
+
+    animationRequestId = window.requestAnimationFrame(_onAnimationFrame);    
+
+    // if (!vrDisplay.stageParameters) {
+    //   VRSamplesUtil.addButton('Reset Pose', null, null, function () {
+    //     vrDisplay.resetPose();
+    //   });
+    // }
+
+    if (vrDisplay.capabilities.canPresent && !btnPresent) {
+      btnPresent = VRSamplesUtil.addButton(
+        'Enter VR', null, '../images/cardboard64.png',
+        _onVRRequestPresent);
+    }
+
+    btnHome = VRSamplesUtil.addButton('Home', null, null, _onHome);
+    btnRewind = VRSamplesUtil.addButton('Rewind', null, null, _onRewind);
+    btnPlay = VRSamplesUtil.addButton('Play', null, null, _onPlay);
+  }
+
+
   function _onHome() {
-    window.location.href = '../';
+    window.location.href = 'https://googlechrome.github.io/omnitone/';
   }
 
 
   function _onPlay() {
-    if (btnReplay)
-      VRSamplesUtil.removeButton(btnReplay);
-
-    _onResize();
-
-    animationRequestId = window.requestAnimationFrame(_onAnimationFrame);
-
-    foaDecoder.setMode('ambisonic');
-    vrDisplay.resetPose();
-    videoElement.currentTime = 0;
     videoElement.play();
+    VRSamplesUtil.removeButton(btnPlay);
+    btnPause = VRSamplesUtil.addButton('Pause', null, null, _onPause);
+  }
+
+
+  function _onPause() {
+    videoElement.pause();
+    VRSamplesUtil.removeButton(btnPause);
+    btnPlay = VRSamplesUtil.addButton('Play', null, null, _onPlay);
+  }
+
+
+  function _onRewind() {
+    videoElement.currentTime = 0;
   }
 
 
@@ -328,18 +337,6 @@ var DemoPlayer = (function () {
       canvasElement.height = canvasElement.offsetHeight * window.devicePixelRatio;
     }
   }
-
-
-  function _onVideoEnded() {
-    VRSamplesUtil.removeButton(btnPlay);
-    btnReplay = VRSamplesUtil.addButton('Replay', null, null, function () {
-      vrDisplay.resetPose();
-      videoElement.currentTime = 0;
-      videoElement.play();
-      VRSamplesUtil.removeButton(btnReplay);
-    });
-  }
-
 
   function _onVRRequestPresent() {
     vrDisplay.requestPresent({
