@@ -1,3 +1,17 @@
+<!--
+  Copyright 2016 Google Inc. All Rights Reserved.
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+  
+      http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/iron-icons/av-icons.html">
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
@@ -14,7 +28,7 @@
       }
 
       .section {
-        margin: 30px auto;
+        margin: 45px auto;
         padding: 0;
         text-align: center;
       }
@@ -31,14 +45,15 @@
 
       .section.title h1 {
         @apply(--paper-font-display3);
-        font-size: 64px;
+        font-size: 72px;
+        line-height: 72px;
         margin: 20px 0;
         padding: 0;
       }
 
       .section.title h2 {
         @apply(--paper-font-display2);
-        font-size: 28px;
+        font-size: 32px;
         font-weight: 200;
         line-height: 30px;
         margin: 15px 0;
@@ -52,7 +67,8 @@
 
       .section.text p {
         @apply(--paper-font-subhead);
-        font-size: 16px;
+        font-size: 18px;
+        line-height: 28px;
       }
 
       .section.jumbo {
@@ -79,12 +95,13 @@
 
       .section.jumbo .jumbo-item p {
         @apply(--paper-font-subhead);
-        font-size: 16px;
+        font-size: 15px;
+        line-height: 24px;
       }
 
       .section.jumbo .jumbo-item p.caption {
         @apply(--paper-font-body1);
-        font-size: 12px;
+        font-size: 13px;
       }
 
       .section.jumbo .jumbo-item p.caption a {
@@ -96,9 +113,11 @@
       }
 
       .section.resources h1 {
-        font-size: 38px;
-        font-weight: 400;
-        padding: 20px 0;
+        font-size: 40px;
+        font-weight: 100;
+        padding: 20px 0 10px 0;
+        letter-spacing: 4px;
+        color: #757575;
       }
 
       .section .grid {
@@ -120,17 +139,17 @@
 
       .section.resources h2 {
         font-weight: 400;
-        font-size: 22px;
+        font-size: 24px;
         margin: 0;
       }
 
       .section.resources p {
         @apply(--paper-font-body1);
-        font-size: 14px;
-        line-height: 22px;
+        font-size: 15px;
+        line-height: 24px;
         display: inline-block;
-        margin: 20px;
-        padding: 20px 10px 0;
+        margin: 15px;
+        padding: 15px 10px 0;
         border-top: 1px solid #B0BEC5;
         text-align: left;
       }
@@ -153,7 +172,7 @@
         font-size: 16px;
         font-weight: 700;
         padding: 20px;
-        margin: 20px 0;
+        margin: 15px 0;
       }
 
       paper-button iron-icon {
