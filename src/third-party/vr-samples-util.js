@@ -42,11 +42,13 @@ window.VRSamplesUtil = (function () {
     messageElement.classList.add = "vr-sample-message";
     messageElement.style.color = "#FFF";
     messageElement.style.backgroundColor = backgroundColor;
-    messageElement.style.borderRadius = "3px";
+    messageElement.style.fontSize = "20px";
+    messageElement.style.lineHeight = "32px";
+    messageElement.style.borderRadius = "6px";
     messageElement.style.position = "relative";
     messageElement.style.display = "inline-block";
-    messageElement.style.margin = "0.5em";
-    messageElement.style.padding = "0.75em";
+    messageElement.style.margin = "10px";
+    messageElement.style.padding = "20px";
 
     messageElement.innerHTML = message;
 
@@ -70,7 +72,7 @@ window.VRSamplesUtil = (function () {
   }
 
   function addError (message, timeout) {
-    var element = addMessageElement("<b>ERROR:</b> " + message, "#F44336");
+    var element = addMessageElement("<b>ERROR!</b><br><br>" + message, "#F44336");
 
     if (timeout) {
       makeToast(element, timeout);

@@ -19,6 +19,7 @@ var DemoPlayer = (function () {
   'use strict';
 
   var VERSION = '0.1.2.0002';
+  var DEBUG_MODE = false;
 
   // "Resonance-specific" constants.
   var GL_YAW_OFFSET = Math.PI;
@@ -86,17 +87,23 @@ var DemoPlayer = (function () {
       systemInfo.platform = 'Windows';
     }
 
+    if (WGLUUrl.getBool('debug', false)) {
+      DEBUG_MODE = true;
+      console.log('[DEMO-PLAYER] mode: DEBUG');
+    }
+
     // TODO: iOS Safari cannot decode the multichannel audio file.
-    if (systemInfo.platform === 'iOS') {
+    if (systemInfo.platform === 'iOS' && !DEBUG_MODE) {
       VRSamplesUtil.addError('Your browser cannot decode this video or audio format.');
       return;
     }
 
-    // TODO: Android is not fully ready yet.
-    // if (systemInfo.platform === 'Android') {
-    //   VRSamplesUtil.addError('Chrome on Android is not capable of decoding multichannel audio.');
-    //   return;
-    // }
+    // TODO: Android is not fully ready yet. Unified Media Pipeline must be
+    // enabled for M51. It is enabled by default at M53.
+    if (systemInfo.platform === 'Android' && !DEBUG_MODE) {
+      VRSamplesUtil.addError('Decoding multichannel audio is not supported yet in this browser.');
+      return;
+    }
 
     console.log('[DEMO-PLAYER] System info: ', systemInfo);
 
@@ -199,7 +206,7 @@ var DemoPlayer = (function () {
       videoElement.pause();
       VRSamplesUtil.makeToast(infoMessage, 1);
       VRSamplesUtil.addInfo('Drag the screen to hear the spatial audio effect.'
-        + '<br> Press "Play" to start the video.', 3000);
+        + '<br> Press "Play" to start the video.', 5000);
       _preparePlayer();
     }, function (error) {
       console.log('[DEMO-PLAYER] ERROR: ', error);
