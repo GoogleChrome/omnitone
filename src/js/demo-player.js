@@ -93,10 +93,10 @@ var DemoPlayer = (function () {
     }
 
     // TODO: Android is not fully ready yet.
-    if (systemInfo.platform === 'Android') {
-      VRSamplesUtil.addError('Chrome on Android is not capable of decoding multichannel audio.');
-      return;
-    }
+    // if (systemInfo.platform === 'Android') {
+    //   VRSamplesUtil.addError('Chrome on Android is not capable of decoding multichannel audio.');
+    //   return;
+    // }
 
     console.log('[DEMO-PLAYER] System info: ', systemInfo);
 
