@@ -18,7 +18,9 @@ npm install omnitone
 
 ## How it works
 
-<img align="center" src="https://raw.githubusercontent.com/GoogleChrome/omnitone/master/doc/diagram-omnitone.png" alt="Omnitone Diagram">
+<p align="center">
+    <img src="https://raw.githubusercontent.com/GoogleChrome/omnitone/master/doc/diagram-omnitone.png" alt="Omnitone Diagram">
+</p>
 
 Omnitone is a high-level library that abstracts various technical layers of the spatial audio processing. The input audio stream can be either a media element (video or audio tags) or a multichannel web audio source. The rotation of the sound field also can be easily linked to the mobile phone's sensor or the on-screen user interaction.
 
