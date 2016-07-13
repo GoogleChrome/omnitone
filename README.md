@@ -18,16 +18,11 @@ npm install omnitone
 
 ## How it works
 
+Omnitone is a high-level library that abstracts various technical layers of the spatial audio processing. The input audio stream can be either a media element (video or audio tags) or a multichannel web audio source. The rotation of the sound field also can be easily linked to the mobile phone's sensor or the on-screen user interaction.
+
 <p align="center">
     <img src="https://raw.githubusercontent.com/GoogleChrome/omnitone/master/doc/diagram-omnitone.png" alt="Omnitone Diagram">
 </p>
-
-Omnitone is a high-level library that abstracts various technical layers of the spatial audio processing. The input audio stream can be either a media element (video or audio tags) or a multichannel web audio source. The rotation of the sound field also can be easily linked to the mobile phone's sensor or the on-screen user interaction.
-
-
-## Audio Codec Compatibility
-
-Omnitone is designed to run any browser that supports Web Audio API, however, it does not address the incompatibility issue around various media codec in the browsers. At the time of writing, the decoding of compressed multichannel audio via `<video>` or `<audio>` elements is not fully supported by the majority of mobile browsers.
 
 
 ## Usage
@@ -162,6 +157,11 @@ npm run build       # build a non-minified library.
 npm run watch       # recompile whenever any source file changes.
 npm run build-all   # build a minified library and copy static resources.
 ```
+
+
+## Audio Codec Compatibility
+
+Omnitone is designed to run any browser that supports Web Audio API, however, it does not address the incompatibility issue around various media codec in the browsers. At the time of writing, the decoding of compressed multichannel audio via `<video>` or `<audio>` elements is not fully supported by the majority of mobile browsers.
 
 
 ## Related Resources
