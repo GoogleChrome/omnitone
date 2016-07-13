@@ -213,42 +213,42 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var CHROME_CHANNEL_LAYOUT = [0, 1, 2, 3];
-	var ISO_CHANNEL_LAYOUT = [2, 0, 1, 3];
+	var CHROME_CHANNEL_MAP = [0, 1, 2, 3];
+	var ISO_CHANNEL_MAP = [2, 0, 1, 3];
 
 	/**
 	 * @class A simple channel re-router.
 	 * @param {AudioContext} context      Associated AudioContext.
-	 * @param {Array} routingDestination  Routing destination array.
+	 * @param {Array} channelMap  Routing destination array.
 	 *                                    e.g.) Chrome: [0, 1, 2, 3],
 	 *                                    iOS: [1, 2, 0, 3]
 	 */
-	function FOARouter (context, routingDestination) {
+	function FOARouter (context, channelMap) {
 	  this._context = context;
 
 	  this._splitter = this._context.createChannelSplitter(4);
 	  this._merger = this._context.createChannelMerger(4);
 
-	  this._routingDestination = routingDestination || CHROME_CHANNEL_LAYOUT;
+	  this._channelMap = channelMap || CHROME_CHANNEL_MAP;
 
-	  this._splitter.connect(this._merger, 0, this._routingDestination[0]);
-	  this._splitter.connect(this._merger, 1, this._routingDestination[1]);
-	  this._splitter.connect(this._merger, 2, this._routingDestination[2]);
-	  this._splitter.connect(this._merger, 3, this._routingDestination[3]);
+	  this._splitter.connect(this._merger, 0, this._channelMap[0]);
+	  this._splitter.connect(this._merger, 1, this._channelMap[1]);
+	  this._splitter.connect(this._merger, 2, this._channelMap[2]);
+	  this._splitter.connect(this._merger, 3, this._channelMap[3]);
 	  
 	  // input/output proxy.
 	  this.input = this._splitter;
 	  this.output = this._merger;
 	}
 
-	FOARouter.prototype.setRoutingDestination = function (routingDestination) {
+	FOARouter.prototype.setchannelMap = function (channelMap) {
 
-	  this._routingDestination = routingDestination;
+	  this._channelMap = channelMap;
 	  this._splitter.disconnect();
-	  this._splitter.connect(this._merger, 0, this._routingDestination[0]);
-	  this._splitter.connect(this._merger, 1, this._routingDestination[1]);
-	  this._splitter.connect(this._merger, 2, this._routingDestination[2]);
-	  this._splitter.connect(this._merger, 3, this._routingDestination[3]);
+	  this._splitter.connect(this._merger, 0, this._channelMap[0]);
+	  this._splitter.connect(this._merger, 1, this._channelMap[1]);
+	  this._splitter.connect(this._merger, 2, this._channelMap[2]);
+	  this._splitter.connect(this._merger, 3, this._channelMap[3]);
 	}
 
 	module.exports = FOARouter;
