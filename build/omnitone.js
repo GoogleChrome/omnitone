@@ -81,7 +81,6 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
-	 * @license
 	 * Copyright 2016 Google Inc. All Rights Reserved.
 	 * Licensed under the Apache License, Version 2.0 (the "License");
 	 * you may not use this file except in compliance with the License.
@@ -108,30 +107,44 @@ return /******/ (function(modules) { // webpackBootstrap
 	var Omnitone = {};
 
 	// Internal dependencies.
-	var FOARotator = __webpack_require__(2);
-	var FOAPhaseMatchedFilter = __webpack_require__(3);
-	var FOAVirtualSpeaker = __webpack_require__(4);
-	var FOADecoder = __webpack_require__(5);
+	var FOARouter = __webpack_require__(2);
+	var FOARotator = __webpack_require__(3);
+	var FOAPhaseMatchedFilter = __webpack_require__(4);
+	var FOAVirtualSpeaker = __webpack_require__(5);
+	var FOADecoder = __webpack_require__(6);
 
 	/**
 	 * Omnitone library version
 	 * @type {String}
 	 */
-	Omnitone.VERSION = '0.1.0';
+	Omnitone.VERSION = '0.1.2';
+
+	// Omnitone library-wide log utility.
+	// @param {any}                       Messages to be printed out.
+	Omnitone.LOG = function () {
+	  window.console.log.apply(window.console, [
+	    '%c[Omnitone]%c '
+	      + Array.prototype.slice.call(arguments).join(' ') + ' %c(@'
+	      + performance.now().toFixed(2) + 'ms)',
+	    'background: #BBDEFB; color: #FF5722; font-weight: 700',
+	    'font-weight: 400',
+	    'color: #AAA'
+	  ]);
+	};
+
+	/**
+	 * Create an instance of FOA Router. For parameters, refer the definition of
+	 * Router class.
+	 * @return {Object}
+	 */
+	Omnitone.createFOARouter = function (context, options) {
+	  return new FOARouter(context, options);
+	};
 
 	/**
 	 * Create an instance of FOA Rotator. For parameters, refer the definition of
 	 * Rotator class.
 	 * @return {Object}
-	 */
-	Omnitone.createFOARotator = function (context) {
-	  return new FOARotator(context);
-	};
-
-	/**
-	 * Create an instance of FOARotator. For parameters, refer the definition of
-	 * Rotator class.
-	 * @return {FOARotator}
 	 */
 	Omnitone.createFOARotator = function (context) {
 	  return new FOARotator(context);
@@ -159,11 +172,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * Create a singleton FOADecoder instance.
 	 * @param {AudioContext} context      Associated AudioContext.
 	 * @param {DOMElement} videoElement   Video or Audio DOM element to be streamed.
-	 * @param {String} baseResourceUrl    Base URL for resources. (HRTF IR files)
+	 * @param {Object} options            Options for FOA decoder.
+	 * @param {String} options.baseResourceUrl    Base URL for resources.
+	 *                                            (HRTF IR files)
+	 * @param {Number} options.postGain           Post-decoding gain compensation.
+	 *                                            (Default = 26.0)
+	 * @param {Array} options.routingDestination  Custom channel layout.
 	 * @return {FOADecoder}
 	 */
-	Omnitone.createFOADecoder = function (context, videoElement, baseResourceUrl) {
-	  return new FOADecoder(context, videoElement, baseResourceUrl);
+	Omnitone.createFOADecoder = function (context, videoElement, options) {
+	  return new FOADecoder(context, videoElement, options);
 	};
 
 	module.exports = Omnitone;
@@ -174,7 +192,73 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports) {
 
 	/**
-	 * @license
+	 * Copyright 2016 Google Inc. All Rights Reserved.
+	 * Licensed under the Apache License, Version 2.0 (the "License");
+	 * you may not use this file except in compliance with the License.
+	 * You may obtain a copy of the License at
+	 *
+	 *     http://www.apache.org/licenses/LICENSE-2.0
+	 *
+	 * Unless required by applicable law or agreed to in writing, software
+	 * distributed under the License is distributed on an "AS IS" BASIS,
+	 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	 * See the License for the specific language governing permissions and
+	 * limitations under the License.
+	 */
+
+	/**
+	 * @fileOverview An audio channel re-router to resolve different channel layouts
+	 *               between various platforms.
+	 */
+
+	'use strict';
+
+	var CHROME_CHANNEL_LAYOUT = [0, 1, 2, 3];
+	var ISO_CHANNEL_LAYOUT = [2, 0, 1, 3];
+
+	/**
+	 * @class A simple channel re-router.
+	 * @param {AudioContext} context      Associated AudioContext.
+	 * @param {Array} routingDestination  Routing destination array.
+	 *                                    e.g.) Chrome: [0, 1, 2, 3],
+	 *                                    iOS: [1, 2, 0, 3]
+	 */
+	function FOARouter (context, routingDestination) {
+	  this._context = context;
+
+	  this._splitter = this._context.createChannelSplitter(4);
+	  this._merger = this._context.createChannelMerger(4);
+
+	  this._routingDestination = routingDestination || CHROME_CHANNEL_LAYOUT;
+
+	  this._splitter.connect(this._merger, 0, this._routingDestination[0]);
+	  this._splitter.connect(this._merger, 1, this._routingDestination[1]);
+	  this._splitter.connect(this._merger, 2, this._routingDestination[2]);
+	  this._splitter.connect(this._merger, 3, this._routingDestination[3]);
+	  
+	  // input/output proxy.
+	  this.input = this._splitter;
+	  this.output = this._merger;
+	}
+
+	FOARouter.prototype.setRoutingDestination = function (routingDestination) {
+
+	  this._routingDestination = routingDestination;
+	  this._splitter.disconnect();
+	  this._splitter.connect(this._merger, 0, this._routingDestination[0]);
+	  this._splitter.connect(this._merger, 1, this._routingDestination[1]);
+	  this._splitter.connect(this._merger, 2, this._routingDestination[2]);
+	  this._splitter.connect(this._merger, 3, this._routingDestination[3]);
+	}
+
+	module.exports = FOARouter;
+
+
+/***/ },
+/* 3 */
+/***/ function(module, exports) {
+
+	/**
 	 * Copyright 2016 Google Inc. All Rights Reserved.
 	 * Licensed under the Apache License, Version 2.0 (the "License");
 	 * you may not use this file except in compliance with the License.
@@ -198,9 +282,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 * @class First-order-ambisonic decoder based on gain node network.
 	 * @param {AudioContext} context    Associated AudioContext.
-	 * @param {AudioNode} source        FOA ambisonic stream source.
-	 *                                  (i.e. MediaElementSourceNode with
-	 *                                  ambisonic audio stream.)
 	 */
 	function FOARotator (context) {
 	  this._context = context;
@@ -289,11 +370,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 3 */
+/* 4 */
 /***/ function(module, exports) {
 
 	/**
-	 * @license
 	 * Copyright 2016 Google Inc. All Rights Reserved.
 	 * Licensed under the Apache License, Version 2.0 (the "License");
 	 * you may not use this file except in compliance with the License.
@@ -334,6 +414,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  // TODO: calculate the freq/reso based on the context sample rate.
 	  if (!this._context.createIIRFilter) {
+	    Omnitone.LOG('IIR filter is missing. Using Biquad filter instead.');
 	    this._lpf = this._context.createBiquadFilter();
 	    this._hpf = this._context.createBiquadFilter();
 	    this._lpf.frequency.value = FREQUENCY;
@@ -347,7 +428,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this._hpf = this._context.createIIRFilter(
 	      [0.95204461, -1.9040892, 0.95204461],
 	      [1, -1.9029109, 0.90526748]
-	    );  
+	    );
 	  }
 
 	  this._splitterLow = this._context.createChannelSplitter(4);
@@ -393,11 +474,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 4 */
+/* 5 */
 /***/ function(module, exports) {
 
 	/**
-	 * @license
 	 * Copyright 2016 Google Inc. All Rights Reserved.
 	 * Licensed under the Apache License, Version 2.0 (the "License");
 	 * you may not use this file except in compliance with the License.
@@ -487,11 +567,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 5 */
+/* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
-	 * @license
 	 * Copyright 2016 Google Inc. All Rights Reserved.
 	 * Licensed under the Apache License, Version 2.0 (the "License");
 	 * you may not use this file except in compliance with the License.
@@ -512,15 +591,18 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	// Post gain compensation value.
+	// Post gain compensation value, empirically determined.
 	var POST_GAIN = 26.0;
+	var HRTF_URL = 'https://raw.githubusercontent.com/google/spatial-media/master/support/hrtfs/cube/';
+	var ROUTING_DESTINATION = [0, 1, 2, 3];
 
 	// Dependencies.
-	var AudioBufferManager = __webpack_require__(6);
-	var FOARotator = __webpack_require__(2);
-	var FOAPhaseMatchedFilter = __webpack_require__(3);
-	var FOAVirtualSpeaker = __webpack_require__(4);
-	var FOASpeakerData = __webpack_require__(7);
+	var AudioBufferManager = __webpack_require__(7);
+	var FOARouter = __webpack_require__(2);
+	var FOARotator = __webpack_require__(3);
+	var FOAPhaseMatchedFilter = __webpack_require__(4);
+	var FOAVirtualSpeaker = __webpack_require__(5);
+	var FOASpeakerData = __webpack_require__(8);
 
 	/**
 	 * @class Omnitone FOA decoder class.
@@ -528,25 +610,39 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @param {VideoElement} videoElement Target video (or audio) element for
 	 *                                    streaming.
 	 * @param {Object} options
-	 * @param {String} options.baseResourceUrl  Base URL for resources.
-	 *                                          (HRTF IR files)
-	 * @param {Number} options.postGain         Post-decoding gain compensation.
-	 *                                          (By default, this is 26.0.)
+	 * @param {String} options.baseResourceUrl    Base URL for resources.
+	 *                                            (HRTF IR files)
+	 * @param {Number} options.postGain           Post-decoding gain compensation.
+	 *                                            (By default, this is 26.0.)
+	 * @param {Array} options.routingDestination  Custom channel layout.
 	 */
 	function FOADecoder (context, videoElement, options) {
 	  this._isDecoderReady = false;
 	  this._context = context;
 	  this._videoElement = videoElement;
 	  this._decodingMode = 'ambisonic';
+	  
+	  this._baseResourceUrl = HRTF_URL;
+	  this._postGain = POST_GAIN;
+	  this._routingDestination = ROUTING_DESTINATION;
 
-	  var _baseResourceUrl = options.baseResourceUrl || '';
+	  if (options) {
+	    if (options.baseResourceUrl)
+	      this._baseResourceUrl = options.baseResourceUrl;
+
+	    if (options.postGain)
+	      this._postGain = options.postGain;
+
+	    if (options.routingDestination)
+	      this._routingDestination = options.routingDestination;
+	  }
 
 	  // Rearrange speaker data based on |options.baseResourceUrl|.
 	  this._speakerData = [];
 	  for (var i = 0; i < FOASpeakerData.length; ++i) {
 	    this._speakerData.push({
 	      name: FOASpeakerData[i].name,
-	      url: _baseResourceUrl + '/' + FOASpeakerData[i].url,
+	      url: this._baseResourceUrl + '/' + FOASpeakerData[i].url,
 	      coef: FOASpeakerData[i].coef
 	    });
 	  }
@@ -557,15 +653,31 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @return {Promise}
 	 */
 	FOADecoder.prototype.initialize = function () {
+
+	  Omnitone.LOG('Initializing... (mode: ' + this._decodingMode + ')');
+
+	  // Rerouting channels if necessary.
+	  var routingDestinationString = this._routingDestination.toString();
+	  if (routingDestinationString !== ROUTING_DESTINATION.toString()) {
+	    Omnitone.LOG('Rerouting channels ([0,1,2,3] -> [' 
+	      + routingDestinationString + '])');  
+	  }  
+
 	  this._audioElementSource = this._context.createMediaElementSource(
 	    this._videoElement);
+	  this._foaRouter = new FOARouter(this._context, this._routingDestination);
 	  this._foaRotator = new FOARotator(this._context);
 	  this._foaPhaseMatchedFilter = new FOAPhaseMatchedFilter(this._context);
 
-	  this._audioElementSource.connect(this._foaRotator.input);
+	  this._audioElementSource.connect(this._foaRouter.input);
+	  this._foaRouter.output.connect(this._foaRotator.input);
 	  this._foaRotator.output.connect(this._foaPhaseMatchedFilter.input);
 
 	  this._foaVirtualSpeakers = [];
+
+	  // Bypass signal path.
+	  this._bypass = this._context.createGain();
+	  this._audioElementSource.connect(this._bypass);
 
 	  // This returns a promise so developers can use the decoder when it is ready.
 	  var me = this;
@@ -576,23 +688,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	          me._foaVirtualSpeakers[i] = new FOAVirtualSpeaker(me._context, {
 	            coefficients: me._speakerData[i].coef,
 	            IR: buffers.get(me._speakerData[i].name),
-	            gain: POST_GAIN
+	            gain: me._postGain
 	          });
 
 	          me._foaPhaseMatchedFilter.output.connect(
 	            me._foaVirtualSpeakers[i].input);
 	        }
-	        
+
+	        // Set the decoding mode.
+	        me.setMode(me._decodingMode);
 	        me._isDecoderReady = true;
+	        Omnitone.LOG('HRTF IRs are loaded successfully. The decoder is ready.');
+
 	        resolve();
 	      }, reject);
 	  });
-
-	  // Bypass signal path.
-	  this._bypass = this._context.createGain();
-	  this._audioElementSource.connect(this._bypass);
-	  
-	  this.setMode(this._decodingMode);
 	};
 
 	/**
@@ -606,10 +716,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	/**
 	 * Set the decoding mode.
-	 * @param {String} mode               Decoding mode. When the mode is 'plain'
-	 *                                    the decoder produces a plain audio stream
-	 *                                    (non-spatialized). Setting the mode to 
-	 *                                    'ambisonic' activates the decoder.
+	 * @param {String} mode               Decoding mode. When the mode is 'bypass'
+	 *                                    the decoder is disabled and bypass the
+	 *                                    input stream to the output. Setting the
+	 *                                    mode to 'ambisonic' activates the decoder.
+	 *                                    When the mode is 'off', all the
+	 *                                    processing is completely turned off saving
+	 *                                    the CPU power.
 	 */
 	FOADecoder.prototype.setMode = function (mode) {
 	  if (mode === this._decodingMode)
@@ -617,35 +730,42 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  switch (mode) {
 
-	    case 'plain':
-	      this._decodingMode = 'plain';
+	    case 'bypass':
+	      this._decodingMode = 'bypass';
 	      for (var i = 0; i < this._foaVirtualSpeakers.length; ++i)
-	        me._foaVirtualSpeakers[i].disable();
+	        this._foaVirtualSpeakers[i].disable();
 	      this._bypass.connect(this._context.destination);
 	      break;
 
 	    case 'ambisonic':
 	      this._decodingMode = 'ambisonic';
 	      for (var i = 0; i < this._foaVirtualSpeakers.length; ++i)
-	        me._foaVirtualSpeakers[i].enable();
-	      this._bypass.gain.disconnect();
+	        this._foaVirtualSpeakers[i].enable();
+	      this._bypass.disconnect();
 	      break;
-	      
+
+	    case 'off':
+	      this._decodingMode = 'off';
+	      for (var i = 0; i < this._foaVirtualSpeakers.length; ++i)
+	        this._foaVirtualSpeakers[i].disable();
+	      this._bypass.disconnect();
+	      break;
+
 	    default:
-	      return;
 	      break;
 	  }
+
+	  Omnitone.LOG('Decoding mode changed. (' + mode + ')');
 	};
 
 	module.exports = FOADecoder;
 
 
 /***/ },
-/* 6 */
+/* 7 */
 /***/ function(module, exports) {
 
 	/**
-	 * @license
 	 * Copyright 2016 Google Inc. All Rights Reserved.
 	 * Licensed under the Apache License, Version 2.0 (the "License");
 	 * you may not use this file except in compliance with the License.
@@ -660,20 +780,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * limitations under the License.
 	 */
 
-	'use strict';
-
 	/**
-	 * Print buffer loading message.
-	 * @param {any}                       Messages to be printed out.
+	 * @fileOverview Audio buffer loading utility.
 	 */
-	var _print = function () {
-	  window.console.log.apply(window.console, [
-	    '%c[Omnitone:AudioBufferManager]%c ' 
-	      + Array.prototype.slice.call(arguments).join(' '), 
-	    'background: #BBDEFB; color: #FF5722; font-weight: 700',
-	    'font-weight: 400'
-	  ]);
-	};
+
+	'use strict';
 
 	/**
 	 * Streamlined audio file loader supports Promise.
@@ -699,7 +810,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    // Check for duplicates filename and quit if it happens.
 	    if (this._loadingTasks.hasOwnProperty(fileInfo.name)) {
-	      _print('Duplicated filename when loading: ' + fileInfo.name);
+	      Omnitone.LOG('Duplicated filename when loading: ' + fileInfo.name);
 	      return;
 	    }
 
@@ -719,23 +830,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	    if (xhr.status === 200) {
 	      that._context.decodeAudioData(xhr.response,
 	        function (buffer) {
-	          _print('File loaded: ' + fileInfo.url);
+	          // Omnitone.LOG('File loaded: ' + fileInfo.url);
 	          that._done(fileInfo.name, buffer);
 	        },
 	        function (message) {
-	          _print('Decoding failure: '
+	          Omnitone.LOG('Decoding failure: '
 	            + fileInfo.url + ' (' + message + ')');
 	          that._done(fileInfo.name, null);
 	        });
 	    } else {
-	      _print('XHR Error: ' + fileInfo.url + ' (' + xhr.statusText 
+	      Omnitone.LOG('XHR Error: ' + fileInfo.url + ' (' + xhr.statusText 
 	        + ')');
 	      that._done(fileInfo.name, null);
 	    }
 	  };
 
 	  xhr.onerror = function (event) {
-	    _print('XHR Network failure: ' + fileInfo.url);
+	    Omnitone.LOG('XHR Network failure: ' + fileInfo.url);
 	    me._done(fileInfo.name, null);
 	  };
 
@@ -778,11 +889,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 7 */
+/* 8 */
 /***/ function(module, exports) {
 
 	/**
-	 * @license
 	 * Copyright 2016 Google Inc. All Rights Reserved.
 	 * Licensed under the Apache License, Version 2.0 (the "License");
 	 * you may not use this file except in compliance with the License.
@@ -798,18 +908,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 
 	/**
-	NOTES
-	=====
-	sampling rate: 48kHz
-	bit depth: 16
-	length: 512 samples
-	normalization: -3.76 dBFS peak
-	tapering: half-hann (128 samples)
-	subject: gorzel@
-	microphones: Audio Technica BMC-10 (open ear canal)
-	loudspeakers: Equator D5
-	venue: Interactive Media Lab, TFTV, University of York, UK
-	remarks: Low frequencies re-modelled below 500Hz.
+
+	This is from -
+	https://github.com/google/spatial-media/tree/master/support/hrtfs/cube
 
 	FOA Decoding coefficients 
 	=========================
@@ -824,7 +925,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	8   -35.26  135   0.125000000000000 0.216494623077544  -0.216529812402237 -0.216494623077545
 	*/
 
-	// TODO: why these are different from the coefs above?
 	var FOASpeakerData = [{
 	  name: 'E35.26_A45',  // <0.5774,0.5774,-0.5774>
 	  url: 'E35.26_A45_D1.4.wav',
