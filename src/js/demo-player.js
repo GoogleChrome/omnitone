@@ -161,7 +161,7 @@ var DemoPlayer = (function () {
     glContext.enable(glContext.CULL_FACE);
 
     vrPanoramicView = new VRPanorama(glContext);
-    vrPanoramicView.isStereo = true;
+    // vrPanoramicView.isStereo = true;
     vrPanoramicView.yawOffset = GL_YAW_OFFSET;
 
     videoElement = document.createElement('video');
@@ -180,12 +180,18 @@ var DemoPlayer = (function () {
       videoElement.src = playerOptions.video_url_1080_remote;
     }
 
+    if (playerOptions.local_video_test) {
+      videoElement.src = playerOptions.local_video_test;
+    }
+
     console.log('[DEMO-PLAYER] video src: ', videoElement.src);
 
     // Safari's AAC decoder has different channel layout.
     if (systemInfo.browser !== 'Safari') {
       audioContext = new AudioContext();
-      foaDecoder = Omnitone.createFOADecoder(audioContext, videoElement);
+      foaDecoder = Omnitone.createFOADecoder(audioContext, videoElement, {
+        postGain: 60
+      });
     } else {
       audioContext = new webkitAudioContext();
       foaDecoder = Omnitone.createFOADecoder(audioContext, videoElement, {
