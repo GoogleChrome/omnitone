@@ -25,6 +25,7 @@
 var Omnitone = {};
 
 // Internal dependencies.
+var AudioBufferManager = require('./audiobuffer-manager.js');
 var FOARouter = require('./foa-router.js');
 var FOARotator = require('./foa-rotator.js');
 var FOAPhaseMatchedFilter = require('./foa-phase-matched-filter.js');
@@ -49,6 +50,23 @@ Omnitone.LOG = function () {
     'color: #AAA'
   ]);
 };
+
+
+/**
+ * Load audio buffers based on the speaker configuration map data.
+ * @param {AudioContext} context      The associated AudioContext.
+ * @param {Map} speakerData           The speaker configuration map data.
+ *                                    { name, url, coef }
+ * @return {Promise}
+ */
+Omnitone.loadAudioBuffers = function (context, speakerData) {
+  return new Promise(function (resolve, reject) {
+    new AudioBufferManager(context, speakerData, function (buffers) {
+      resolve(buffers);
+    }, reject);
+  });
+};
+
 
 /**
  * Create an instance of FOA Router. For parameters, refer the definition of

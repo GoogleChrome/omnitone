@@ -59,21 +59,21 @@ function FOAPhaseMatchedFilter (context) {
   this._splitterLow = this._context.createChannelSplitter(4);
   this._splitterHigh = this._context.createChannelSplitter(4);
   this._gainHighW = this._context.createGain();
-  this._gainHighX = this._context.createGain();
   this._gainHighY = this._context.createGain();
   this._gainHighZ = this._context.createGain();
+  this._gainHighX = this._context.createGain();
   this._merger = this._context.createChannelMerger(4);
 
   this._input.connect(this._hpf);
   this._hpf.connect(this._splitterHigh);
   this._splitterHigh.connect(this._gainHighW, 0);
-  this._splitterHigh.connect(this._gainHighX, 1);
-  this._splitterHigh.connect(this._gainHighY, 2);
-  this._splitterHigh.connect(this._gainHighZ, 3);
+  this._splitterHigh.connect(this._gainHighY, 1);
+  this._splitterHigh.connect(this._gainHighZ, 2);
+  this._splitterHigh.connect(this._gainHighX, 3);
   this._gainHighW.connect(this._merger, 0, 0);
-  this._gainHighX.connect(this._merger, 0, 1);
-  this._gainHighY.connect(this._merger, 0, 2);
-  this._gainHighZ.connect(this._merger, 0, 3);
+  this._gainHighY.connect(this._merger, 0, 1);
+  this._gainHighZ.connect(this._merger, 0, 2);
+  this._gainHighX.connect(this._merger, 0, 3);
 
   this._input.connect(this._lpf);
   this._lpf.connect(this._splitterLow);
@@ -86,9 +86,9 @@ function FOAPhaseMatchedFilter (context) {
   // Inverting sign is necessary as the low-passed and high-passed portion are
   // out-of-phase after the filtering.
   this._gainHighW.gain.value = -1 * COEFFICIENTS[0];
-  this._gainHighX.gain.value = -1 * COEFFICIENTS[1];
-  this._gainHighY.gain.value = -1 * COEFFICIENTS[2];
-  this._gainHighZ.gain.value = -1 * COEFFICIENTS[3];
+  this._gainHighY.gain.value = -1 * COEFFICIENTS[1];
+  this._gainHighZ.gain.value = -1 * COEFFICIENTS[2];
+  this._gainHighX.gain.value = -1 * COEFFICIENTS[3];
 
   // Input/output Proxy.
   this.input = this._input;

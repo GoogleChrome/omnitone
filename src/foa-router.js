@@ -49,6 +49,8 @@ function FOARouter (context, channelMap) {
 }
 
 FOARouter.prototype.setchannelMap = function (channelMap) {
+  if (!channelMap)
+    return;
 
   this._channelMap = channelMap;
   this._splitter.disconnect();

@@ -32,7 +32,10 @@
       audioElement.src = 'resources/4ch_B_FuMaNorm_FuMaOrd_speech.wav';
 
       // Create a decoder.
-      var decoder = Omnitone.createFOADecoder(audioContext, audioElement);
+      var decoder = Omnitone.createFOADecoder(audioContext, audioElement, {
+        // The example audio is in the FuMa ordering (W,X,Y,Z).
+        channelMap: [0, 2, 3, 1]
+      });
 
       // Assign the action to the button.
       var btn = document.getElementById('eBtn');

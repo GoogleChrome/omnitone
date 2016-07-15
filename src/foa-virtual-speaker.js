@@ -28,7 +28,7 @@
  *              destination.
  * @param {AudioContext} context        Associated AudioContext.
  * @param {Object} options              Options for speaker.
- * @param {Array} options.coefficients  Decoding coefficients for (W,X,Y,Z).
+ * @param {Array} options.coefficients  Decoding coefficients for (W,Y,Z,X).
  * @param {AudioBuffer} options.IR      Stereo IR buffer for HRTF convolution.
  * @param {Number} options.gain         Post-gain for the speaker.
  */
@@ -42,20 +42,20 @@ function FOAVirtualSpeaker (context, options) {
 
   this._input = this._context.createChannelSplitter(4);
   this._cW = this._context.createGain();
-  this._cX = this._context.createGain();
   this._cY = this._context.createGain();
   this._cZ = this._context.createGain();
+  this._cX = this._context.createGain();
   this._convolver = this._context.createConvolver();
   this._gain = this._context.createGain();
 
   this._input.connect(this._cW, 0);
-  this._input.connect(this._cX, 1);
-  this._input.connect(this._cY, 2);
-  this._input.connect(this._cZ, 3);
+  this._input.connect(this._cY, 1);
+  this._input.connect(this._cZ, 2);
+  this._input.connect(this._cX, 3);
   this._cW.connect(this._convolver);
-  this._cX.connect(this._convolver);
   this._cY.connect(this._convolver);
   this._cZ.connect(this._convolver);
+  this._cX.connect(this._convolver);
   this._convolver.connect(this._gain);
   this._gain.connect(this._context.destination);
 
@@ -66,9 +66,9 @@ function FOAVirtualSpeaker (context, options) {
 
   // Set gain coefficients for FOA ambisonic streams.
   this._cW.gain.value = options.coefficients[0];
-  this._cX.gain.value = options.coefficients[1];
-  this._cY.gain.value = options.coefficients[2];
-  this._cZ.gain.value = options.coefficients[3];
+  this._cY.gain.value = options.coefficients[1];
+  this._cZ.gain.value = options.coefficients[2];
+  this._cX.gain.value = options.coefficients[3];
 
   // Input proxy. Output directly connects to the destination.
   this.input = this._input;
