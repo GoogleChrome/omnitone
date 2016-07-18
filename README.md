@@ -40,7 +40,7 @@ The decoder requires an `<audio>` or `<video>` element and `AudioContext`. The f
 var audioElement = document.createElement('audio');
 audioElement.src = 'resources/4ch-spatial-audio-file.wav';
 
-// Create an AudioContext and an SAR decoder.
+// Create an AudioContext and an Omnitone decoder.
 var audioContext = new AudioContext();
 var decoder = Omnitone.createFOADecoder(audioContext, audioElement);
 
@@ -71,13 +71,31 @@ decoder.setMode('bypass');
 decoder.setMode('ambisonic');
 
 // Disable encoding completely. (audio processing disabled)
-decoder.setMode('none');
+decoder.setMode('off');
 ```
 
 
 ## Advanced Usage
 
 Omnitone also provides various building blocks for the first-order-ambisonic decoding and the binaural rendering. The `FOADecoder` is just a ready-made object built with those components. You can create them and connect together build your own decoding mechanism.
+
+### FOADecoder
+
+`FOADecoder` is a ready-made FOA decoder and binaural renderer. If you need to use the spatialization without any custom configuration, this is the simplest way of using Omnitone.
+
+```js
+var decoder = Omnitone.createFOADecoder(context, element, {
+  HRTFSetUrl: 'YOUR_HRTF_SET_URL',
+  postGainDB: 30,
+  channelMap: [0, 1, 2, 3]
+});
+```
+
+* context (AudioContext): an AudioContext object.
+* element (MediaElement): A target video or audio element for streaming.
+* options.HRTFSetUrl (String): Base URL for the cube HRTF sets.
+* options.postGainDB (Number): Post-decoding gain compensation in dB.
+* options.channelMap (Array): A custom channel map.
 
 ### FOARouter
 
