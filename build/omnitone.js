@@ -751,24 +751,30 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * limitations under the License.
 	 */
 
+
 	/**
 	 * @fileOverview Omnitone FOA decoder.
 	 */
 
 	'use strict';
 
-	// Post gain compensation value, empirically determined.
-	var POST_GAIN = 26.0;
-	var HRTFSET_URL = 'https://raw.githubusercontent.com/google/spatial-media/master/support/hrtfs/cube/';
-	var CHANNEL_MAP = [0, 1, 2, 3];
-
-	// Dependencies.
 	var AudioBufferManager = __webpack_require__(2);
 	var FOARouter = __webpack_require__(3);
 	var FOARotator = __webpack_require__(4);
 	var FOAPhaseMatchedFilter = __webpack_require__(5);
 	var FOAVirtualSpeaker = __webpack_require__(6);
 	var FOASpeakerData = __webpack_require__(8);
+
+
+	// By default, Omnitone fetches IR from the spatial media repository.
+	var HRTFSET_URL = 'https://raw.githubusercontent.com/google/spatial-media/master/support/hrtfs/cube/';
+
+	// Post gain compensation value, empirically determined.
+	var POST_GAIN_DB = 30;
+
+	// The default channel map. This assumes the media uses ACN channel ordering.
+	var CHANNEL_MAP = [0, 1, 2, 3];
+
 
 	/**
 	 * @class Omnitone FOA decoder class.
@@ -777,8 +783,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *                                    streaming.
 	 * @param {Object} options
 	 * @param {String} options.HRTFSetUrl Base URL for the cube HRTF sets.
-	 * @param {Number} options.postGain   Post-decoding gain compensation.
-	 *                                    (By default, this is 26.0.)
+	 * @param {Number} options.postGainDB Post-decoding gain compensation in dB.
 	 * @param {Array} options.channelMap  Custom channel map.
 	 */
 	function FOADecoder (context, videoElement, options) {
@@ -786,14 +791,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  this._context = context;
 	  this._videoElement = videoElement;
 	  this._decodingMode = 'ambisonic';
-	  
-	  this._postGain = POST_GAIN;
+
+	  this._postGainDB = POST_GAIN_DB;
 	  this._HRTFSetUrl = HRTFSET_URL;
 	  this._channelMap = CHANNEL_MAP;
 
 	  if (options) {
-	    if (options.postGain)
-	      this._postGain = options.postGain;
+	    if (options.postGainDB)
+	      this._postGainDB = options.postGainDB;
 
 	    if (options.HRTFSetUrl)
 	      this._HRTFSetUrl = options.HRTFSetUrl;
@@ -824,9 +829,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  // Rerouting channels if necessary.
 	  var channelMapString = this._channelMap.toString();
 	  if (channelMapString !== CHANNEL_MAP.toString()) {
-	    Omnitone.LOG('Remapping channels ([0,1,2,3] -> [' 
-	      + channelMapString + '])');  
-	  }  
+	    Omnitone.LOG('Remapping channels ([0,1,2,3] -> ['
+	      + channelMapString + '])');
+	  }
 
 	  this._audioElementSource = this._context.createMediaElementSource(
 	    this._videoElement);
@@ -844,6 +849,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  this._bypass = this._context.createGain();
 	  this._audioElementSource.connect(this._bypass);
 
+	  // Get the linear amplitude from the post gain option, which is in decibel.
+	  var postGainLinear = Math.pow(10, this._postGainDB/20);
+	  Omnitone.LOG('Gain compensation: ' + postGainLinear + ' (' + this._postGainDB
+	    + 'dB)');
+
 	  // This returns a promise so developers can use the decoder when it is ready.
 	  var me = this;
 	  return new Promise(function (resolve, reject) {
@@ -853,7 +863,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	          me._foaVirtualSpeakers[i] = new FOAVirtualSpeaker(me._context, {
 	            coefficients: me._speakerData[i].coef,
 	            IR: buffers.get(me._speakerData[i].name),
-	            gain: me._postGain
+	            gain: postGainLinear
 	          });
 
 	          me._foaPhaseMatchedFilter.output.connect(
