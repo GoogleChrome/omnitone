@@ -80,13 +80,13 @@ function FOADecoder (context, videoElement, options) {
  * @return {Promise}
  */
 FOADecoder.prototype.initialize = function () {
-
+  Omnitone.LOG('Version: ' + Omnitone.VERSION);
   Omnitone.LOG('Initializing... (mode: ' + this._decodingMode + ')');
 
   // Rerouting channels if necessary.
   var channelMapString = this._channelMap.toString();
   if (channelMapString !== CHANNEL_MAP.toString()) {
-    Omnitone.LOG('Rerouting channels ([0,1,2,3] -> [' 
+    Omnitone.LOG('Remapping channels ([0,1,2,3] -> [' 
       + channelMapString + '])');  
   }  
 

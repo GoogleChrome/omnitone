@@ -78,6 +78,7 @@ AudioBufferManager.prototype._loadAudioFile = function (fileInfo) {
     }
   };
 
+  // TODO: fetch local resources if XHR fails.
   xhr.onerror = function (event) {
     Omnitone.LOG('XHR Network failure: ' + fileInfo.url);
     me._done(fileInfo.name, null);

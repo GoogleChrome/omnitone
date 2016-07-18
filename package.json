@@ -1,6 +1,6 @@
 {
   "name": "omnitone",
-  "version": "0.1.2",
+  "version": "0.1.4",
   "description": "Spatial Audio Decoder in Web Audio API",
   "main": "src/main.js",
   "keywords": [

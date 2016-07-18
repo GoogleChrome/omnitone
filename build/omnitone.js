@@ -107,17 +107,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	var Omnitone = {};
 
 	// Internal dependencies.
-	var FOARouter = __webpack_require__(2);
-	var FOARotator = __webpack_require__(3);
-	var FOAPhaseMatchedFilter = __webpack_require__(4);
-	var FOAVirtualSpeaker = __webpack_require__(5);
-	var FOADecoder = __webpack_require__(6);
+	var AudioBufferManager = __webpack_require__(2);
+	var FOARouter = __webpack_require__(3);
+	var FOARotator = __webpack_require__(4);
+	var FOAPhaseMatchedFilter = __webpack_require__(5);
+	var FOAVirtualSpeaker = __webpack_require__(6);
+	var FOADecoder = __webpack_require__(7);
 
 	/**
 	 * Omnitone library version
 	 * @type {String}
 	 */
-	Omnitone.VERSION = '0.1.2';
+	Omnitone.VERSION = '0.1.4';
 
 	// Omnitone library-wide log utility.
 	// @param {any}                       Messages to be printed out.
@@ -131,6 +132,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	    'color: #AAA'
 	  ]);
 	};
+
+
+	/**
+	 * Load audio buffers based on the speaker configuration map data.
+	 * @param {AudioContext} context      The associated AudioContext.
+	 * @param {Map} speakerData           The speaker configuration map data.
+	 *                                    { name, url, coef }
+	 * @return {Promise}
+	 */
+	Omnitone.loadAudioBuffers = function (context, speakerData) {
+	  return new Promise(function (resolve, reject) {
+	    new AudioBufferManager(context, speakerData, function (buffers) {
+	      resolve(buffers);
+	    }, reject);
+	  });
+	};
+
 
 	/**
 	 * Create an instance of FOA Router. For parameters, refer the definition of
@@ -207,6 +225,134 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 
 	/**
+	 * @fileOverview Audio buffer loading utility.
+	 */
+
+	'use strict';
+
+	/**
+	 * Streamlined audio file loader supports Promise.
+	 * @param {Object} context          AudioContext
+	 * @param {Object} audioFileData    Audio file info as [{name, url}]
+	 * @param {Function} resolve        Resolution handler for promise.
+	 * @param {Function} reject         Rejection handler for promise.
+	 * @param {Function} progress       Progress event handler.
+	 */
+	function AudioBufferManager(context, audioFileData, resolve, reject, progress) {
+	  this._context = context;
+
+	  this._buffers = new Map();
+	  this._loadingTasks = {};
+
+	  this._resolve = resolve;
+	  this._reject = reject;
+	  this._progress = progress;
+
+	  // Iterating file loading.
+	  for (var i = 0; i < audioFileData.length; i++) {
+	    var fileInfo = audioFileData[i];
+
+	    // Check for duplicates filename and quit if it happens.
+	    if (this._loadingTasks.hasOwnProperty(fileInfo.name)) {
+	      Omnitone.LOG('Duplicated filename when loading: ' + fileInfo.name);
+	      return;
+	    }
+
+	    // Mark it as pending (0)
+	    this._loadingTasks[fileInfo.name] = 0;
+	    this._loadAudioFile(fileInfo);
+	  }
+	}
+
+	AudioBufferManager.prototype._loadAudioFile = function (fileInfo) {
+	  var xhr = new XMLHttpRequest();
+	  xhr.open('GET', fileInfo.url);
+	  xhr.responseType = 'arraybuffer';
+
+	  var that = this;
+	  xhr.onload = function () {
+	    if (xhr.status === 200) {
+	      that._context.decodeAudioData(xhr.response,
+	        function (buffer) {
+	          // Omnitone.LOG('File loaded: ' + fileInfo.url);
+	          that._done(fileInfo.name, buffer);
+	        },
+	        function (message) {
+	          Omnitone.LOG('Decoding failure: '
+	            + fileInfo.url + ' (' + message + ')');
+	          that._done(fileInfo.name, null);
+	        });
+	    } else {
+	      Omnitone.LOG('XHR Error: ' + fileInfo.url + ' (' + xhr.statusText 
+	        + ')');
+	      that._done(fileInfo.name, null);
+	    }
+	  };
+
+	  // TODO: fetch local resources if XHR fails.
+	  xhr.onerror = function (event) {
+	    Omnitone.LOG('XHR Network failure: ' + fileInfo.url);
+	    me._done(fileInfo.name, null);
+	  };
+
+	  xhr.send();
+	};
+
+	AudioBufferManager.prototype._done = function (filename, buffer) {
+	  // Label the loading task.
+	  this._loadingTasks[filename] = buffer !== null ? 'loaded' : 'failed';
+
+	  // A failed task will be a null buffer.
+	  this._buffers.set(filename, buffer);
+
+	  this._updateProgress(filename);
+	};
+
+	AudioBufferManager.prototype._updateProgress = function (filename) {
+	  var numberOfFinishedTasks = 0, numberOfFailedTask = 0;
+	  var numberOfTasks = 0;
+
+	  for (var task in this._loadingTasks) {
+	    numberOfTasks++;
+	    if (this._loadingTasks[task] === 'loaded')
+	      numberOfFinishedTasks++;
+	    else if (this._loadingTasks[task] === 'failed')
+	      numberOfFailedTask++;
+	  }
+
+	  if (typeof this._progress === 'function')
+	    this._progress(filename, numberOfFinishedTasks, numberOfTasks);
+
+	  if (numberOfFinishedTasks === numberOfTasks)
+	    this._resolve(this._buffers);
+
+	  if (numberOfFinishedTasks + numberOfFailedTask === numberOfTasks)
+	    this._reject(this._buffers);
+	};
+
+	module.exports = AudioBufferManager;
+
+
+/***/ },
+/* 3 */
+/***/ function(module, exports) {
+
+	/**
+	 * Copyright 2016 Google Inc. All Rights Reserved.
+	 * Licensed under the Apache License, Version 2.0 (the "License");
+	 * you may not use this file except in compliance with the License.
+	 * You may obtain a copy of the License at
+	 *
+	 *     http://www.apache.org/licenses/LICENSE-2.0
+	 *
+	 * Unless required by applicable law or agreed to in writing, software
+	 * distributed under the License is distributed on an "AS IS" BASIS,
+	 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	 * See the License for the specific language governing permissions and
+	 * limitations under the License.
+	 */
+
+	/**
 	 * @fileOverview An audio channel re-router to resolve different channel layouts
 	 *               between various platforms.
 	 */
@@ -242,6 +388,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	FOARouter.prototype.setchannelMap = function (channelMap) {
+	  if (!channelMap)
+	    return;
 
 	  this._channelMap = channelMap;
 	  this._splitter.disconnect();
@@ -255,7 +403,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 3 */
+/* 4 */
 /***/ function(module, exports) {
 
 	/**
@@ -273,11 +421,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * limitations under the License.
 	 */
 
+	'use strict';
+
+
 	/**
 	 * @fileOverview Sound field rotator for first-order-ambisonics decoding.
 	 */
 
-	'use strict';
 
 	/**
 	 * @class First-order-ambisonic decoder based on gain node network.
@@ -287,9 +437,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  this._context = context;
 
 	  this._splitter = this._context.createChannelSplitter(4);
-	  this._inX = this._context.createGain();
 	  this._inY = this._context.createGain();
 	  this._inZ = this._context.createGain();
+	  this._inX = this._context.createGain();
 	  this._m0 = this._context.createGain();
 	  this._m1 = this._context.createGain();
 	  this._m2 = this._context.createGain();
@@ -299,48 +449,48 @@ return /******/ (function(modules) { // webpackBootstrap
 	  this._m6 = this._context.createGain();
 	  this._m7 = this._context.createGain();
 	  this._m8 = this._context.createGain();
-	  this._outX = this._context.createGain();
 	  this._outY = this._context.createGain();
 	  this._outZ = this._context.createGain();
+	  this._outX = this._context.createGain();
 	  this._merger = this._context.createChannelMerger(4);
 
-	  // Transform 1: audio space to world space.
-	  this._splitter.connect(this._inZ, 1); // X (1) -> -Z
-	  this._splitter.connect(this._inX, 2); // Y (2) -> -X
-	  this._splitter.connect(this._inY, 3); // Z (3) ->  Y
+	    // ACN channel ordering: [1, 2, 3] => [-Y, Z, -X]
+	  this._splitter.connect(this._inY, 1); // Y (from channel 1)
+	  this._splitter.connect(this._inZ, 2); // Z (from channel 2)
+	  this._splitter.connect(this._inX, 3); // X (from channel 3)
+	  this._inY.gain.value = -1;
 	  this._inX.gain.value = -1;
-	  this._inZ.gain.value = -1;
 
-	  // Transform 2: 3x3 rotation matrix.
-	  // |X|   | m0  m3  m6 |   | X * m0 + Y * m3 + Z * m6 |   | X |
-	  // |Y| * | m1  m4  m7 | = | X * m1 + Y * m4 + Z * m7 | = | Y |
-	  // |Z|   | m2  m5  m8 |   | X * m2 + Y * m5 + Z * m8 |   | Z |
-	  this._inX.connect(this._m0);
-	  this._inX.connect(this._m1);
-	  this._inX.connect(this._m2);
-	  this._inY.connect(this._m3);
-	  this._inY.connect(this._m4);
-	  this._inY.connect(this._m5);
-	  this._inZ.connect(this._m6);
-	  this._inZ.connect(this._m7);
-	  this._inZ.connect(this._m8);
-	  this._m0.connect(this._outX);
-	  this._m1.connect(this._outY);
-	  this._m2.connect(this._outZ);
-	  this._m3.connect(this._outX);
-	  this._m4.connect(this._outY);
-	  this._m5.connect(this._outZ);
-	  this._m6.connect(this._outX);
-	  this._m7.connect(this._outY);
-	  this._m8.connect(this._outZ);
+	  // Apply the rotation in the world space.
+	  // |Y|   | m0  m3  m6 |   | Y * m0 + Z * m3 + X * m6 |   | Yr |
+	  // |Z| * | m1  m4  m7 | = | Y * m1 + Z * m4 + X * m7 | = | Zr |
+	  // |X|   | m2  m5  m8 |   | Y * m2 + Z * m5 + X * m8 |   | Xr |
+	  this._inY.connect(this._m0);
+	  this._inY.connect(this._m1);
+	  this._inY.connect(this._m2);
+	  this._inZ.connect(this._m3);
+	  this._inZ.connect(this._m4);
+	  this._inZ.connect(this._m5);
+	  this._inX.connect(this._m6);
+	  this._inX.connect(this._m7);
+	  this._inX.connect(this._m8);
+	  this._m0.connect(this._outY);
+	  this._m1.connect(this._outZ);
+	  this._m2.connect(this._outX);
+	  this._m3.connect(this._outY);
+	  this._m4.connect(this._outZ);
+	  this._m5.connect(this._outX);
+	  this._m6.connect(this._outY);
+	  this._m7.connect(this._outZ);
+	  this._m8.connect(this._outX);
 
 	  // Transform 3: world space to audio space.
-	  this._splitter.connect(this._merger, 0, 0); // W -> W (0)
-	  this._outX.connect(this._merger, 0, 2); // outX -> -Y (2)
-	  this._outY.connect(this._merger, 0, 3); // outY ->  Z (3)
-	  this._outZ.connect(this._merger, 0, 1); // outZ -> -X (1)
+	  this._splitter.connect(this._merger, 0, 0); // W -> W (to channel 0)
+	  this._outY.connect(this._merger, 0, 1); // Y (to channel 1)
+	  this._outZ.connect(this._merger, 0, 2); // Z (to channel 2)
+	  this._outX.connect(this._merger, 0, 3); // X (to channel 3)
+	  this._outY.gain.value = -1;
 	  this._outX.gain.value = -1;
-	  this._outZ.gain.value = -1;
 
 	  this.setRotationMatrix(new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]));
 
@@ -348,6 +498,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  this.input = this._splitter;
 	  this.output = this._merger;
 	}
+
 
 	/**
 	 * Set 3x3 matrix for soundfield rotation.
@@ -366,11 +517,26 @@ return /******/ (function(modules) { // webpackBootstrap
 	  this._m8.gain.value = rotationMatrix[8];
 	};
 
+
+	/**
+	 * Returns the current rotation matrix.
+	 * @return {Array}                  A 3x3 matrix of soundfield rotation. The
+	 *                                  matrix is in the row-major representation.
+	 */
+	FOARotator.prototype.getRotationMatrix = function () {
+	  return [
+	    this._m0.gain.value, this._m1.gain.value, this._m2.gain.value,
+	    this._m3.gain.value, this._m4.gain.value, this._m5.gain.value,
+	    this._m6.gain.value, this._m7.gain.value, this._m8.gain.value
+	  ];
+	};
+
+
 	module.exports = FOARotator;
 
 
 /***/ },
-/* 4 */
+/* 5 */
 /***/ function(module, exports) {
 
 	/**
@@ -434,21 +600,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	  this._splitterLow = this._context.createChannelSplitter(4);
 	  this._splitterHigh = this._context.createChannelSplitter(4);
 	  this._gainHighW = this._context.createGain();
-	  this._gainHighX = this._context.createGain();
 	  this._gainHighY = this._context.createGain();
 	  this._gainHighZ = this._context.createGain();
+	  this._gainHighX = this._context.createGain();
 	  this._merger = this._context.createChannelMerger(4);
 
 	  this._input.connect(this._hpf);
 	  this._hpf.connect(this._splitterHigh);
 	  this._splitterHigh.connect(this._gainHighW, 0);
-	  this._splitterHigh.connect(this._gainHighX, 1);
-	  this._splitterHigh.connect(this._gainHighY, 2);
-	  this._splitterHigh.connect(this._gainHighZ, 3);
+	  this._splitterHigh.connect(this._gainHighY, 1);
+	  this._splitterHigh.connect(this._gainHighZ, 2);
+	  this._splitterHigh.connect(this._gainHighX, 3);
 	  this._gainHighW.connect(this._merger, 0, 0);
-	  this._gainHighX.connect(this._merger, 0, 1);
-	  this._gainHighY.connect(this._merger, 0, 2);
-	  this._gainHighZ.connect(this._merger, 0, 3);
+	  this._gainHighY.connect(this._merger, 0, 1);
+	  this._gainHighZ.connect(this._merger, 0, 2);
+	  this._gainHighX.connect(this._merger, 0, 3);
 
 	  this._input.connect(this._lpf);
 	  this._lpf.connect(this._splitterLow);
@@ -461,9 +627,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  // Inverting sign is necessary as the low-passed and high-passed portion are
 	  // out-of-phase after the filtering.
 	  this._gainHighW.gain.value = -1 * COEFFICIENTS[0];
-	  this._gainHighX.gain.value = -1 * COEFFICIENTS[1];
-	  this._gainHighY.gain.value = -1 * COEFFICIENTS[2];
-	  this._gainHighZ.gain.value = -1 * COEFFICIENTS[3];
+	  this._gainHighY.gain.value = -1 * COEFFICIENTS[1];
+	  this._gainHighZ.gain.value = -1 * COEFFICIENTS[2];
+	  this._gainHighX.gain.value = -1 * COEFFICIENTS[3];
 
 	  // Input/output Proxy.
 	  this.input = this._input;
@@ -474,7 +640,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 5 */
+/* 6 */
 /***/ function(module, exports) {
 
 	/**
@@ -507,7 +673,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *              destination.
 	 * @param {AudioContext} context        Associated AudioContext.
 	 * @param {Object} options              Options for speaker.
-	 * @param {Array} options.coefficients  Decoding coefficients for (W,X,Y,Z).
+	 * @param {Array} options.coefficients  Decoding coefficients for (W,Y,Z,X).
 	 * @param {AudioBuffer} options.IR      Stereo IR buffer for HRTF convolution.
 	 * @param {Number} options.gain         Post-gain for the speaker.
 	 */
@@ -521,20 +687,20 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  this._input = this._context.createChannelSplitter(4);
 	  this._cW = this._context.createGain();
-	  this._cX = this._context.createGain();
 	  this._cY = this._context.createGain();
 	  this._cZ = this._context.createGain();
+	  this._cX = this._context.createGain();
 	  this._convolver = this._context.createConvolver();
 	  this._gain = this._context.createGain();
 
 	  this._input.connect(this._cW, 0);
-	  this._input.connect(this._cX, 1);
-	  this._input.connect(this._cY, 2);
-	  this._input.connect(this._cZ, 3);
+	  this._input.connect(this._cY, 1);
+	  this._input.connect(this._cZ, 2);
+	  this._input.connect(this._cX, 3);
 	  this._cW.connect(this._convolver);
-	  this._cX.connect(this._convolver);
 	  this._cY.connect(this._convolver);
 	  this._cZ.connect(this._convolver);
+	  this._cX.connect(this._convolver);
 	  this._convolver.connect(this._gain);
 	  this._gain.connect(this._context.destination);
 
@@ -545,9 +711,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  // Set gain coefficients for FOA ambisonic streams.
 	  this._cW.gain.value = options.coefficients[0];
-	  this._cX.gain.value = options.coefficients[1];
-	  this._cY.gain.value = options.coefficients[2];
-	  this._cZ.gain.value = options.coefficients[3];
+	  this._cY.gain.value = options.coefficients[1];
+	  this._cZ.gain.value = options.coefficients[2];
+	  this._cX.gain.value = options.coefficients[3];
 
 	  // Input proxy. Output directly connects to the destination.
 	  this.input = this._input;
@@ -567,7 +733,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 6 */
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -597,11 +763,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	var CHANNEL_MAP = [0, 1, 2, 3];
 
 	// Dependencies.
-	var AudioBufferManager = __webpack_require__(7);
-	var FOARouter = __webpack_require__(2);
-	var FOARotator = __webpack_require__(3);
-	var FOAPhaseMatchedFilter = __webpack_require__(4);
-	var FOAVirtualSpeaker = __webpack_require__(5);
+	var AudioBufferManager = __webpack_require__(2);
+	var FOARouter = __webpack_require__(3);
+	var FOARotator = __webpack_require__(4);
+	var FOAPhaseMatchedFilter = __webpack_require__(5);
+	var FOAVirtualSpeaker = __webpack_require__(6);
 	var FOASpeakerData = __webpack_require__(8);
 
 	/**
@@ -652,13 +818,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @return {Promise}
 	 */
 	FOADecoder.prototype.initialize = function () {
-
+	  Omnitone.LOG('Version: ' + Omnitone.VERSION);
 	  Omnitone.LOG('Initializing... (mode: ' + this._decodingMode + ')');
 
 	  // Rerouting channels if necessary.
 	  var channelMapString = this._channelMap.toString();
 	  if (channelMapString !== CHANNEL_MAP.toString()) {
-	    Omnitone.LOG('Rerouting channels ([0,1,2,3] -> [' 
+	    Omnitone.LOG('Remapping channels ([0,1,2,3] -> [' 
 	      + channelMapString + '])');  
 	  }  
 
@@ -761,133 +927,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 7 */
-/***/ function(module, exports) {
-
-	/**
-	 * Copyright 2016 Google Inc. All Rights Reserved.
-	 * Licensed under the Apache License, Version 2.0 (the "License");
-	 * you may not use this file except in compliance with the License.
-	 * You may obtain a copy of the License at
-	 *
-	 *     http://www.apache.org/licenses/LICENSE-2.0
-	 *
-	 * Unless required by applicable law or agreed to in writing, software
-	 * distributed under the License is distributed on an "AS IS" BASIS,
-	 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-	 * See the License for the specific language governing permissions and
-	 * limitations under the License.
-	 */
-
-	/**
-	 * @fileOverview Audio buffer loading utility.
-	 */
-
-	'use strict';
-
-	/**
-	 * Streamlined audio file loader supports Promise.
-	 * @param {Object} context          AudioContext
-	 * @param {Object} audioFileData    Audio file info as [{name, url}]
-	 * @param {Function} resolve        Resolution handler for promise.
-	 * @param {Function} reject         Rejection handler for promise.
-	 * @param {Function} progress       Progress event handler.
-	 */
-	function AudioBufferManager(context, audioFileData, resolve, reject, progress) {
-	  this._context = context;
-
-	  this._buffers = new Map();
-	  this._loadingTasks = {};
-
-	  this._resolve = resolve;
-	  this._reject = reject;
-	  this._progress = progress;
-
-	  // Iterating file loading.
-	  for (var i = 0; i < audioFileData.length; i++) {
-	    var fileInfo = audioFileData[i];
-
-	    // Check for duplicates filename and quit if it happens.
-	    if (this._loadingTasks.hasOwnProperty(fileInfo.name)) {
-	      Omnitone.LOG('Duplicated filename when loading: ' + fileInfo.name);
-	      return;
-	    }
-
-	    // Mark it as pending (0)
-	    this._loadingTasks[fileInfo.name] = 0;
-	    this._loadAudioFile(fileInfo);
-	  }
-	}
-
-	AudioBufferManager.prototype._loadAudioFile = function (fileInfo) {
-	  var xhr = new XMLHttpRequest();
-	  xhr.open('GET', fileInfo.url);
-	  xhr.responseType = 'arraybuffer';
-
-	  var that = this;
-	  xhr.onload = function () {
-	    if (xhr.status === 200) {
-	      that._context.decodeAudioData(xhr.response,
-	        function (buffer) {
-	          // Omnitone.LOG('File loaded: ' + fileInfo.url);
-	          that._done(fileInfo.name, buffer);
-	        },
-	        function (message) {
-	          Omnitone.LOG('Decoding failure: '
-	            + fileInfo.url + ' (' + message + ')');
-	          that._done(fileInfo.name, null);
-	        });
-	    } else {
-	      Omnitone.LOG('XHR Error: ' + fileInfo.url + ' (' + xhr.statusText 
-	        + ')');
-	      that._done(fileInfo.name, null);
-	    }
-	  };
-
-	  xhr.onerror = function (event) {
-	    Omnitone.LOG('XHR Network failure: ' + fileInfo.url);
-	    me._done(fileInfo.name, null);
-	  };
-
-	  xhr.send();
-	};
-
-	AudioBufferManager.prototype._done = function (filename, buffer) {
-	  // Label the loading task.
-	  this._loadingTasks[filename] = buffer !== null ? 'loaded' : 'failed';
-
-	  // A failed task will be a null buffer.
-	  this._buffers.set(filename, buffer);
-
-	  this._updateProgress(filename);
-	};
-
-	AudioBufferManager.prototype._updateProgress = function (filename) {
-	  var numberOfFinishedTasks = 0, numberOfFailedTask = 0;
-	  var numberOfTasks = 0;
-
-	  for (var task in this._loadingTasks) {
-	    numberOfTasks++;
-	    if (this._loadingTasks[task] === 'loaded')
-	      numberOfFinishedTasks++;
-	    else if (this._loadingTasks[task] === 'failed')
-	      numberOfFailedTask++;
-	  }
-
-	  if (typeof this._progress === 'function')
-	    this._progress(filename, numberOfFinishedTasks, numberOfTasks);
-
-	  if (numberOfFinishedTasks === numberOfTasks)
-	    this._resolve(this._buffers);
-
-	  if (numberOfFinishedTasks + numberOfFailedTask === numberOfTasks)
-	    this._reject(this._buffers);
-	};
-
-	module.exports = AudioBufferManager;
-
-
-/***/ },
 /* 8 */
 /***/ function(module, exports) {
 
@@ -907,55 +946,56 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 
 	/**
+	 * See also:
+	 * https://github.com/google/spatial-media/tree/master/support/hrtfs/cube
+	 */
 
-	This is from -
-	https://github.com/google/spatial-media/tree/master/support/hrtfs/cube
-
-	FOA Decoding coefficients 
-	=========================
-	    EL      AZ    W                 X                  Y                  Z
-	1   35.26   45    0.125000000000000 0.216494623077544  0.216529812402237  0.216494623077545
-	2   35.26   -45   0.125000000000000 -0.216494623077544 0.216529812402236  0.216494623077545
-	3   35.26   -135  0.125000000000000 -0.216494623077544 0.216529812402237  -0.216494623077545
-	4   35.26   135   0.125000000000000 0.216494623077544  0.216529812402237  -0.216494623077545
-	5   -35.26  45    0.125000000000000 0.216494623077544  -0.216529812402237 0.216494623077545
-	6   -35.26  -45   0.125000000000000 -0.216494623077544 -0.216529812402237 0.216494623077545
-	7   -35.26  -135  0.125000000000000 -0.216494623077544 -0.216529812402237 -0.216494623077545
-	8   -35.26  135   0.125000000000000 0.216494623077544  -0.216529812402237 -0.216494623077545
-	*/
-
+	/**
+	 * The data for FOAVirtualSpeaker. Each entry contains the URL for IR files and
+	 * the gain coefficients for the associated IR files. Note that the order of
+	 * coefficients follows the ACN channel ordering. (W,Y,Z,X)
+	 * @type {Array}
+	 */
 	var FOASpeakerData = [{
-	  name: 'E35.26_A45',  // <0.5774,0.5774,-0.5774>
-	  url: 'E35.26_A45_D1.4.wav',
-	  coef: [.1250, 0.216494623077544, 0.216529812402237, -0.216494623077545]
-	}, {
-	  name: 'E35.26_A-45', // <0.5774,-0.5774,-0.5774>
-	  url: 'E35.26_A-45_D1.4.wav',
-	  coef: [.1250, 0.216494623077544, -0.216529812402236, -0.216494623077544],
-	}, {
-	  name: 'E35.26_A-135', // <-0.5774,-0.5774,-0.5774>
-	  url: 'E35.26_A-135_D1.4.wav',
-	  coef: [.1250, -0.216494623077544, -0.216529812402236, -0.216494623077545],
-	}, {
-	  name: 'E35.26_A135', // <-0.5774,0.5774,-0.5774>
+	  name: 'E35.26_A135',
 	  url: 'E35.26_A135_D1.4.wav',
-	  coef: [.1250, -0.216494623077545, 0.216529812402237, -0.216494623077545],
+	  gainFactor: 1,
+	  coef: [.1250, 0.216495, 0.21653, -0.216495]
 	}, {
-	  name: 'E-35.26_A45', // <0.5774,0.5774,0.5774>
-	  url: 'E-35.26_A45_D1.4.wav',
-	  coef: [.1250, 0.216494623077544, 0.216529812402237, 0.216494623077545],
+	  name: 'E35.26_A-135',
+	  url: 'E35.26_A-135_D1.4.wav',
+	  gainFactor: 1,
+	  coef: [.1250, -0.216495, 0.21653, -0.216495]
 	}, {
-	  name: 'E-35.26_A-45', // <0.5774,-0.5774,0.5774>
-	  url: 'E-35.26_A-45_D1.4.wav',
-	  coef: [.1250, 0.216494623077544, -0.216529812402236, 0.216494623077545],
-	}, {
-	  name: 'E-35.26_A-135', // <-0.5774,-0.5774,0.5774>
-	  url: 'E-35.26_A-135_D1.4.wav',
-	  coef: [.1250, -0.216494623077544, -0.216529812402237, 0.216494623077545],
-	}, {
-	  name: 'E-35.26_A135', // <-0.5774,0.5774,0.5774>
+	  name: 'E-35.26_A135',
 	  url: 'E-35.26_A135_D1.4.wav',
-	  coef: [.1250, -0.216494623077545, 0.216529812402237, 0.216494623077545]
+	  gainFactor: 1,
+	  coef: [.1250, 0.216495, -0.21653, -0.216495]
+	}, {
+	  name: 'E-35.26_A-135',
+	  url: 'E-35.26_A-135_D1.4.wav',
+	  gainFactor: 1,
+	  coef: [.1250, -0.216495, -0.21653, -0.216495]
+	}, {
+	  name: 'E35.26_A45',
+	  url: 'E35.26_A45_D1.4.wav',
+	  gainFactor: 1,
+	  coef: [.1250, 0.216495, 0.21653, 0.216495]
+	}, {
+	  name: 'E35.26_A-45',
+	  url: 'E35.26_A-45_D1.4.wav',
+	  gainFactor: 1,
+	  coef: [.1250, -0.216495, 0.21653, 0.216495]
+	}, {
+	  name: 'E-35.26_A45',
+	  url: 'E-35.26_A45_D1.4.wav',
+	  gainFactor: 1,
+	  coef: [.1250, 0.216495, -0.21653, 0.216495]
+	}, {
+	  name: 'E-35.26_A-45',
+	  url: 'E-35.26_A-45_D1.4.wav',
+	  gainFactor: 1,
+	  coef: [.1250, -0.216495, -0.21653, 0.216495]
 	}];
 
 	module.exports = FOASpeakerData;

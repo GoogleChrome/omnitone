@@ -33,8 +33,9 @@
 
       // Create a decoder.
       var decoder = Omnitone.createFOADecoder(audioContext, audioElement, {
-        // The example audio is in the FuMa ordering (W,X,Y,Z).
-        channelMap: [0, 2, 3, 1]
+        // The example audio is in the FuMa ordering (W,X,Y,Z). So remap the
+        // channels to the ACN format.
+        channelMap: [0, 3, 1, 2]
       });
 
       // Assign the action to the button.

@@ -36,7 +36,7 @@ var FOADecoder = require('./foa-decoder.js');
  * Omnitone library version
  * @type {String}
  */
-Omnitone.VERSION = '0.1.2';
+Omnitone.VERSION = '0.1.4';
 
 // Omnitone library-wide log utility.
 // @param {any}                       Messages to be printed out.
