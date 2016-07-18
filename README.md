@@ -93,9 +93,10 @@ var decoder = Omnitone.createFOADecoder(context, element, {
 
 * context (AudioContext): an AudioContext object.
 * element (MediaElement): A target video or audio element for streaming.
-* options.HRTFSetUrl (String): Base URL for the cube HRTF sets.
-* options.postGainDB (Number): Post-decoding gain compensation in dB.
-* options.channelMap (Array): A custom channel map.
+* options (Object): options for decoder.
+    - HRTFSetUrl (String): Base URL for the cube HRTF sets.
+    - postGainDB (Number): Post-decoding gain compensation in dB.
+    - channelMap (Array): A custom channel map.
 
 ### FOARouter
 
