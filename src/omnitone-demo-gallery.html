@@ -83,6 +83,7 @@
 
       paper-toolbar {
         --paper-toolbar-height: 48px;
+        --paper-toolbar-background: #607D8B;
       }
 
       paper-card {
@@ -110,7 +111,7 @@
         @apply(--layout-flex);
       }
 
-      paper-icon-button {
+      paper-icon-button.play {
         width: 64px;
         height: 64px;
         color: #039be5;
@@ -137,7 +138,7 @@
               <p>By <a href="http://timfain.com/" target="_blank">Tim Fain</a></p>
             </div>
             <div>
-              <paper-icon-button icon="av:play-circle-filled" on-tap="_playContent" data-arg="resonance">
+              <paper-icon-button class="play" icon="av:play-circle-filled" on-tap="_playContent" data-arg="resonance">
               </paper-icon-button>
             </div>
           </div>
@@ -152,7 +153,7 @@
               <p>By <a href="http://jauntvr.com/" target="_blank">Jaunt VR</a></p>
             </div>
             <div>
-              <paper-icon-button icon="av:play-circle-filled" on-tap="_playContent" data-arg="fuerzaimprevista">
+              <paper-icon-button class="play" icon="av:play-circle-filled" on-tap="_playContent" data-arg="fuerzaimprevista">
               </paper-icon-button>
             </div>
           </div>
