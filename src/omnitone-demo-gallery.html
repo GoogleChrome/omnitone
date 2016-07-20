@@ -171,6 +171,11 @@
 
       properties: {
 
+        pageKey: {
+          type: String,
+          value: 'gallery',
+        },
+
         master: Object
 
       },
@@ -185,7 +190,7 @@
       },
 
       goToHome: function () {
-        this.master.setPage('home', 'gallery');
+        this.master.setPage('home', this);
       }
 
     });

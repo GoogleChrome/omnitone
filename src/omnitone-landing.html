@@ -103,6 +103,11 @@
         }
       },
 
+      _routeToPageFromURL: function () {
+        var token = window.location.hash.substring(1);
+        this.setPage(token, this);
+      },
+
       _registerPage: function (key, dom) {
         this.pages.push(key);
         dom.registerMaster(this);
@@ -110,9 +115,19 @@
 
       setPage: function (key, sender) {
         var pageIndex = this.pages.indexOf(key);
-        if (pageIndex === -1)
+        var currentLocation = window.location;
+        if (pageIndex === -1) {
+          // Clear the invalid hash string and default to #home.
+          window.history.pushState(
+            'omnitone-home', 'Omnitone Home', 
+            currentLocation.origin + currentLocation.pathname + '#home');
           return;
+        }
 
+
+        window.history.pushState(
+          'omnitone-home', 'Omnitone Home', 
+          currentLocation.origin + currentLocation.pathname + '#' + key);
         this.$.ePageSelector.selected = pageIndex;
       },
 
@@ -120,7 +135,10 @@
         // Cache pages when the shadow dom is ready.
         this._registerPage('home', this.$.ePageHome);
         this._registerPage('gallery', this.$.ePageGallery);
+
+        this._routeToPageFromURL();
         
+        // The landing page is ready. Display the content.
         this.removeAttribute('unresolved');
       }
       

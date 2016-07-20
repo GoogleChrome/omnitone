@@ -285,7 +285,14 @@
       is: 'omnitone-home',
 
       properties: {
+        
+        pageKey: {
+          type: String,
+          value: 'home',
+        },
+
         master: Object
+        
       },
 
       registerMaster: function (dom) {
@@ -293,7 +300,7 @@
       },
 
       goToDemoGallery: function () {
-        this.master.setPage('gallery', 'home');
+        this.master.setPage('gallery', this);
       }
 
     });

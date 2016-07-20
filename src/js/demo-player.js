@@ -30,12 +30,8 @@ window.OmnitoneDemoPlayer = (function () {
   // TODO: fix this in vr-panorama.js
   var GL_YAW_OFFSET = Math.PI;
 
-  // Browser information (type, version, os)
-  var _browserInfo = {
-    type: null,
-    version: null,
-    platform: null
-  };
+  // Browser information (brand, version, platform)
+  var _browserInfo;
 
   // Player options.
   var _playerOptions = {
@@ -69,7 +65,7 @@ window.OmnitoneDemoPlayer = (function () {
   // UI-related
   var _infoMessage;
   var _buttonPresent;
-  var _buttonHome;
+  var _buttonGallery;
   var _buttonPause;
   var _buttonRewind;
 
@@ -94,7 +90,11 @@ window.OmnitoneDemoPlayer = (function () {
    */
   function getBrowserInfo () {
     var ua = navigator.userAgent;
-    var platform = ua.match(/android|linux|win64|mac os x|ipad|iphone/i);
+
+    // Check the mobile platform first.
+    var platform = ua.match(/android|ipad|iphone/i);
+    if (!platform)
+      platform = ua.match(/linux|mac os x|win64/i);
 
     // Check Edge first. If fails, check the other major browsers.
     var client = ua.match(/(edge)\/(\d+)/i);
@@ -120,6 +120,7 @@ window.OmnitoneDemoPlayer = (function () {
 
     // iOS Safari cannot decode the multichannel AAC file.
     if (browserInfo.platform === 'iPhone' || browserInfo.platform === 'iPad') {
+      VRSamplesUtil.makeToast(_infoMessage, 1);
       VRSamplesUtil.addError(
         'Your browser cannot decode this video or audio format.');
       return false;
@@ -128,8 +129,10 @@ window.OmnitoneDemoPlayer = (function () {
     // TODO: Android is not fully ready yet. Unified Media Pipeline must be
     // enabled for M51. It is enabled by default at M53.
     if (browserInfo.platform === 'Android') {
+      VRSamplesUtil.makeToast(_infoMessage, 1);
       VRSamplesUtil.addError(
-        'Decoding multichannel audio is not supported yet in this browser.');
+        'Decoding multichannel audio is not supported <br>' +
+        'yet in this browser. Use debug mode if necessary.');
       return false;
     }
 
@@ -184,7 +187,7 @@ window.OmnitoneDemoPlayer = (function () {
       _playerOptions.sourceUrl = contentData.urlSet.mp4_1080p;
     }
 
-    // If the source URl is invalid.
+    // If the source URl is invalid, the demo cannot be played. Halt here.
     if (!_playerOptions.sourceUrl)
       return false;
 
@@ -223,7 +226,7 @@ window.OmnitoneDemoPlayer = (function () {
    */
   function onVRRequestPresent() {
     _vrDisplay.requestPresent({
-      source: canvasElement
+      source: _canvasElement
     }).then(function () {}, function () {
       VRSamplesUtil.addError('VRRequestPresent failed.', 2000);
     });
@@ -246,7 +249,7 @@ window.OmnitoneDemoPlayer = (function () {
    * @return {[type]} [description]
    */
   function onVRPresentChange() {
-    _onResize();
+    onResize();
     if (_vrDisplay.isPresenting) {
       if (_vrDisplay.capabilities.hasExternalDisplay) {
         VRSamplesUtil.removeButton(_buttonPresent);
@@ -372,7 +375,7 @@ window.OmnitoneDemoPlayer = (function () {
     _videoElement.currentTime = 0;
     _vrDisplay.resetPose();
     _foaDecoder.setMode('ambisonic');
-    
+
     onResize();
 
     // Start the graphics renderer.
@@ -386,7 +389,7 @@ window.OmnitoneDemoPlayer = (function () {
     }
 
     // Create the transport control UI.
-    _buttonHome = VRSamplesUtil.addButton('Home', null, null, onHome);
+    _buttonGallery = VRSamplesUtil.addButton('Gallery', null, null, onGallery);
     _buttonRewind = VRSamplesUtil.addButton('Rewind', null, null, onRewind);
     _buttonPlay = VRSamplesUtil.addButton('Play', null, null, onPlay);
   }
@@ -419,9 +422,9 @@ window.OmnitoneDemoPlayer = (function () {
         _projectionMatrix, eye.fieldOfView, 0.1, 1024.0);
       mat4.invert(_viewMatrix, poseMatrix);
     } else {
-      // Why 0.4?
+      // TODO: Why 0.4?
       mat4.perspective(
-        _projectionMatrix, 0.4 * Math.PI, 
+        _projectionMatrix, 0.4 * Math.PI,
         _canvasElement.width / _canvasElement.height, 0.1, 1024.0);
       mat4.invert(_viewMatrix, poseMatrix);
     }
@@ -443,7 +446,7 @@ window.OmnitoneDemoPlayer = (function () {
 
 
   /**
-   * 
+   *
    * @return {[type]} [description]
    */
   function onAnimationFrame () {
@@ -464,7 +467,7 @@ window.OmnitoneDemoPlayer = (function () {
           0, 0, _canvasElement.width * 0.5, _canvasElement.height);
         renderSceneView(_poseMatrix, _vrDisplay.getEyeParameters('left'));
         _glContext.viewport(
-          _canvasElement.width * 0.5, 0, 
+          _canvasElement.width * 0.5, 0,
           _canvasElement.width * 0.5, _canvasElement.height);
         renderSceneView(_poseMatrix, _vrDisplay.getEyeParameters('right'));
         _vrDisplay.submitFrame(pose);
@@ -474,7 +477,7 @@ window.OmnitoneDemoPlayer = (function () {
       }
     } else {
       _glContext.viewport(0, 0, _canvasElement.width, _canvasElement.height);
-      mat4.perspective(_projectionMatrix, 0.4 * Math.PI, 
+      mat4.perspective(_projectionMatrix, 0.4 * Math.PI,
         _canvasElement.width / _canvasElement.height, 0.1, 1024.0);
       mat4.identity(_viewMatrix);
       _glPanoramicView.render(_projectionMatrix, _viewMatrix);
@@ -483,11 +486,11 @@ window.OmnitoneDemoPlayer = (function () {
 
 
   /**
-   * [onHome description]
+   * [onGallery description]
    * @return {[type]} [description]
    */
-  function onHome() {
-    window.location.href = 'https://googlechrome.github.io/omnitone/';
+  function onGallery() {
+    window.location.href = '../#gallery';
   }
 
 
@@ -545,7 +548,7 @@ window.OmnitoneDemoPlayer = (function () {
       _glPanoramicView.setVideoElement(_videoElement)
     ]).then(function () {
       // The initialization of graphics/audio was successful. Make UI
-      // interactive.
+      // interactive and greet the user.
       PLAYERLOG('Ready to play.');
       greetAudience();
     }, function (error) {
@@ -565,13 +568,8 @@ window.OmnitoneDemoPlayer = (function () {
     /**
      * Initialize the demo player with the view port element and options.
      * @param  {String} viewportElementId [description]
-     * @param  {Object} options           [description]
-     * @param  {String} options.title           [description]
-     * @param  {Boolean} options.stereoscopic           [description]
-     * @param  {Number} options.postGain           [description]
-     * @param  {Object} options.urlSet           [description]
      */
-    initialize: function (viewportElementId, options) {
+    initialize: function (viewportElementId) {
       // Get the view port element first.
       _viewportElement = document.getElementById(viewportElementId);
 
