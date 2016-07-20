@@ -7,18 +7,17 @@
   "private": true,
   "dependencies": {
     "polymer": "polymer/polymer#^1.4.0",
-    "app-layout": "polymerelements/app-layout#^0.9.0",
-    "app-route": "polymerelements/app-route#^0.9.1",
     "iron-flex-layout": "polymerelements/iron-flex-layout#^1.0.0",
     "iron-icon": "polymerelements/iron-icon#^1.0.0",
     "iron-icons": "PolymerElements/iron-icons#^1.1.3",
     "iron-iconset-svg": "polymerelements/iron-iconset-svg#^1.0.0",
-    "iron-localstorage": "polymerelements/iron-localstorage#^1.0.0",
     "iron-media-query": "polymerelements/iron-media-query#^1.0.0",
     "iron-pages": "polymerelements/iron-pages#^1.0.0",
     "iron-selector": "polymerelements/iron-selector#^1.0.0",
     "paper-icon-button": "polymerelements/paper-icon-button#^1.0.0",
     "paper-spinner": "polymerelements/paper-spinner#^1.0.0",
-    "paper-button": "PolymerElements/paper-button#^1.0.12"
+    "paper-button": "PolymerElements/paper-button#^1.0.12",
+    "paper-card": "PolymerElements/paper-card#^1.0.0",
+    "paper-toolbar": "PolymerElements/paper-toolbar#^1.0.0"
   }
 }

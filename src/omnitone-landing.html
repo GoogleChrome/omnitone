@@ -16,8 +16,10 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout.html">
 <link rel="import" href="../bower_components/iron-media-query/iron-media-query.html">
+<link rel="import" href="../bower_components/iron-pages/iron-pages.html">
 <link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="omnitone-home.html">
+<link rel="import" href="omnitone-demo-gallery.html">
 
 <dom-module id="omnitone-landing">
   <template>
@@ -74,8 +76,16 @@
     </style>
 
     <iron-media-query query="max-width: 767px" query-matches="{{smallScreen}}"></iron-media-query>
-    <omnitone-home name="home"></omnitone-home>
 
+    <iron-pages id="ePageSelector" selected="1">
+      <div>
+        <omnitone-home id="ePageHome"></omnitone-home>
+      </div>
+      <div>
+        <omnitone-demo-gallery id="ePageGallery"></omnitone-demo-gallery>
+      </div>
+    </iron-pages>
+    
     <footer>
       chrome &#9829; VR
     </footer>
@@ -86,7 +96,31 @@
 
       is: 'omnitone-landing',
 
+      properties: {
+        pages: {
+          type: Array,
+          value: []
+        }
+      },
+
+      _registerPage: function (key, dom) {
+        this.pages.push(key);
+        dom.registerMaster(this);
+      },
+
+      setPage: function (key, sender) {
+        var pageIndex = this.pages.indexOf(key);
+        if (pageIndex === -1)
+          return;
+
+        this.$.ePageSelector.selected = pageIndex;
+      },
+
       attached: function() {
+        // Cache pages when the shadow dom is ready.
+        this._registerPage('home', this.$.ePageHome);
+        this._registerPage('gallery', this.$.ePageGallery);
+        
         this.removeAttribute('unresolved');
       }
       

@@ -13,19 +13,25 @@
  * limitations under the License. 
  */
 
+
 /* global mat4, vec3, VRPanorama, VRSamplesUtil */
+
+
+/**
+ * @class DemoPlayer
+ * @return {DemoPlayer}
+ */
 var DemoPlayer = (function () {
 
   'use strict';
 
-  var VERSION = '0.1.2.0002';
+  var VERSION = '0.1.4.0000';
   var DEBUG_MODE = false;
 
-  // "Resonance-specific" constants.
   var GL_YAW_OFFSET = Math.PI;
-  var AUDIO_YAW_OFFSET = -1.5 * Math.PI;
 
   var playerOptions;
+
   var systemInfo = {
     browser: null,
     version: null,
@@ -161,7 +167,7 @@ var DemoPlayer = (function () {
     glContext.enable(glContext.CULL_FACE);
 
     vrPanoramicView = new VRPanorama(glContext);
-    // vrPanoramicView.isStereo = true;
+    vrPanoramicView.isStereo = true;
     vrPanoramicView.yawOffset = GL_YAW_OFFSET;
 
     videoElement = document.createElement('video');
@@ -189,13 +195,11 @@ var DemoPlayer = (function () {
     // Safari's AAC decoder has different channel layout.
     if (systemInfo.browser !== 'Safari') {
       audioContext = new AudioContext();
-      foaDecoder = Omnitone.createFOADecoder(audioContext, videoElement, {
-        postGain: 60
-      });
+      foaDecoder = Omnitone.createFOADecoder(audioContext, videoElement);
     } else {
       audioContext = new webkitAudioContext();
       foaDecoder = Omnitone.createFOADecoder(audioContext, videoElement, {
-        routingDestination: [2, 0, 1, 3]
+        channelMap: [2, 0, 1, 3]
       });
     }
 
@@ -251,7 +255,6 @@ var DemoPlayer = (function () {
 
   function _updateSoundRotation(poseOrientation) {
     quat.invert(quatFOARotation, poseOrientation);
-    quat.rotateY(quatFOARotation, quatFOARotation, AUDIO_YAW_OFFSET);
     mat3.fromQuat(matFOARotation, quatFOARotation);
     foaDecoder.setRotationMatrix(matFOARotation);
   }

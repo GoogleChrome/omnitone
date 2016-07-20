@@ -8,8 +8,8 @@ window.VRSamplesUtil = (function () {
 
   var containerElement = document.body;
 
-  function setContainerElementID (ContainerElementID) {
-    containerElement = document.getElementById(ContainerElementID);
+  function setContainerElementId (containerElementId) {
+    containerElement = document.getElementById(containerElementId);
   }
 
   // Lifted from the WebVR Polyfill
@@ -180,7 +180,7 @@ window.VRSamplesUtil = (function () {
   }
 
   return {
-    setContainerElementID: setContainerElementID,
+    setContainerElementId: setContainerElementId,
     isMobile: isMobile,
     addError: addError,
     addInfo: addInfo,

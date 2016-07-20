@@ -230,14 +230,11 @@
 
     <div class="section jumbo">
       <div class="jumbo-item">
-        <a href="demo-player.html">
-          <paper-button id="eButtonPlayDemo" raised><iron-icon icon="av:play-circle-filled">
-            </iron-icon>Demo</paper-button>
-        </a>
+        <paper-button on-tap="goToDemoGallery" raised>
+          <iron-icon icon="av:play-circle-filled"></iron-icon>Demo
+        </paper-button>
         <p id="eText">Use <strong>headphones</strong> for the <em>full-sphere 
           surround</em> effect.</p>
-        <p class="caption">"Resonance" by <a href="http://timfain.com/" target="_blank">
-          Tim Fain</a>.</p>
       </div>
       <div class="jumbo-item">
         <a href="https://github.com/GoogleChrome/omnitone/#omnitone" target="_blank">
@@ -285,7 +282,19 @@
   <script>
     Polymer({
 
-      is: 'omnitone-home'
+      is: 'omnitone-home',
+
+      properties: {
+        master: Object
+      },
+
+      registerMaster: function (dom) {
+        this.master = dom;
+      },
+
+      goToDemoGallery: function () {
+        this.master.setPage('gallery', 'home');
+      }
 
     });
   </script>
