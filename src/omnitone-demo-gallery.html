@@ -1,0 +1,193 @@
+<!--
+  Copyright 2016 Google Inc. All Rights Reserved.
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../bower_components/iron-icons/av-icons.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../bower_components/paper-toolbar/paper-toolbar.html">
+<link rel="import" href="../bower_components/paper-styles/typography.html">
+
+<dom-module id="omnitone-demo-gallery">
+  <template>
+
+    <style>
+      p {
+        line-height: 28px;
+        margin: 0 10px 10px;
+        padding: 0;
+      }
+
+      .section {
+        margin: 45px auto;
+        padding: 0;
+        text-align: center;
+      }
+
+      .section.text {
+        max-width: 768px;
+        padding: 0 20px;
+      }
+
+      .section.text p {
+        @apply(--paper-font-subhead);
+        font-size: 18px;
+        line-height: 28px;
+      }
+
+      .section.gallery {
+        @apply(--layout-horizontal);
+        @apply(--layout-wrap);
+        @apply(--layout-justified);
+        max-width: 768px;
+      }
+
+      .section.gallery a {
+        text-decoration: none;
+        color: #039be5;
+      }
+
+      .section.gallery .gallery-item {
+        @apply(--layout-flex);
+        -webkit-flex: 1 1;
+        flex: 1 1;
+        -webkit-flex-basis: 50%;
+        flex-basis: 50%;
+        max-width: 50%;
+        margin: 10px 0;
+      }
+
+      @media (max-width: 768px) {
+
+        .section.gallery .gallery-item {
+          -webkit-flex-basis: 100%;
+          flex-basis: 100%;
+          max-width: 100%;
+        }
+
+      }
+
+      paper-toolbar {
+        --paper-toolbar-height: 48px;
+      }
+
+      paper-card {
+        z-index: 10;
+        --paper-card-content: {
+          @apply(--layout-horizontal);
+          padding: 10px 15px;
+          text-align: left;
+          z-index: -10;
+        };
+      }
+
+      paper-card h2 {
+        padding: 0;
+        margin: 0;
+        line-height: 28px;
+      }
+
+      paper-card p {
+        padding: 0;
+        margin: 0;
+      }
+
+      paper-card .label {
+        @apply(--layout-flex);
+      }
+
+      paper-icon-button {
+        width: 64px;
+        height: 64px;
+        color: #039be5;
+      }
+    </style>
+
+    <paper-toolbar>
+      <paper-icon-button icon="arrow-back" on-tap="goToHome"></paper-icon-button>
+      <div class="title">Demo Gallery</div>
+    </paper-toolbar>
+
+    <div class="section text">
+      <p id="eText">Use <strong>headphones</strong> for the <em>full-sphere
+        surround</em> effect.</p>
+    </div>
+
+    <div class="section gallery">
+
+      <div class="gallery-item">
+        <paper-card image="images/tn-resonance.png" >
+          <div class="card-content">
+            <div class="label">
+              <h2>Resonance</h2>
+              <p>By <a href="http://timfain.com/" target="_blank">Tim Fain</a></p>
+            </div>
+            <div>
+              <paper-icon-button icon="av:play-circle-filled" on-tap="_playContent" data-arg="resonance">
+              </paper-icon-button>
+            </div>
+          </div>
+        </paper-card>
+      </div>
+
+      <div class="gallery-item">
+        <paper-card image="images/tn-fuerzaimprevista.png">
+          <div class="card-content">
+            <div class="label">
+              <h2>Fuerza Imprevista</h2>
+              <p>By <a href="http://jauntvr.com/" target="_blank">Jaunt VR</a></p>
+            </div>
+            <div>
+              <paper-icon-button icon="av:play-circle-filled" on-tap="_playContent" data-arg="fuerzaimprevista">
+              </paper-icon-button>
+            </div>
+          </div>
+        </paper-card>
+      </div>
+
+    </div>
+
+  </template>
+
+  <script>
+    Polymer({
+
+      is: 'omnitone-demo-gallery',
+
+      properties: {
+
+        master: Object
+
+      },
+
+      registerMaster: function (dom) {
+        this.master = dom;
+      },
+
+      _playContent: function (event) {
+        var contentId = event.target.dataset.arg;
+        window.location.href = 'src/omnitone-demo-player.html?id=' + contentId;
+      },
+
+      goToHome: function () {
+        this.master.setPage('home', 'gallery');
+      }
+
+    });
+  </script>
+
+</dom-module>
