@@ -35,7 +35,8 @@ var OmnitoneDemoContentData = {
     stereoscopic: false,
     postGainDB: 38,
     urlSet: {
-      'mp4_1080p': 'https://storage.googleapis.com/omnitone-demo.google.com.a.appspot.com/FuerzaImprevista_v8_3840x1920_ACN-SN3D.mov',
+      'mp4_1080p': 'https://storage.googleapis.com/omnitone-demo.google.com.a.appspot.com/fuerza-imprevista-1080p-h264-aac.mp4',
     }
   }
 };
+

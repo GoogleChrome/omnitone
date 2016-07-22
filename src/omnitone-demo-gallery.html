@@ -131,7 +131,7 @@
     <div class="section gallery">
 
       <div class="gallery-item">
-        <paper-card image="images/tn-resonance.png" >
+        <paper-card image="images/tn-resonance.png">
           <div class="card-content">
             <div class="label">
               <h2>Resonance</h2>
@@ -174,14 +174,8 @@
         pageKey: {
           type: String,
           value: 'gallery',
-        },
+        }
 
-        master: Object
-
-      },
-
-      registerMaster: function (dom) {
-        this.master = dom;
       },
 
       _playContent: function (event) {
@@ -190,7 +184,7 @@
       },
 
       goToHome: function () {
-        this.master.setPage('home', this);
+        window.location.hash = 'home';
       }
 
     });

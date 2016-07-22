@@ -27,9 +27,9 @@ window.VRSamplesUtil = (function () {
       messageContainer.style.position = "absolute";
       messageContainer.style.zIndex = "999";
       messageContainer.style.left = "0";
-      messageContainer.style.top = "0";
+      messageContainer.style.top = "10px";
       messageContainer.style.right = "0";
-      messageContainer.style.margin = "10px";
+      messageContainer.style.margin = "0";
       messageContainer.style.padding = "0";
       messageContainer.align = "center";
       containerElement.appendChild(messageContainer);
@@ -101,9 +101,9 @@ window.VRSamplesUtil = (function () {
       buttonContainer.style.position = "absolute";
       buttonContainer.style.zIndex = "999";
       buttonContainer.style.left = "0";
-      buttonContainer.style.bottom = "0";
+      buttonContainer.style.bottom = "10px";
       buttonContainer.style.right = "0";
-      buttonContainer.style.margin = "20px";
+      buttonContainer.style.margin = "0";
       buttonContainer.style.padding = "0";
       buttonContainer.align = "center";
       containerElement.appendChild(buttonContainer);

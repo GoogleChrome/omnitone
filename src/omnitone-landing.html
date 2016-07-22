@@ -48,8 +48,7 @@
         display: none !important;
       }
 
-      iron-pages {
-        max-width: 1440px;
+      iron-pages {        
         margin: 0 auto;
       }
 
@@ -110,24 +109,11 @@
 
       _registerPage: function (key, dom) {
         this.pages.push(key);
-        dom.registerMaster(this);
       },
 
       setPage: function (key, sender) {
         var pageIndex = this.pages.indexOf(key);
-        var currentLocation = window.location;
-        if (pageIndex === -1) {
-          // Clear the invalid hash string and default to #home.
-          window.history.pushState(
-            'omnitone-home', 'Omnitone Home', 
-            currentLocation.origin + currentLocation.pathname + '#home');
-          return;
-        }
-
-
-        window.history.pushState(
-          'omnitone-home', 'Omnitone Home', 
-          currentLocation.origin + currentLocation.pathname + '#' + key);
+        window.location.hash = pageIndex !== -1 ? key : 'home';
         this.$.ePageSelector.selected = pageIndex;
       },
 
@@ -136,10 +122,14 @@
         this._registerPage('home', this.$.ePageHome);
         this._registerPage('gallery', this.$.ePageGallery);
 
+        // Force URL parsing for the initial loading.
         this._routeToPageFromURL();
         
         // The landing page is ready. Display the content.
         this.removeAttribute('unresolved');
+
+        window.addEventListener(
+          'hashchange', this._routeToPageFromURL.bind(this));
       }
       
     });

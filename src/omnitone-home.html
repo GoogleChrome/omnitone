@@ -237,7 +237,7 @@
           surround</em> effect.</p>
       </div>
       <div class="jumbo-item">
-        <a href="https://github.com/GoogleChrome/omnitone/#omnitone" target="_blank">
+        <a href="https://github.com/GoogleChrome/omnitone#omnitone-spatial-audio-on-the-web" target="_blank">
           <paper-button raised><iron-icon icon="av:library-books"></iron-icon>
             Docs</paper-button>
         </a>
@@ -289,18 +289,12 @@
         pageKey: {
           type: String,
           value: 'home',
-        },
-
-        master: Object
+        }
         
       },
 
-      registerMaster: function (dom) {
-        this.master = dom;
-      },
-
       goToDemoGallery: function () {
-        this.master.setPage('gallery', this);
+        window.location.hash = 'gallery';
       }
 
     });

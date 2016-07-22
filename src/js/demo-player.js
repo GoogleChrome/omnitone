@@ -24,7 +24,7 @@
 window.OmnitoneDemoPlayer = (function () {
 
   // Player information
-  var VERSION = '0.1.4.0002';
+  var VERSION = '0.1.4.0004';
 
   // The GL video mapping is 180 degree opposite.
   // TODO: fix this in vr-panorama.js
