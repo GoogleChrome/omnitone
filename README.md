@@ -7,7 +7,7 @@ The implementation of Omnitone is based on the [Google spatial media](https://gi
 
 ## Installation
 
-Omnitone is designed to be used for the web-facing project, so the installation via [Bower](https://bower.io/) or [NPM](https://www.npmjs.com/) is recommended. Alternatively, you can clone or download this repository and use the library script file as usual.
+Omnitone is designed to be used for the web-facing projects, so the installation via [Bower](https://bower.io/) or [NPM](https://www.npmjs.com/) is recommended. Alternatively, you can clone or download this repository and use the library script file as usual.
 
 ```bash
 bower install omnitone
@@ -189,6 +189,11 @@ Omnitone is designed to run any browser that supports Web Audio API, however, it
 * [VRView](https://developers.google.com/vr/concepts/vrview/)
 * [Web Audio API](https://webaudio.github.io/web-audio-api/)
 * [WebVR](https://webvr.info/)
+
+
+## Acknowledgments
+
+Special thanks to Julius Kammerl, Dillon Cower, Boris Smus and Brandon Jones for their help on this project. We are also grateful to Tim Fain and Jaunt VR for their permission to use beautiful VR contents in the demo.
 
 
 ## Support
