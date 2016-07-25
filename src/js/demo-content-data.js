@@ -26,8 +26,8 @@ var OmnitoneDemoContentData = {
     urlSet: {
       'mp4_720p': 'https://storage.googleapis.com/omnitone-demo.google.com.a.appspot.com/resonance-720p-h264-aac.mp4',
       'mp4_1080p': 'https://storage.googleapis.com/omnitone-demo.google.com.a.appspot.com/resonance-1080p-h264-aac.mp4',
-      'mp4_1080p_excerpt': '../media/resonance-1080p-h264-aac-excerpt.mp4',
-      'webm_1080p_excerpt': '../media/resonance-1080p-vp9-vorbis-excerpt.webm'
+      'webm_1080p': '../media/resonance-1080p-vp9-vorbis-excerpt.webm',
+      'mp4_1080p_excerpt': '../media/resonance-1080p-h264-aac-excerpt.mp4'
     }
   },
   'fuerzaimprevista': {
@@ -36,6 +36,7 @@ var OmnitoneDemoContentData = {
     postGainDB: 38,
     urlSet: {
       'mp4_1080p': 'https://storage.googleapis.com/omnitone-demo.google.com.a.appspot.com/fuerza-imprevista-1080p-h264-aac.mp4',
+      'webm_1080p': 'https://storage.googleapis.com/omnitone-demo.google.com.a.appspot.com/fuerza-imprevista-1080p-vp9-vorbis.webm'
     }
   }
 };

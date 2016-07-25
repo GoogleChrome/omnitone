@@ -71,6 +71,16 @@
         margin: 10px 0;
       }
 
+      .section.disclaimer {
+        max-width: 768px;
+        padding: 0 20px;
+      }
+
+      .section.disclaimer p {
+        color: #90a4ae;
+        line-height: 24px;
+      }
+
       @media (max-width: 768px) {
 
         .section.gallery .gallery-item {
@@ -138,7 +148,7 @@
               <p>By <a href="http://timfain.com/" target="_blank">Tim Fain</a></p>
             </div>
             <div>
-              <paper-icon-button class="play" icon="av:play-circle-filled" on-tap="_playContent" data-arg="resonance">
+              <paper-icon-button id="resonance" class="play" icon="av:play-circle-filled" on-tap="_playContent">
               </paper-icon-button>
             </div>
           </div>
@@ -153,13 +163,19 @@
               <p>By <a href="http://jauntvr.com/" target="_blank">Jaunt VR</a></p>
             </div>
             <div>
-              <paper-icon-button class="play" icon="av:play-circle-filled" on-tap="_playContent" data-arg="fuerzaimprevista">
+              <paper-icon-button id="fuerzaimprevista" class="play" icon="av:play-circle-filled" on-tap="_playContent">
               </paper-icon-button>
             </div>
           </div>
         </paper-card>
       </div>
 
+    </div>
+
+    <div class="section disclaimer">
+      <p>The contents in the demo gallery are allowed to be displayed only for
+        demonstration purposes of the Omnitone project.<br>The other usage must
+        obtain the permission from the author.</p>
     </div>
 
   </template>
@@ -179,7 +195,7 @@
       },
 
       _playContent: function (event) {
-        var contentId = event.target.dataset.arg;
+        var contentId = event.currentTarget.id;
         window.location.href = 'src/omnitone-demo-player.html?id=' + contentId;
       },
 

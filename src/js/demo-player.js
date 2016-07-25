@@ -162,6 +162,7 @@ window.OmnitoneDemoPlayer = (function () {
     var contentId = WGLUUrl.getString('id');
     var contentData;
     if (!contentId) {
+      VRSamplesUtil.makeToast(_infoMessage, 1);
       VRSamplesUtil.addError(
         'Invalid content ID. The content cannot be played.');
       return false;
@@ -181,15 +182,20 @@ window.OmnitoneDemoPlayer = (function () {
       _playerOptions.sourceUrl = contentData.urlSet.mp4_1080p_excerpt;
     } else if (_browserInfo.brand === 'Firefox') {
       // FireFox only can decode VP/Vorbis (WebM).
-      _playerOptions.sourceUrl = contentData.urlSet.webm_1080p_excerpt;
+      _playerOptions.sourceUrl = contentData.urlSet.webm_1080p;
     } else {
       // All is good, go for the highest quality video.
       _playerOptions.sourceUrl = contentData.urlSet.mp4_1080p;
     }
 
-    // If the source URl is invalid, the demo cannot be played. Halt here.
-    if (!_playerOptions.sourceUrl)
+    // If the source URL is invalid, the demo cannot be played. Halt here.
+    if (!_playerOptions.sourceUrl) {
+      VRSamplesUtil.makeToast(_infoMessage, 1);
+      VRSamplesUtil.addError(
+        'The demo content is not prepared for this browser. ' +
+        'Try with other browsers.');
       return false;
+    }
 
     PLAYERLOG('Browser: ' + _browserInfo.brand + ' ' + _browserInfo.version
       + ' on ' + _browserInfo.platform);
