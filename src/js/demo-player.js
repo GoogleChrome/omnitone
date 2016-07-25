@@ -328,6 +328,16 @@ window.OmnitoneDemoPlayer = (function () {
       antialias: false,
       preserveDrawingBuffer: false
     });
+
+    // If glContext fails, do not proceed.
+    if (!_glContext) {
+      VRSamplesUtil.makeToast(_infoMessage, 1);
+      VRSamplesUtil.addError(
+        'WebGL is not available for the demo player. ' +
+        'Try again with other browser or a different machine.');
+      return;  
+    }
+    
     _glContext.enable(_glContext.DEPTH_TEST);
     _glContext.enable(_glContext.CULL_FACE);
 
