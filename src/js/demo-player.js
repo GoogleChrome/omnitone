@@ -94,17 +94,19 @@ window.OmnitoneDemoPlayer = (function () {
     // Check the mobile platform first.
     var platform = ua.match(/android|ipad|iphone/i);
     if (!platform)
-      platform = ua.match(/linux|mac os x|win64/i);
+      platform = ua.match(/cros|linux|mac os x|windows/i);
 
     // Check Edge first. If fails, check the other major browsers.
     var client = ua.match(/(edge)\/(\d+)/i);
     if (!client)
       client = ua.match(/(chrome|safari|firefox|opera)\/(\d+)/i);
 
+    PLAYERLOG('User agent: ' + ua);
+
     return {
       brand: client[1],
       version: client[2],
-      platform: platform[0]
+      platform: platform ? platform[0] : 'unknown'
     };
   }
 
@@ -197,8 +199,6 @@ window.OmnitoneDemoPlayer = (function () {
       return false;
     }
 
-    PLAYERLOG('Browser: ' + _browserInfo.brand + ' ' + _browserInfo.version
-      + ' on ' + _browserInfo.platform);
     PLAYERLOG('Target media URL: ' + _playerOptions.sourceUrl);
 
     return true;
