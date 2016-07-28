@@ -568,8 +568,9 @@ window.OmnitoneDemoPlayer = (function () {
       PLAYERLOG('Ready to play.');
       greetAudience();
     }, function (error) {
-      PLAYERLOG('ERROR: initialization.');
       console.log(error);
+      PLAYERLOG('ERROR: initialization.');
+      VRSamplesUtil.makeToast(_infoMessage, 1);
       if (error.code === 3) {
         VRSamplesUtil.addError('The media file cannot be decoded.');
       } else if (error.code === 4) {
