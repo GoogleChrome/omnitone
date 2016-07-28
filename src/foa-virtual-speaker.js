@@ -61,6 +61,7 @@ function FOAVirtualSpeaker (context, options) {
 
   this.enable();
 
+  this._convolver.normalize = false;
   this._convolver.buffer = options.IR;
   this._gain.gain.value = options.gain;
 

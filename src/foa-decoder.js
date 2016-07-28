@@ -31,8 +31,8 @@ var FOASpeakerData = require('./foa-speaker-data.js');
 // By default, Omnitone fetches IR from the spatial media repository.
 var HRTFSET_URL = 'https://raw.githubusercontent.com/google/spatial-media/master/support/hrtfs/cube/';
 
-// Post gain compensation value, empirically determined.
-var POST_GAIN_DB = 30;
+// Post gain compensation value.
+var POST_GAIN_DB = 0;
 
 // The default channel map. This assumes the media uses ACN channel ordering.
 var CHANNEL_MAP = [0, 1, 2, 3];
