@@ -11,7 +11,7 @@
     "ambisonic",
     "VR audio",
     "360 audio",
-    "spatial audio",    
+    "spatial audio",
     "Web Audio API"
   ],
   "homepage": "https://github.com/GoogleChrome/omnitone",
@@ -21,5 +21,9 @@
     "bower_components",
     "test",
     "tests"
-  ]
+  ],
+  "devDependencies": {
+    "mocha": "^3.0.0",
+    "chai": "^3.5.0"
+  }
 }
