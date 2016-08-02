@@ -24,8 +24,8 @@
 
   <script>
     window.addEventListener('load', function () {
-      // Set up the context and the audio element.
-      var audioContext = new AudioContext();
+      // Set up the context and the video element.
+      var audioContext = new ( window.AudioContext || window.webkitAudioContext )();
       var videoElement = document.createElement('video');
       videoElement.loop = true;
       videoElement.autoplay = true;
@@ -33,15 +33,16 @@
       videoElement.controls = true;
       videoElement.width = 600;
       videoElement.height = 400;
-      videoElement.src = "https://storage.googleapis.com/omnitone-demo.google.com.a.appspot.com/fuerza-imprevista-1080p-h264-aac.mp4";
-      //videoElement.src = 'https://storage.googleapis.com/omnitone-demo.google.com.a.appspot.com/fuerza-imprevista-1080p-vp9-vorbis.webm';
+      //videoElement.src = "http://videos-electroteque-org.s3.amazonaws.com/ambisonics/fuerza-imprevista-320p-h264-aac.mp4";
+      //videoElement.src = "http://videos-electroteque-org.s3.amazonaws.com/ambisonics/fuerza-imprevista-360p-vp9-vorbis.webm";
+      //videoElement.src = "https://storage.googleapis.com/omnitone-demo.google.com.a.appspot.com/fuerza-imprevista-1080p-h264-aac.mp4";
+      videoElement.src = 'https://storage.googleapis.com/omnitone-demo.google.com.a.appspot.com/fuerza-imprevista-1080p-vp9-vorbis.webm';
 
       document.body.appendChild(videoElement);
 
       // Create a decoder.
       var decoder = Omnitone.createFOADecoder(audioContext, videoElement, {
-        // The example audio is in the FuMa ordering (W,X,Y,Z). So remap the
-        // channels to the ACN format.
+        // customise channel map if required.
        // channelMap: [0, 3, 1, 2]
       });
 
@@ -52,7 +53,7 @@
 
       // Initialize the decoder and activate the button when ready.
       decoder.initialize().then(function () {
-        //decoder.mode = "none";
+        console.log("Omnitone Initialized");
       }, function (onInitializationError) {
         console.error(onInitializationError);
       });
