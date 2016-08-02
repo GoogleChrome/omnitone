@@ -1,0 +1,63 @@
+<!--
+  Copyright 2016 Google Inc. All Rights Reserved.
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+  
+      http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewpoer" content="width=device-width,initial-scale=1,maximum-scale=1,shrink-to-fit=no,user-scalable=no,minimal-ui"/>
+  <title>Basic Video Demo no Webgl: Omnitone</title>
+  <script src="../build/omnitone.min.js"></script>
+</head>
+<body>
+
+  <script>
+    window.addEventListener('load', function () {
+      // Set up the context and the video element.
+      var audioContext = new ( window.AudioContext || window.webkitAudioContext )();
+      var videoElement = document.createElement('video');
+      videoElement.loop = true;
+      videoElement.autoplay = true;
+      videoElement.crossOrigin = 'anonymous';
+      videoElement.controls = true;
+      videoElement.width = 600;
+      videoElement.height = 400;
+      //videoElement.src = "http://videos-electroteque-org.s3.amazonaws.com/ambisonics/fuerza-imprevista-320p-h264-aac.mp4";
+      //videoElement.src = "http://videos-electroteque-org.s3.amazonaws.com/ambisonics/fuerza-imprevista-360p-vp9-vorbis.webm";
+      //videoElement.src = "https://storage.googleapis.com/omnitone-demo.google.com.a.appspot.com/fuerza-imprevista-1080p-h264-aac.mp4";
+      videoElement.src = 'https://storage.googleapis.com/omnitone-demo.google.com.a.appspot.com/fuerza-imprevista-1080p-vp9-vorbis.webm';
+
+      document.body.appendChild(videoElement);
+
+      // Create a decoder.
+      var decoder = Omnitone.createFOADecoder(audioContext, videoElement, {
+        // customise channel map if required.
+       // channelMap: [0, 3, 1, 2]
+      });
+
+
+      videoElement.onclick = function () {
+        videoElement.play();
+      };
+
+      // Initialize the decoder and activate the button when ready.
+      decoder.initialize().then(function () {
+        console.log("Omnitone Initialized");
+      }, function (onInitializationError) {
+        console.error(onInitializationError);
+      });
+    });
+  </script>
+</body>
+</html>
