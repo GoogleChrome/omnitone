@@ -73,8 +73,8 @@ Omnitone.loadAudioBuffers = function (context, speakerData) {
  * Router class.
  * @return {Object}
  */
-Omnitone.createFOARouter = function (context, options) {
-  return new FOARouter(context, options);
+Omnitone.createFOARouter = function (context, channelMap) {
+  return new FOARouter(context, channelMap);
 };
 
 /**

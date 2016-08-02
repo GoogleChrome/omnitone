@@ -13,22 +13,25 @@
  * limitations under the License.
  */
 
+'use strict';
+
 /**
  * @fileOverview An audio channel re-router to resolve different channel layouts
  *               between various platforms.
  */
 
-'use strict';
 
-var CHROME_CHANNEL_MAP = [0, 1, 2, 3];
-var ISO_CHANNEL_MAP = [2, 0, 1, 3];
+var DEFAULT_CHANNEL_MAP = [0, 1, 2, 3];
+
+var IOS_CHANNEL_MAP = [2, 0, 1, 3];
+var FUMA_2_ACN_CHANNEL_MAP = [0, 3, 1, 2];
 
 /**
  * @class A simple channel re-router.
  * @param {AudioContext} context      Associated AudioContext.
  * @param {Array} channelMap  Routing destination array.
  *                                    e.g.) Chrome: [0, 1, 2, 3],
- *                                    iOS: [1, 2, 0, 3]
+ *                                    iOS: [2, 0, 1, 3]
  */
 function FOARouter (context, channelMap) {
   this._context = context;
@@ -36,7 +39,7 @@ function FOARouter (context, channelMap) {
   this._splitter = this._context.createChannelSplitter(4);
   this._merger = this._context.createChannelMerger(4);
 
-  this._channelMap = channelMap || CHROME_CHANNEL_MAP;
+  this._channelMap = channelMap || DEFAULT_CHANNEL_MAP;
 
   this._splitter.connect(this._merger, 0, this._channelMap[0]);
   this._splitter.connect(this._merger, 1, this._channelMap[1]);
@@ -48,7 +51,7 @@ function FOARouter (context, channelMap) {
   this.output = this._merger;
 }
 
-FOARouter.prototype.setchannelMap = function (channelMap) {
+FOARouter.prototype.setChannelMap = function (channelMap) {
   if (!channelMap)
     return;
 
