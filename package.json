@@ -11,6 +11,7 @@
     "Web Audio API"
   ],
   "devDependencies": {
+    "copy-webpack-plugin": "^3.0.1",
     "webpack": "^1.13.0"
   },
   "scripts": {
