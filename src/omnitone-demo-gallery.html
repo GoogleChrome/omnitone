@@ -93,7 +93,7 @@
 
       paper-toolbar {
         --paper-toolbar-height: 48px;
-        --paper-toolbar-background: #607D8B;
+        --paper-toolbar-background: #0091EA;
       }
 
       paper-card {
@@ -126,14 +126,22 @@
         height: 64px;
         color: #039be5;
       }
+
+      svg {
+        fill: #B0BEC5;
+      }
     </style>
 
-    <paper-toolbar>
+    <paper-toolbar id="eToolBar">
       <paper-icon-button icon="arrow-back" on-tap="goToHome"></paper-icon-button>
       <div class="title">Demo Gallery</div>
+      <paper-icon-button id="eIconMode" icon="settings" on-tap="toggleMode"></paper-icon-button>
     </paper-toolbar>
 
     <div class="section text">
+      <svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 48 48">
+        <path d="M24 2C14.06 2 6 10.06 6 20v14c0 3.31 2.69 6 6 6h6V24h-8v-4c0-7.73 6.27-14 14-14s14 6.27 14 14v4h-8v16h6c3.31 0 6-2.69 6-6V20c0-9.94-8.06-18-18-18z"/>
+      </svg>
       <p id="eText">Use <strong>headphones</strong> for the <em>full-sphere
         surround</em> effect.</p>
     </div>
@@ -187,6 +195,11 @@
 
       properties: {
 
+        currentMode: {
+          type: String,
+          value: 'prod'
+        },
+
         pageKey: {
           type: String,
           value: 'gallery',
@@ -196,7 +209,24 @@
 
       _playContent: function (event) {
         var contentId = event.currentTarget.id;
-        window.location.href = 'src/omnitone-demo-player.html?id=' + contentId;
+        var targetUrl = 'src/omnitone-demo-player.html?id=' + contentId;
+        if (this.currentMode === 'debug')
+          targetUrl += '&debug=1';
+        
+        window.location.href = targetUrl;
+      },
+
+      toggleMode: function () {
+        this.currentMode = this.currentMode === 'prod' ? 'debug' : 'prod';
+        if (this.currentMode === 'debug') {
+          this.$.eIconMode.icon = 'exit-to-app';
+          // this.$.eToolBar.toggleClass('prod', false);
+          // this.$.eToolBar.toggleClass('debug', true);
+        } else {
+          this.$.eIconMode.icon = 'settings';
+          // this.$.eToolBar.toggleClass('debug', false);
+          // this.$.eToolBar.toggleClass('prod', true);
+        }
       },
 
       goToHome: function () {
