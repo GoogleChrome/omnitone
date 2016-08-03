@@ -86,17 +86,11 @@
         font-size: 12px;
       }
 
-      @media (max-width: 768px) {
-
-        .section.gallery .gallery-item {
-          -webkit-flex-basis: 100%;
-          flex-basis: 100%;
-          max-width: 100%;
-        }
-
-      }
-
       paper-toolbar {
+        --paper-toolbar: {
+          box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.26);
+        };
+
         --paper-toolbar-title: {
           height: 32px;
           line-height: 32px;
@@ -134,8 +128,18 @@
         color: #039be5;
       }
 
-      svg {
+      svg.big-icon {
         fill: #B0BEC5;
+      }
+
+      @media (max-width: 768px) {
+
+        .section.gallery .gallery-item {
+          -webkit-flex-basis: 100%;
+          flex-basis: 100%;
+          max-width: 100%;
+        }
+
       }
     </style>
 
@@ -146,7 +150,7 @@
     </paper-toolbar>
 
     <div class="section text">
-      <svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 48 48">
+      <svg class="big-icon" xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 48 48">
         <path d="M24 2C14.06 2 6 10.06 6 20v14c0 3.31 2.69 6 6 6h6V24h-8v-4c0-7.73 6.27-14 14-14s14 6.27 14 14v4h-8v16h6c3.31 0 6-2.69 6-6V20c0-9.94-8.06-18-18-18z"/>
       </svg>
       <p id="eText">Use <strong>headphones</strong> for the <em>full-sphere
