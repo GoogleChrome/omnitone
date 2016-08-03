@@ -153,6 +153,7 @@ window.OmnitoneDemoPlayer = (function () {
     // Enable debug mode if necessary. This bypasses the platform lock for
     // mobile phones, or for the local test.
     if (WGLUUrl.getBool('debug', false)) {
+      PLAYERLOG('DemoPlayer is in DEBUG mode.');
       _playerOptions.debug = true;
     }
 
