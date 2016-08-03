@@ -81,6 +81,11 @@
         line-height: 24px;
       }
 
+      #eModeLabel {
+        display: none;
+        font-size: 12px;
+      }
+
       @media (max-width: 768px) {
 
         .section.gallery .gallery-item {
@@ -92,8 +97,10 @@
       }
 
       paper-toolbar {
-        --paper-toolbar-height: 48px;
-        --paper-toolbar-background: #0091EA;
+        --paper-toolbar-title: {
+          height: 32px;
+          line-height: 32px;
+        };
       }
 
       paper-card {
@@ -134,7 +141,7 @@
 
     <paper-toolbar id="eToolBar">
       <paper-icon-button icon="arrow-back" on-tap="goToHome"></paper-icon-button>
-      <div class="title">Demo Gallery</div>
+      <div class="title">Demo Gallery <span id="eModeLabel">DEBUG</span></div>
       <paper-icon-button id="eIconMode" icon="settings" on-tap="toggleMode"></paper-icon-button>
     </paper-toolbar>
 
@@ -210,23 +217,34 @@
       _playContent: function (event) {
         var contentId = event.currentTarget.id;
         var targetUrl = 'src/omnitone-demo-player.html?id=' + contentId;
+        
         if (this.currentMode === 'debug')
           targetUrl += '&debug=1';
         
         window.location.href = targetUrl;
       },
 
-      toggleMode: function () {
-        this.currentMode = this.currentMode === 'prod' ? 'debug' : 'prod';
+      _updateMode: function () {
         if (this.currentMode === 'debug') {
           this.$.eIconMode.icon = 'exit-to-app';
-          // this.$.eToolBar.toggleClass('prod', false);
-          // this.$.eToolBar.toggleClass('debug', true);
+          this.$.eModeLabel.style.display = 'inline';
+          this.$.eToolBar.style.backgroundColor = '#424242';
         } else {
           this.$.eIconMode.icon = 'settings';
-          // this.$.eToolBar.toggleClass('debug', false);
-          // this.$.eToolBar.toggleClass('prod', true);
+          this.$.eModeLabel.style.display = 'none';
+          this.$.eToolBar.style.backgroundColor = '#0091EA';
         }
+
+        this.updateStyles();
+      },
+
+      attached: function () {
+        this._updateMode();
+      },
+
+      toggleMode: function () {
+        this.currentMode = this.currentMode === 'prod' ? 'debug' : 'prod';
+        this._updateMode();
       },
 
       goToHome: function () {
