@@ -19,6 +19,8 @@
 
 'use strict';
 
+var Utils = require('./utils.js');
+
 /**
  * Streamlined audio file loader supports Promise.
  * @param {Object} context          AudioContext
@@ -43,7 +45,7 @@ function AudioBufferManager(context, audioFileData, resolve, reject, progress) {
 
     // Check for duplicates filename and quit if it happens.
     if (this._loadingTasks.hasOwnProperty(fileInfo.name)) {
-      Omnitone.LOG('Duplicated filename when loading: ' + fileInfo.name);
+      Utils.LOG('Duplicated filename when loading: ' + fileInfo.name);
       return;
     }
 
@@ -63,16 +65,16 @@ AudioBufferManager.prototype._loadAudioFile = function (fileInfo) {
     if (xhr.status === 200) {
       that._context.decodeAudioData(xhr.response,
         function (buffer) {
-          // Omnitone.LOG('File loaded: ' + fileInfo.url);
+          // Utils.LOG('File loaded: ' + fileInfo.url);
           that._done(fileInfo.name, buffer);
         },
         function (message) {
-          Omnitone.LOG('Decoding failure: '
+          Utils.LOG('Decoding failure: '
             + fileInfo.url + ' (' + message + ')');
           that._done(fileInfo.name, null);
         });
     } else {
-      Omnitone.LOG('XHR Error: ' + fileInfo.url + ' (' + xhr.statusText 
+      Utils.LOG('XHR Error: ' + fileInfo.url + ' (' + xhr.statusText 
         + ')');
       that._done(fileInfo.name, null);
     }
@@ -80,7 +82,7 @@ AudioBufferManager.prototype._loadAudioFile = function (fileInfo) {
 
   // TODO: fetch local resources if XHR fails.
   xhr.onerror = function (event) {
-    Omnitone.LOG('XHR Network failure: ' + fileInfo.url);
+    Utils.LOG('XHR Network failure: ' + fileInfo.url);
     that._done(fileInfo.name, null);
   };
 
