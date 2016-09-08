@@ -31,6 +31,7 @@ var FOARotator = require('./foa-rotator.js');
 var FOAPhaseMatchedFilter = require('./foa-phase-matched-filter.js');
 var FOAVirtualSpeaker = require('./foa-virtual-speaker.js');
 var FOADecoder = require('./foa-decoder.js');
+var Utils = require('./utils.js');
 
 /**
  * Omnitone library version
@@ -38,19 +39,12 @@ var FOADecoder = require('./foa-decoder.js');
  */
 Omnitone.VERSION = '0.1.5';
 
-// Omnitone library-wide log utility.
-// @param {any}                       Messages to be printed out.
-Omnitone.LOG = function () {
-  window.console.log.apply(window.console, [
-    '%c[Omnitone]%c '
-      + Array.prototype.slice.call(arguments).join(' ') + ' %c(@'
-      + performance.now().toFixed(2) + 'ms)',
-    'background: #BBDEFB; color: #FF5722; font-weight: 700',
-    'font-weight: 400',
-    'color: #AAA'
-  ]);
-};
-
+/**
+ * Omnitone library logging function.
+ * @type {Function}
+ * @param {any} Message to be printed out.
+ */
+Omnitone.LOG = Utils.LOG;
 
 /**
  * Load audio buffers based on the speaker configuration map data.
@@ -66,7 +60,6 @@ Omnitone.loadAudioBuffers = function (context, speakerData) {
     }, reject);
   });
 };
-
 
 /**
  * Create an instance of FOA Router. For parameters, refer the definition of

@@ -26,7 +26,7 @@ var FOARotator = require('./foa-rotator.js');
 var FOAPhaseMatchedFilter = require('./foa-phase-matched-filter.js');
 var FOAVirtualSpeaker = require('./foa-virtual-speaker.js');
 var FOASpeakerData = require('./foa-speaker-data.js');
-
+var Utils = require('./utils.js');
 
 // By default, Omnitone fetches IR from the spatial media repository.
 var HRTFSET_URL = 'https://raw.githubusercontent.com/google/spatial-media/master/support/hrtfs/cube/';
@@ -85,13 +85,13 @@ function FOADecoder (context, videoElement, options) {
  * @return {Promise}
  */
 FOADecoder.prototype.initialize = function () {
-  Omnitone.LOG('Version: ' + Omnitone.VERSION);
-  Omnitone.LOG('Initializing... (mode: ' + this._decodingMode + ')');
+  Utils.LOG('Version: ' + Omnitone.VERSION);
+  Utils.LOG('Initializing... (mode: ' + this._decodingMode + ')');
 
   // Rerouting channels if necessary.
   var channelMapString = this._channelMap.toString();
   if (channelMapString !== CHANNEL_MAP.toString()) {
-    Omnitone.LOG('Remapping channels ([0,1,2,3] -> ['
+    Utils.LOG('Remapping channels ([0,1,2,3] -> ['
       + channelMapString + '])');
   }
 
@@ -113,7 +113,7 @@ FOADecoder.prototype.initialize = function () {
 
   // Get the linear amplitude from the post gain option, which is in decibel.
   var postGainLinear = Math.pow(10, this._postGainDB/20);
-  Omnitone.LOG('Gain compensation: ' + postGainLinear + ' (' + this._postGainDB
+  Utils.LOG('Gain compensation: ' + postGainLinear + ' (' + this._postGainDB
     + 'dB)');
 
   // This returns a promise so developers can use the decoder when it is ready.
@@ -135,7 +135,7 @@ FOADecoder.prototype.initialize = function () {
         // Set the decoding mode.
         me.setMode(me._decodingMode);
         me._isDecoderReady = true;
-        Omnitone.LOG('HRTF IRs are loaded successfully. The decoder is ready.');
+        Utils.LOG('HRTF IRs are loaded successfully. The decoder is ready.');
 
         resolve();
       }, reject);
@@ -192,7 +192,7 @@ FOADecoder.prototype.setMode = function (mode) {
       break;
   }
 
-  Omnitone.LOG('Decoding mode changed. (' + mode + ')');
+  Utils.LOG('Decoding mode changed. (' + mode + ')');
 };
 
 module.exports = FOADecoder;

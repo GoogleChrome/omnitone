@@ -21,6 +21,8 @@
 
 'use strict';
 
+var Utils = require('./utils.js');
+
 // Static parameters.
 var FREQUENCY = 700;
 var COEFFICIENTS = [1.4142, 0.8166, 0.8166, 0.8166];
@@ -39,7 +41,7 @@ function FOAPhaseMatchedFilter (context) {
 
   // TODO: calculate the freq/reso based on the context sample rate.
   if (!this._context.createIIRFilter) {
-    Omnitone.LOG('IIR filter is missing. Using Biquad filter instead.');
+    Utils.LOG('IIR filter is missing. Using Biquad filter instead.');
     this._lpf = this._context.createBiquadFilter();
     this._hpf = this._context.createBiquadFilter();
     this._lpf.frequency.value = FREQUENCY;

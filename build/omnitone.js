@@ -108,31 +108,25 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	// Internal dependencies.
 	var AudioBufferManager = __webpack_require__(2);
-	var FOARouter = __webpack_require__(3);
-	var FOARotator = __webpack_require__(4);
-	var FOAPhaseMatchedFilter = __webpack_require__(5);
-	var FOAVirtualSpeaker = __webpack_require__(6);
-	var FOADecoder = __webpack_require__(7);
+	var FOARouter = __webpack_require__(4);
+	var FOARotator = __webpack_require__(5);
+	var FOAPhaseMatchedFilter = __webpack_require__(6);
+	var FOAVirtualSpeaker = __webpack_require__(7);
+	var FOADecoder = __webpack_require__(8);
+	var Utils = __webpack_require__(3);
 
 	/**
 	 * Omnitone library version
 	 * @type {String}
 	 */
-	Omnitone.VERSION = '0.1.4';
+	Omnitone.VERSION = '0.1.5';
 
-	// Omnitone library-wide log utility.
-	// @param {any}                       Messages to be printed out.
-	Omnitone.LOG = function () {
-	  window.console.log.apply(window.console, [
-	    '%c[Omnitone]%c '
-	      + Array.prototype.slice.call(arguments).join(' ') + ' %c(@'
-	      + performance.now().toFixed(2) + 'ms)',
-	    'background: #BBDEFB; color: #FF5722; font-weight: 700',
-	    'font-weight: 400',
-	    'color: #AAA'
-	  ]);
-	};
-
+	/**
+	 * Omnitone library logging function.
+	 * @type {Function}
+	 * @param {any} Message to be printed out.
+	 */
+	Omnitone.LOG = Utils.LOG;
 
 	/**
 	 * Load audio buffers based on the speaker configuration map data.
@@ -149,14 +143,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	  });
 	};
 
-
 	/**
 	 * Create an instance of FOA Router. For parameters, refer the definition of
 	 * Router class.
 	 * @return {Object}
 	 */
-	Omnitone.createFOARouter = function (context, options) {
-	  return new FOARouter(context, options);
+	Omnitone.createFOARouter = function (context, channelMap) {
+	  return new FOARouter(context, channelMap);
 	};
 
 	/**
@@ -207,7 +200,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 2 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	/**
 	 * Copyright 2016 Google Inc. All Rights Reserved.
@@ -229,6 +222,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 
 	'use strict';
+
+	var Utils = __webpack_require__(3);
 
 	/**
 	 * Streamlined audio file loader supports Promise.
@@ -254,7 +249,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    // Check for duplicates filename and quit if it happens.
 	    if (this._loadingTasks.hasOwnProperty(fileInfo.name)) {
-	      Omnitone.LOG('Duplicated filename when loading: ' + fileInfo.name);
+	      Utils.LOG('Duplicated filename when loading: ' + fileInfo.name);
 	      return;
 	    }
 
@@ -274,16 +269,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	    if (xhr.status === 200) {
 	      that._context.decodeAudioData(xhr.response,
 	        function (buffer) {
-	          // Omnitone.LOG('File loaded: ' + fileInfo.url);
+	          // Utils.LOG('File loaded: ' + fileInfo.url);
 	          that._done(fileInfo.name, buffer);
 	        },
 	        function (message) {
-	          Omnitone.LOG('Decoding failure: '
+	          Utils.LOG('Decoding failure: '
 	            + fileInfo.url + ' (' + message + ')');
 	          that._done(fileInfo.name, null);
 	        });
 	    } else {
-	      Omnitone.LOG('XHR Error: ' + fileInfo.url + ' (' + xhr.statusText 
+	      Utils.LOG('XHR Error: ' + fileInfo.url + ' (' + xhr.statusText 
 	        + ')');
 	      that._done(fileInfo.name, null);
 	    }
@@ -291,8 +286,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  // TODO: fetch local resources if XHR fails.
 	  xhr.onerror = function (event) {
-	    Omnitone.LOG('XHR Network failure: ' + fileInfo.url);
-	    me._done(fileInfo.name, null);
+	    Utils.LOG('XHR Network failure: ' + fileInfo.url);
+	    that._done(fileInfo.name, null);
 	  };
 
 	  xhr.send();
@@ -353,21 +348,65 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 
 	/**
-	 * @fileOverview An audio channel re-router to resolve different channel layouts
-	 *               between various platforms.
+	 * @fileOverview Omnitone library common utilities.
 	 */
 
 	'use strict';
 
-	var CHROME_CHANNEL_MAP = [0, 1, 2, 3];
-	var ISO_CHANNEL_MAP = [2, 0, 1, 3];
+	/**
+	 * Omnitone library logging function.
+	 * @type {Function}
+	 * @param {any} Message to be printed out.
+	 */
+	exports.LOG = function () {
+	  window.console.log.apply(window.console, [
+	    '%c[Omnitone]%c '
+	      + Array.prototype.slice.call(arguments).join(' ') + ' %c(@'
+	      + performance.now().toFixed(2) + 'ms)',
+	    'background: #BBDEFB; color: #FF5722; font-weight: 700',
+	    'font-weight: 400',
+	    'color: #AAA'
+	  ]);
+	};
+
+
+/***/ },
+/* 4 */
+/***/ function(module, exports) {
+
+	/**
+	 * Copyright 2016 Google Inc. All Rights Reserved.
+	 * Licensed under the Apache License, Version 2.0 (the "License");
+	 * you may not use this file except in compliance with the License.
+	 * You may obtain a copy of the License at
+	 *
+	 *     http://www.apache.org/licenses/LICENSE-2.0
+	 *
+	 * Unless required by applicable law or agreed to in writing, software
+	 * distributed under the License is distributed on an "AS IS" BASIS,
+	 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	 * See the License for the specific language governing permissions and
+	 * limitations under the License.
+	 */
+
+	'use strict';
+
+	/**
+	 * @fileOverview An audio channel re-router to resolve different channel layouts
+	 *               between various platforms.
+	 */
+
+	var DEFAULT_CHANNEL_MAP = [0, 1, 2, 3];
+	var IOS_CHANNEL_MAP = [2, 0, 1, 3];
+	var FUMA_2_ACN_CHANNEL_MAP = [0, 3, 1, 2];
+
 
 	/**
 	 * @class A simple channel re-router.
 	 * @param {AudioContext} context      Associated AudioContext.
 	 * @param {Array} channelMap  Routing destination array.
 	 *                                    e.g.) Chrome: [0, 1, 2, 3],
-	 *                                    iOS: [1, 2, 0, 3]
+	 *                                    iOS: [2, 0, 1, 3]
 	 */
 	function FOARouter (context, channelMap) {
 	  this._context = context;
@@ -375,7 +414,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  this._splitter = this._context.createChannelSplitter(4);
 	  this._merger = this._context.createChannelMerger(4);
 
-	  this._channelMap = channelMap || CHROME_CHANNEL_MAP;
+	  this._channelMap = channelMap || DEFAULT_CHANNEL_MAP;
 
 	  this._splitter.connect(this._merger, 0, this._channelMap[0]);
 	  this._splitter.connect(this._merger, 1, this._channelMap[1]);
@@ -387,7 +426,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  this.output = this._merger;
 	}
 
-	FOARouter.prototype.setchannelMap = function (channelMap) {
+	FOARouter.prototype.setChannelMap = function (channelMap) {
 	  if (!channelMap)
 	    return;
 
@@ -403,7 +442,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 4 */
+/* 5 */
 /***/ function(module, exports) {
 
 	/**
@@ -536,8 +575,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 5 */
-/***/ function(module, exports) {
+/* 6 */
+/***/ function(module, exports, __webpack_require__) {
 
 	/**
 	 * Copyright 2016 Google Inc. All Rights Reserved.
@@ -562,6 +601,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
+	var Utils = __webpack_require__(3);
+
 	// Static parameters.
 	var FREQUENCY = 700;
 	var COEFFICIENTS = [1.4142, 0.8166, 0.8166, 0.8166];
@@ -580,7 +621,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  // TODO: calculate the freq/reso based on the context sample rate.
 	  if (!this._context.createIIRFilter) {
-	    Omnitone.LOG('IIR filter is missing. Using Biquad filter instead.');
+	    Utils.LOG('IIR filter is missing. Using Biquad filter instead.');
 	    this._lpf = this._context.createBiquadFilter();
 	    this._hpf = this._context.createBiquadFilter();
 	    this._lpf.frequency.value = FREQUENCY;
@@ -640,7 +681,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 6 */
+/* 7 */
 /***/ function(module, exports) {
 
 	/**
@@ -706,6 +747,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  this.enable();
 
+	  this._convolver.normalize = false;
 	  this._convolver.buffer = options.IR;
 	  this._gain.gain.value = options.gain;
 
@@ -733,7 +775,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 7 */
+/* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -759,18 +801,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	var AudioBufferManager = __webpack_require__(2);
-	var FOARouter = __webpack_require__(3);
-	var FOARotator = __webpack_require__(4);
-	var FOAPhaseMatchedFilter = __webpack_require__(5);
-	var FOAVirtualSpeaker = __webpack_require__(6);
-	var FOASpeakerData = __webpack_require__(8);
-
+	var FOARouter = __webpack_require__(4);
+	var FOARotator = __webpack_require__(5);
+	var FOAPhaseMatchedFilter = __webpack_require__(6);
+	var FOAVirtualSpeaker = __webpack_require__(7);
+	var FOASpeakerData = __webpack_require__(9);
+	var Utils = __webpack_require__(3);
 
 	// By default, Omnitone fetches IR from the spatial media repository.
 	var HRTFSET_URL = 'https://raw.githubusercontent.com/google/spatial-media/master/support/hrtfs/cube/';
 
-	// Post gain compensation value, empirically determined.
-	var POST_GAIN_DB = 30;
+	// Post gain compensation value.
+	var POST_GAIN_DB = 0;
 
 	// The default channel map. This assumes the media uses ACN channel ordering.
 	var CHANNEL_MAP = [0, 1, 2, 3];
@@ -823,13 +865,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @return {Promise}
 	 */
 	FOADecoder.prototype.initialize = function () {
-	  Omnitone.LOG('Version: ' + Omnitone.VERSION);
-	  Omnitone.LOG('Initializing... (mode: ' + this._decodingMode + ')');
+	  Utils.LOG('Version: ' + Omnitone.VERSION);
+	  Utils.LOG('Initializing... (mode: ' + this._decodingMode + ')');
 
 	  // Rerouting channels if necessary.
 	  var channelMapString = this._channelMap.toString();
 	  if (channelMapString !== CHANNEL_MAP.toString()) {
-	    Omnitone.LOG('Remapping channels ([0,1,2,3] -> ['
+	    Utils.LOG('Remapping channels ([0,1,2,3] -> ['
 	      + channelMapString + '])');
 	  }
 
@@ -851,7 +893,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  // Get the linear amplitude from the post gain option, which is in decibel.
 	  var postGainLinear = Math.pow(10, this._postGainDB/20);
-	  Omnitone.LOG('Gain compensation: ' + postGainLinear + ' (' + this._postGainDB
+	  Utils.LOG('Gain compensation: ' + postGainLinear + ' (' + this._postGainDB
 	    + 'dB)');
 
 	  // This returns a promise so developers can use the decoder when it is ready.
@@ -873,7 +915,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // Set the decoding mode.
 	        me.setMode(me._decodingMode);
 	        me._isDecoderReady = true;
-	        Omnitone.LOG('HRTF IRs are loaded successfully. The decoder is ready.');
+	        Utils.LOG('HRTF IRs are loaded successfully. The decoder is ready.');
 
 	        resolve();
 	      }, reject);
@@ -930,14 +972,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	      break;
 	  }
 
-	  Omnitone.LOG('Decoding mode changed. (' + mode + ')');
+	  Utils.LOG('Decoding mode changed. (' + mode + ')');
 	};
 
 	module.exports = FOADecoder;
 
 
 /***/ },
-/* 8 */
+/* 9 */
 /***/ function(module, exports) {
 
 	/**
