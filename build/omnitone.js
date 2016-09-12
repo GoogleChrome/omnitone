@@ -122,13 +122,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	Omnitone.VERSION = '0.1.5';
 
 	/**
-	 * Omnitone library logging function.
-	 * @type {Function}
-	 * @param {any} Message to be printed out.
-	 */
-	Omnitone.LOG = Utils.LOG;
-
-	/**
 	 * Load audio buffers based on the speaker configuration map data.
 	 * @param {AudioContext} context      The associated AudioContext.
 	 * @param {Map} speakerData           The speaker configuration map data.
