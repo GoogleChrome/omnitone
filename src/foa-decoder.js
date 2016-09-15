@@ -27,6 +27,7 @@ var FOAPhaseMatchedFilter = require('./foa-phase-matched-filter.js');
 var FOAVirtualSpeaker = require('./foa-virtual-speaker.js');
 var FOASpeakerData = require('./foa-speaker-data.js');
 var Utils = require('./utils.js');
+var SystemVersion = require('./version.js');
 
 // By default, Omnitone fetches IR from the spatial media repository.
 var HRTFSET_URL = 'https://raw.githubusercontent.com/google/spatial-media/master/support/hrtfs/cube/';
@@ -85,7 +86,7 @@ function FOADecoder (context, videoElement, options) {
  * @return {Promise}
  */
 FOADecoder.prototype.initialize = function () {
-  Utils.LOG('Version: ' + Omnitone.VERSION);
+  Utils.LOG('Version: ' + SystemVersion);
   Utils.LOG('Initializing... (mode: ' + this._decodingMode + ')');
 
   // Rerouting channels if necessary.
