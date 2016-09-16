@@ -34,12 +34,6 @@ var FOADecoder = require('./foa-decoder.js');
 var Utils = require('./utils.js');
 
 /**
- * Omnitone library version
- * @type {String}
- */
-Omnitone.VERSION = '0.1.5';
-
-/**
  * Load audio buffers based on the speaker configuration map data.
  * @param {AudioContext} context      The associated AudioContext.
  * @param {Map} speakerData           The speaker configuration map data.

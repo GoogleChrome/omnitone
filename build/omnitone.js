@@ -116,12 +116,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	var Utils = __webpack_require__(3);
 
 	/**
-	 * Omnitone library version
-	 * @type {String}
-	 */
-	Omnitone.VERSION = '0.1.5';
-
-	/**
 	 * Load audio buffers based on the speaker configuration map data.
 	 * @param {AudioContext} context      The associated AudioContext.
 	 * @param {Map} speakerData           The speaker configuration map data.
@@ -800,6 +794,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var FOAVirtualSpeaker = __webpack_require__(7);
 	var FOASpeakerData = __webpack_require__(9);
 	var Utils = __webpack_require__(3);
+	var SystemVersion = __webpack_require__(10);
 
 	// By default, Omnitone fetches IR from the spatial media repository.
 	var HRTFSET_URL = 'https://raw.githubusercontent.com/google/spatial-media/master/support/hrtfs/cube/';
@@ -858,7 +853,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @return {Promise}
 	 */
 	FOADecoder.prototype.initialize = function () {
-	  Utils.LOG('Version: ' + Omnitone.VERSION);
+	  Utils.LOG('Version: ' + SystemVersion);
 	  Utils.LOG('Initializing... (mode: ' + this._decodingMode + ')');
 
 	  // Rerouting channels if necessary.
@@ -1044,6 +1039,38 @@ return /******/ (function(modules) { // webpackBootstrap
 	}];
 
 	module.exports = FOASpeakerData;
+
+
+/***/ },
+/* 10 */
+/***/ function(module, exports) {
+
+	/**
+	 * Copyright 2016 Google Inc. All Rights Reserved.
+	 * Licensed under the Apache License, Version 2.0 (the "License");
+	 * you may not use this file except in compliance with the License.
+	 * You may obtain a copy of the License at
+	 *
+	 *     http://www.apache.org/licenses/LICENSE-2.0
+	 *
+	 * Unless required by applicable law or agreed to in writing, software
+	 * distributed under the License is distributed on an "AS IS" BASIS,
+	 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	 * See the License for the specific language governing permissions and
+	 * limitations under the License.
+	 */
+
+	/**
+	 * @fileOverview Omnitone version.
+	 */
+
+	'use strict';
+
+	/**
+	 * Omnitone library version
+	 * @type {String}
+	 */
+	module.exports = '0.1.5';
 
 
 /***/ }
