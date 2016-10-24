@@ -4,16 +4,17 @@ Omnitone is a robust implementation of [FOA (first-order-ambisonic)](https://en.
 
 The implementation of Omnitone is based on the [Google spatial media](https://github.com/google/spatial-media) specification. The input audio stream must be configured to ACN channel layout with SN3D normalization.
 
-
-## Installation
-
-Omnitone is designed to be used for the web-facing projects, so the installation via [Bower](https://bower.io/) or [NPM](https://www.npmjs.com/) is recommended. Alternatively, you can clone or download this repository and use the library script file as usual.
-
-```bash
-bower install omnitone
-// Or
-npm install omnitone
-```
+- [Installation](#installation)
+- [Usage](#usage)
+- [Advanced Usage](#advanced-usage)
+  + [FOADecoder](#foadecoder)
+  + [FOARouter](#foarouter)
+  + [FOARotator](#foarotator)
+  + [FOAPhaseMatchedFilter](#foaphasematchedfilter)
+  + [FORVirtualSpeaker](#forvirtualspeaker)
+- [Building](#building)
+- [Audio Codec compatibility](#audio-codec-compatibility)
+- [Related Resources](#related-resouces)
 
 
 ## How it works
@@ -23,6 +24,15 @@ Omnitone is a high-level library that abstracts various technical layers of the 
 <p align="center">
     <img src="https://raw.githubusercontent.com/GoogleChrome/omnitone/master/doc/diagram-omnitone.png" alt="Omnitone Diagram">
 </p>
+
+
+## Installation
+
+Omnitone is designed to be used for the web projects, so the installation via [NPM](https://www.npmjs.com/) is recommended. Alternatively, you can clone or download this repository and use the library script file as usual.
+
+```bash
+npm install omnitone
+```
 
 
 ## Usage
@@ -52,13 +62,20 @@ decoder.initialize().then(function () {
 });
 ```
 
-The decoder constructor accepts the context and the element as arguments. Omnitone uses [HRTFs](https://github.com/google/spatial-media/tree/master/support/hrtfs/cube) from Google spatial media repository, but you can use a custom set of HRTF files as well. The initialization of a decoder instance returns a promise which resolves when the resources (i.e. impulse responses) are fully loaded.
+The decoder constructor accepts the context and the element as arguments. Omnitone uses [HRIRs](https://github.com/google/spatial-media/tree/master/support/hrtfs/cube) from Google spatial media repository, but you can use a custom set of HRIR files as well. The initialization of a decoder instance returns a promise which resolves when the resources (i.e. impulse responses) are fully loaded.
 
 The rotation matrix (3x3, row-major) in the decoder can be updated inside of the graphics render loop. This operation rotates the entire sound field. The rotation matrix is commonly derived from the quaternion of the orientation sensor on the VR headset or the smartphone. Also Omnitone converts the coordinate system from the WebGL space to the audio space internally, so you need not to transform the matrix manually.
 
 ```js
 // Rotate the sound field.
 decoder.setRotationMatrix(rotationMatrix);
+```
+
+If you prefer to work with 4x4 rotation matrix (e.g. Three.js camera), you can use the following method instead.
+
+```js
+// Rotate the sound field based on a Three.js camera object.
+decoder.setRotationMatrixFromCamera(camera.matrix);
 ```
 
 Use `setMode` method to change the setting of the decoder. This is useful when the media source does not have spatially encoded (e.g. stereo or mono) or when you want to reduce the CPU usage or the power consumption by disabling the decoder.
@@ -130,7 +147,11 @@ var rotator = Omnitone.createFOARotator(context);
 
 ```js
 rotator.setRotationMatrix([1, 0, 0, 0, 1, 0, 0, 0, 1]); // 3x3 row-major matrix.
+rotator.setRotationMatrix4([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]); // 4x4 row-major matrix.
 ```
+
+* rotationMatrix (Array): 3x3 row-major matrix.
+* rotationMatrix4 (Array): 4x4 row-major matrix.
 
 ### FOAPhaseMatchedFilter
 
@@ -171,7 +192,7 @@ Deactivating a virtual speaker can save CPU powers. Running multiple HRTF convol
 Omnitone uses [WebPack](https://webpack.github.io/) to build the minified library and to manage dependencies.
 
 ```bash
-npm run install     # install dependencies.
+npm install         # install dependencies.
 npm run build       # build a non-minified library.
 npm run watch       # recompile whenever any source file changes.
 npm run build-all   # build a minified library and copy static resources.
@@ -180,7 +201,7 @@ npm run build-all   # build a minified library and copy static resources.
 
 ## Audio Codec Compatibility
 
-Omnitone is designed to run any browser that supports Web Audio API, however, it does not address the incompatibility issue around various media codec in the browsers. At the time of writing, the decoding of compressed multichannel audio via `<video>` or `<audio>` elements is not fully supported by the majority of mobile browsers.
+Omnitone is designed to run any browser that supports Web Audio API, however, it does not address the incompatibility issue around various media codecs in the browsers. At the time of writing, the decoding of compressed multichannel audio via `<video>` or `<audio>` elements is not fully supported by the majority of mobile browsers.
 
 
 ## Related Resources
