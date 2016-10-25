@@ -31,7 +31,6 @@ var FOARotator = require('./foa-rotator.js');
 var FOAPhaseMatchedFilter = require('./foa-phase-matched-filter.js');
 var FOAVirtualSpeaker = require('./foa-virtual-speaker.js');
 var FOADecoder = require('./foa-decoder.js');
-var Utils = require('./utils.js');
 
 /**
  * Load audio buffers based on the speaker configuration map data.

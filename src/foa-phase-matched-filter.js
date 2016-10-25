@@ -24,8 +24,22 @@
 var Utils = require('./utils.js');
 
 // Static parameters.
-var FREQUENCY = 700;
-var COEFFICIENTS = [1.4142, 0.8166, 0.8166, 0.8166];
+var CROSSOVER_FREQUENCY = 690;
+var GAIN_COEFFICIENTS = [1.4142, 0.8166, 0.8166, 0.8166];
+
+// Helper: generate the coefficients for dual band filter.
+function generateDualBandCoefficients(crossoverFrequency, sampleRate) {
+  var k = Math.tan(Math.PI * crossoverFrequency / sampleRate),
+      k2 = k * k,
+      denominator = k2 + 2 * k + 1;
+
+  return {
+    lowpassA: [1, 2 * (k2 - 1) / denominator, (k2 - 2 * k + 1) / denominator],
+    lowpassB: [k2 / denominator, 2 * k2 / denominator, k2 / denominator],
+    hipassA: [1, 2 * (k2 - 1) / denominator, (k2 - 2 * k + 1) / denominator],
+    hipassB: [1 / denominator, -2 * 1 / denominator, 1 / denominator]
+  };
+}
 
 /**
  * @class FOAPhaseMatchedFilter
@@ -39,23 +53,18 @@ function FOAPhaseMatchedFilter (context) {
 
   this._input = this._context.createGain();
 
-  // TODO: calculate the freq/reso based on the context sample rate.
   if (!this._context.createIIRFilter) {
-    Utils.LOG('IIR filter is missing. Using Biquad filter instead.');
+    Utils.log('IIR filter is missing. Using Biquad filter instead.');
     this._lpf = this._context.createBiquadFilter();
     this._hpf = this._context.createBiquadFilter();
-    this._lpf.frequency.value = FREQUENCY;
-    this._hpf.frequency.value = FREQUENCY;
+    this._lpf.frequency.value = CROSSOVER_FREQUENCY;
+    this._hpf.frequency.value = CROSSOVER_FREQUENCY;
     this._hpf.type = 'highpass';
   } else {
-    this._lpf = this._context.createIIRFilter(
-      [0.00058914319, 0.0011782864, 0.00058914319],
-      [1, -1.9029109, 0.90526748]
-    );
-    this._hpf = this._context.createIIRFilter(
-      [0.95204461, -1.9040892, 0.95204461],
-      [1, -1.9029109, 0.90526748]
-    );
+    var coef = generateDualBandCoefficients(
+        CROSSOVER_FREQUENCY, this._context.sampleRate);
+    this._lpf = this._context.createIIRFilter(coef.lowpassB, coef.lowpassA);
+    this._hpf = this._context.createIIRFilter(coef.hipassB, coef.hipassA);
   }
 
   this._splitterLow = this._context.createChannelSplitter(4);
@@ -87,10 +96,10 @@ function FOAPhaseMatchedFilter (context) {
   // Apply gain correction to hi-passed pressure and velocity components:
   // Inverting sign is necessary as the low-passed and high-passed portion are
   // out-of-phase after the filtering.
-  this._gainHighW.gain.value = -1 * COEFFICIENTS[0];
-  this._gainHighY.gain.value = -1 * COEFFICIENTS[1];
-  this._gainHighZ.gain.value = -1 * COEFFICIENTS[2];
-  this._gainHighX.gain.value = -1 * COEFFICIENTS[3];
+  this._gainHighW.gain.value = -1 * GAIN_COEFFICIENTS[0];
+  this._gainHighY.gain.value = -1 * GAIN_COEFFICIENTS[1];
+  this._gainHighZ.gain.value = -1 * GAIN_COEFFICIENTS[2];
+  this._gainHighX.gain.value = -1 * GAIN_COEFFICIENTS[3];
 
   // Input/output Proxy.
   this.input = this._input;

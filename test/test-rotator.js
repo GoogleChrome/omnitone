@@ -14,7 +14,7 @@
  */
 
 
-describe('FOARouter', function () {
+describe('FOARotator', function () {
 
   var sampleRate = 48000;
   var renderLength = 0.1 * sampleRate;
@@ -29,24 +29,28 @@ describe('FOARouter', function () {
   });
 
 
-  it('#constructor: passing a channel map array to the constructor.', 
+  it('#setRotationMatrix: rotate the incoming stream with a 3x3 matrix.',
       function (done) {
-        // Use constructor to set the channel map.
-        var router = Omnitone.createFOARouter(context, [1, 2, 0, 3]);
         var source = context.createBufferSource();
         source.buffer = testBuffer;
 
-        source.connect(router.input);
-        router.output.connect(context.destination);
+        var rotator = Omnitone.createFOARotator(context);
+
+        source.connect(rotator.input);
+        rotator.output.connect(context.destination);
         source.start();
 
-        // With the router configuration above, this is what must be rendered.
-        //   Channel #0: value [0] => (to channel #1) => value [2]
-        //   Channel #1: value [1] => (to channel #2) => value [0]
-        //   Channel #2: value [2] => (to channel #0) => value [1]
-        //   Channel #3: value [3] => (to channel #3) => value [3]
-        var expectedValues = [2, 0, 1, 3];
-        var passed = false;
+        // 90 degree clockwise along z-axis. (row-major representation)
+        rotator.setRotationMatrix([
+            0, -1,  0,
+            1,  0,  0,
+            0,  0,  1
+          ]);
+
+        // Note that there are some conversions due to the ACN channel ordering
+        // and world-audio space transformation.
+        var expectedValues = [0, -2, 1, 3];
+
         context.startRendering().then(function (renderedBuffer) {
           for (c = 0; c < renderedBuffer.numberOfChannels; c++) {
             passed = isConstantValueOf(
@@ -59,26 +63,29 @@ describe('FOARouter', function () {
   );
 
 
-  it('#setChannelMap: change the channel map.', 
+  it('#setRotationMatrix4: rotate the incoming stream with a 4x4 matrix.',
       function (done) {
-        var router = Omnitone.createFOARouter(context);
         var source = context.createBufferSource();
         source.buffer = testBuffer;
 
-        source.connect(router.input);
-        router.output.connect(context.destination);
+        var rotator = Omnitone.createFOARotator(context);
+
+        source.connect(rotator.input);
+        rotator.output.connect(context.destination);
         source.start();
 
-        // Use setChannleMap() method.
-        router.setChannelMap([0, 3, 1, 2]);
+        // 90 degree counter-clockwise along z-axis. (row-major representation)
+        rotator.setRotationMatrix4([
+            0,  1, 0, 0,
+            -1, 0, 0, 0,
+            0,  0, 1, 0,
+            0,  0, 0, 1
+          ]);
 
-        // With the router configuration above, this is what must be rendered.
-        //   Channel #0: value [0] => (to channel #0) => value [0]
-        //   Channel #1: value [1] => (to channel #3) => value [2]
-        //   Channel #2: value [2] => (to channel #1) => value [3]
-        //   Channel #3: value [3] => (to channel #2) => value [1]
-        var expectedValues = [0, 2, 3, 1];
-        var passed = false;
+        // Note that there are some conversions due to the ACN channel ordering
+        // and world-audio space transformation.
+        var expectedValues = [0, 2, -1, 3];
+
         context.startRendering().then(function (renderedBuffer) {
           for (c = 0; c < renderedBuffer.numberOfChannels; c++) {
             passed = isConstantValueOf(
@@ -87,6 +94,7 @@ describe('FOARouter', function () {
           }
           done();
         });
+
       }
   );
 

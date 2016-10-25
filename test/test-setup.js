@@ -18,6 +18,27 @@ var should = chai.should();
 
 
 /**
+ * Create a buffer for testing. Each channel contains a stream of single,
+ * user-defined value.
+ * @param {AudioContext}  context     AudioContext.
+ * @param {Array}         contents    User-defined value for each channel.
+ * @return {AudioBuffer}              A created buffer.
+ */
+function createTestBuffer(context, contents, length) {
+  var testBuffer = context.createBuffer(
+      contents.length, length, context.sampleRate);
+
+  for (var channel = 0; channel < testBuffer.numberOfChannels; channel++) {
+    var channelData = testBuffer.getChannelData(channel);
+    for (var index = 0; index < channelData.length; index++)
+      channelData[index] = contents[channel];
+  }
+
+  return testBuffer;
+}
+
+
+/**
  * Check if the array is filled with the specified value only.
  * @param  {Float32Array} channelData The target array for testing.
  * @param  {Number} value             A value for the testing.
@@ -30,6 +51,5 @@ function isConstantValueOf(channelData, value) {
       mismatches[i] = channelData[i];
   }
 
-  var numberOfmismatches = Object.keys(mismatches).length;
-  return numberOfmismatches === 0;
+  return Object.keys(mismatches).length === 0;
 };

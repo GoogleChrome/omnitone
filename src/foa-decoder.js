@@ -79,6 +79,8 @@ function FOADecoder (context, videoElement, options) {
       coef: FOASpeakerData[i].coef
     });
   }
+
+  this._tempMatrix4 = new Float32Array(16);
 }
 
 /**
@@ -86,13 +88,13 @@ function FOADecoder (context, videoElement, options) {
  * @return {Promise}
  */
 FOADecoder.prototype.initialize = function () {
-  Utils.LOG('Version: ' + SystemVersion);
-  Utils.LOG('Initializing... (mode: ' + this._decodingMode + ')');
+  Utils.log('Version: ' + SystemVersion);
+  Utils.log('Initializing... (mode: ' + this._decodingMode + ')');
 
   // Rerouting channels if necessary.
   var channelMapString = this._channelMap.toString();
   if (channelMapString !== CHANNEL_MAP.toString()) {
-    Utils.LOG('Remapping channels ([0,1,2,3] -> ['
+    Utils.log('Remapping channels ([0,1,2,3] -> ['
       + channelMapString + '])');
   }
 
@@ -114,7 +116,7 @@ FOADecoder.prototype.initialize = function () {
 
   // Get the linear amplitude from the post gain option, which is in decibel.
   var postGainLinear = Math.pow(10, this._postGainDB/20);
-  Utils.LOG('Gain compensation: ' + postGainLinear + ' (' + this._postGainDB
+  Utils.log('Gain compensation: ' + postGainLinear + ' (' + this._postGainDB
     + 'dB)');
 
   // This returns a promise so developers can use the decoder when it is ready.
@@ -136,7 +138,7 @@ FOADecoder.prototype.initialize = function () {
         // Set the decoding mode.
         me.setMode(me._decodingMode);
         me._isDecoderReady = true;
-        Utils.LOG('HRTF IRs are loaded successfully. The decoder is ready.');
+        Utils.log('HRTF IRs are loaded successfully. The decoder is ready.');
 
         resolve();
       }, reject);
@@ -150,6 +152,18 @@ FOADecoder.prototype.initialize = function () {
  */
 FOADecoder.prototype.setRotationMatrix = function (rotationMatrix) {
   this._foaRotator.setRotationMatrix(rotationMatrix);
+};
+
+
+/**
+ * Update the rotation matrix from a Three.js camera object.
+ * @param  {Object} cameraMatrix      The Matrix4 obejct of Three.js the camera.
+ */
+FOADecoder.prototype.setRotationMatrixFromCamera = function (cameraMatrix) {
+  // Extract the inner array elements and inverse. (The actual view rotation is
+  // the opposite of the camera movement.)
+  Utils.invertMatrix4(this._tempMatrix4, cameraMatrix.elements);
+  this._foaRotator.setRotationMatrix4(this._tempMatrix4);
 };
 
 /**
@@ -193,7 +207,7 @@ FOADecoder.prototype.setMode = function (mode) {
       break;
   }
 
-  Utils.LOG('Decoding mode changed. (' + mode + ')');
+  Utils.log('Decoding mode changed. (' + mode + ')');
 };
 
 module.exports = FOADecoder;

@@ -93,7 +93,7 @@ function FOARotator (context) {
 
 
 /**
- * Set 3x3 matrix for soundfield rotation.
+ * Set 3x3 matrix for soundfield rotation. (gl-matrix.js style)
  * @param {Array} rotationMatrix    A 3x3 matrix of soundfield rotation. The
  *                                  matrix is in the row-major representation.
  */
@@ -109,6 +109,21 @@ FOARotator.prototype.setRotationMatrix = function (rotationMatrix) {
   this._m8.gain.value = rotationMatrix[8];
 };
 
+/**
+ * Set 4x4 matrix for soundfield rotation. (Three.js style)
+ * @param {Array} rotationMatrix4   A 4x4 matrix of soundfield rotation.
+ */
+FOARotator.prototype.setRotationMatrix4 = function (rotationMatrix4) {
+  this._m0.gain.value = rotationMatrix4[0];
+  this._m1.gain.value = rotationMatrix4[1];
+  this._m2.gain.value = rotationMatrix4[2];
+  this._m3.gain.value = rotationMatrix4[4];
+  this._m4.gain.value = rotationMatrix4[5];
+  this._m5.gain.value = rotationMatrix4[6];
+  this._m6.gain.value = rotationMatrix4[8];
+  this._m7.gain.value = rotationMatrix4[9];
+  this._m8.gain.value = rotationMatrix4[10];
+};
 
 /**
  * Returns the current rotation matrix.

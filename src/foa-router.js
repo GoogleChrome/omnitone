@@ -21,8 +21,8 @@
  */
 
 var DEFAULT_CHANNEL_MAP = [0, 1, 2, 3];
-var IOS_CHANNEL_MAP = [2, 0, 1, 3];
-var FUMA_2_ACN_CHANNEL_MAP = [0, 3, 1, 2];
+// var IOS_CHANNEL_MAP = [2, 0, 1, 3];
+// var FUMA_2_ACN_CHANNEL_MAP = [0, 3, 1, 2];
 
 
 /**
