@@ -2,6 +2,10 @@
 
 Omnitone is a robust implementation of [FOA (first-order-ambisonic)](https://en.wikipedia.org/wiki/Ambisonics) decoder with binaural rendering written in Web Audio API. Its decoding process is based on multiple gain nodes for ambisonic gain matrix and convolutions for [HRTF](https://en.wikipedia.org/wiki/Head-related_transfer_function) binaural rendering, ensuring the optimum performance.
 
+See Omnitone in action:
+- __[Project Home](https://googlechrome.github.io/omnitone/#home)__
+- __[JauntVR Gallery: Music](https://www.jauntvr.com/lobby/MusicLobby)__
+
 The implementation of Omnitone is based on the [Google spatial media](https://github.com/google/spatial-media) specification. The input audio stream must be configured to ACN channel layout with SN3D normalization.
 
 - [Installation](#installation)
@@ -13,6 +17,7 @@ The implementation of Omnitone is based on the [Google spatial media](https://gi
   + [FOAPhaseMatchedFilter](#foaphasematchedfilter)
   + [FORVirtualSpeaker](#forvirtualspeaker)
 - [Building](#building)
+- [Test](#test)
 - [Audio Codec compatibility](#audio-codec-compatibility)
 - [Related Resources](#related-resouces)
 
@@ -197,6 +202,11 @@ npm run build       # build a non-minified library.
 npm run watch       # recompile whenever any source file changes.
 npm run build-all   # build a minified library and copy static resources.
 ```
+
+
+## Test
+
+Currently there is no sane way of testing web applications built with Web Audio API in the automated setting (e.g. Travis CI). To run unit tests locally, fire up the web server and load the index HTML page in the the `test` directory.
 
 
 ## Audio Codec Compatibility
