@@ -34,7 +34,7 @@ var OmnitoneDemoContentData = {
   'fuerzaimprevista': {
     title: 'Fuerza Imprevista by Jaunt VR',
     stereoscopic: false,
-    postGainDB: 10,
+    postGainDB: 3,
     urlSet: {
       'mp4_1080p': 'https://storage.googleapis.com/omnitone-demo.google.com.a.appspot.com/fuerza-imprevista-1080p-h264-aac.mp4',
       'webm_1080p': 'https://storage.googleapis.com/omnitone-demo.google.com.a.appspot.com/fuerza-imprevista-1080p-vp9-vorbis.webm'
