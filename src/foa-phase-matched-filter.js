@@ -89,17 +89,18 @@ function FOAPhaseMatchedFilter (context) {
   this._input.connect(this._lpf);
   this._lpf.connect(this._splitterLow);
   this._splitterLow.connect(this._merger, 0, 0);
-  this._splitterLow.connect(this._merger, 0, 1);
-  this._splitterLow.connect(this._merger, 0, 2);
-  this._splitterLow.connect(this._merger, 0, 3);
+  this._splitterLow.connect(this._merger, 1, 1);
+  this._splitterLow.connect(this._merger, 2, 2);
+  this._splitterLow.connect(this._merger, 3, 3);
 
   // Apply gain correction to hi-passed pressure and velocity components:
   // Inverting sign is necessary as the low-passed and high-passed portion are
   // out-of-phase after the filtering.
-  this._gainHighW.gain.value = -1 * GAIN_COEFFICIENTS[0];
-  this._gainHighY.gain.value = -1 * GAIN_COEFFICIENTS[1];
-  this._gainHighZ.gain.value = -1 * GAIN_COEFFICIENTS[2];
-  this._gainHighX.gain.value = -1 * GAIN_COEFFICIENTS[3];
+  var now = this._context.currentTime;
+  this._gainHighW.gain.setValueAtTime(-1 * GAIN_COEFFICIENTS[0], now);
+  this._gainHighY.gain.setValueAtTime(-1 * GAIN_COEFFICIENTS[1], now);
+  this._gainHighZ.gain.setValueAtTime(-1 * GAIN_COEFFICIENTS[2], now);
+  this._gainHighX.gain.setValueAtTime(-1 * GAIN_COEFFICIENTS[3], now);
 
   // Input/output Proxy.
   this.input = this._input;

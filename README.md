@@ -108,7 +108,7 @@ Omnitone also provides various building blocks for the first-order-ambisonic dec
 ```js
 var decoder = Omnitone.createFOADecoder(context, element, {
   HRTFSetUrl: 'YOUR_HRTF_SET_URL',
-  postGainDB: 30,
+  postGainDB: 0,
   channelMap: [0, 1, 2, 3]
 });
 ```
@@ -217,7 +217,7 @@ Omnitone is designed to run any browser that supports Web Audio API, however, it
 ## Related Resources
 
 * [Google Spatial Media](https://github.com/google/spatial-media)
-* [VRView](https://developers.google.com/vr/concepts/vrview/)
+* [VR view](https://developers.google.com/vr/concepts/vrview/)
 * [Web Audio API](https://webaudio.github.io/web-audio-api/)
 * [WebVR](https://webvr.info/)
 
