@@ -56,9 +56,12 @@ function isConstantValueOf(channelData, value) {
 
 
 /**
- * @param  {[type]} crossoverFrequency [description]
- * @param  {[type]} sampleRate         [description]
- * @return {[type]}                    [description]
+ * Generate the filter coefficients for the phase matched dual band filter.
+ * @param  {NUmber} crossoverFrequency Filter crossover frequency.
+ * @param  {NUmber} sampleRate         Operating sample rate.
+ * @return {Object}                    Filter coefficients.
+ *                                     { lowpassA, lowpassB, hipassA, hipassB }
+ *                                     (where B is feedforward, A is feedback.)
  */
 function getDualBandFilterCoefs(crossoverFrequency, sampleRate) {
   var k = Math.tan(Math.PI * crossoverFrequency / sampleRate),
@@ -101,10 +104,10 @@ function kernel_IIRFIlter (channelData, feedforward, feedback) {
 
 
 /**
- * [AudioBus description]
- * @param {[type]} numberOfChannels [description]
- * @param {[type]} length           [description]
- * @param {[type]} sampleRate       [description]
+ * A collection of Float32Array as AudioBus abstraction.
+ * @param {Number} numberOfChannels   Number of channels.
+ * @param {Number} length             Buffer length in samples.
+ * @param {Number} sampleRate         Operating sample rate.
  */
 function AudioBus (numberOfChannels, length, sampleRate) {
   this.numberOfChannels = numberOfChannels;
@@ -156,21 +159,6 @@ AudioBus.prototype.sumFrom = function (otherAudioBus) {
   }
 };
 
-AudioBus.prototype.compareWith = function (otherAudioBus, threshold) {
-  for (var channel = 0; channel < this.numberOfChannels; ++channel) {
-    var channelDataA = this._channelData[channel];
-    var channelDataB = otherAudioBus.getChannelData(channel);
-    
-    for (var i = 0; i < this.length; ++i) {
-      var absDiff = Math.abs(channelDataA[i] - channelDataB[i]);
-      if (absDiff > threshold) {
-        console.log('ERROR: at the index ' + i + ' (' 
-            + absDiff + ' > ' + threshold + ').');
-      }
-    }
-  }
-};
-
 AudioBus.prototype.processGain = function (coefficents) {
   for (var channel = 0; channel < this.numberOfChannels; ++channel) {
     var channelData = this._channelData[channel];
@@ -184,8 +172,32 @@ AudioBus.prototype.processIIRFilter = function (feedforward, feedback) {
     kernel_IIRFIlter(this._channelData[channel], feedforward, feedback);
 };
 
-AudioBus.prototype.print = function () {
+AudioBus.prototype.compareWith = function (otherAudioBus, threshold) {
+  var passed = true;
+
   for (var channel = 0; channel < this.numberOfChannels; ++channel) {
-    console.log(this._channelData[channel]);
+    var channelDataA = this._channelData[channel];
+    var channelDataB = otherAudioBus.getChannelData(channel);
+
+    for (var i = 0; i < this.length; ++i) {
+      var absDiff = Math.abs(channelDataA[i] - channelDataB[i]);
+      if (absDiff > threshold) {
+        console.log('ERROR: at the index ' + i + ' (' + absDiff + ' > '
+            + threshold + ').');
+        passed = false;
+      }
+    }
+  }
+
+  return passed;
+};
+
+AudioBus.prototype.print = function (begin, end) {
+  begin = (begin || 0);
+  end = (end || this.length);
+  console.log('AudioBus: <' + begin + ' ~ ' + end + '>');
+  for (var channel = 0; channel < this.numberOfChannels; ++channel) {
+    console.log(channel
+        + ' => [' + this._channelData[channel].subarray(begin, end) + ']');
   }
 }

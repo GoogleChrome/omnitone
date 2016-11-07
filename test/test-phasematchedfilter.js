@@ -15,15 +15,17 @@
 
 
 describe('FOAPhaseMatchedFilter', function () {
+  // Test threshold. Approximately -140dBFS.
+  var TEST_THRESHOLD = 1.0e-7;
+
+  // Parameters for the FOA phase matched filter.
+  var crossoverFrequency = 690;
+  var hipassGainCompensation = [-1.4142, -0.8166, -0.8166, -0.8166];
 
   var sampleRate = 48000;
   var renderLength = 128;
   var context;
   var testAudioBus;
-
-  // Parameters for the FOA phase matched filter.
-  var crossoverFrequency = 690;
-  var hipassGainCompensation = [-1.4142, -0.8166, -0.8166, -0.8166];
 
   // A common task for router tests. Create an OAC for rendering.
   beforeEach(function (done) {
@@ -34,9 +36,43 @@ describe('FOAPhaseMatchedFilter', function () {
   });
 
 
+  // Testing IIR filter implementation in the browser. (if applicable)
+  it('Testing the IIR filter implementation.', function (done) {
+      expect(typeof context.createIIRFilter).to.equal('function');
+
+      var filterCoefs = getDualBandFilterCoefs(
+          crossoverFrequency, sampleRate);
+
+      var expectedBus = new AudioBus(4, renderLength, sampleRate);
+      expectedBus.copyFrom(testAudioBus);
+      expectedBus.processIIRFilter(
+          filterCoefs.lowpassB, filterCoefs.lowpassA);
+
+      var source = context.createBufferSource();
+      source.buffer = testAudioBus.getAudioBuffer(context);
+      var filter = context.createIIRFilter(
+          filterCoefs.lowpassB, filterCoefs.lowpassA);
+
+      source.connect(filter);
+      filter.connect(context.destination);
+      source.start();
+
+      context.startRendering().then(function (renderedBuffer) {
+        var actualBus = new AudioBus(4, renderLength, sampleRate);
+        actualBus.copyFromAudioBuffer(renderedBuffer);
+        var result = expectedBus.compareWith(actualBus, 0.0);
+        expect(result).to.equal(true);
+
+        done();
+      });
+    }
+  );
+
+
+  // Create the expected result from the JS-version of dual band filter, and
+  // compare with the FOAPhaseMatchedFilter result.
   it('Simulate and verify the phase-matched filter implementation.',
       function (done) {
-
         // Generate the expected filter result.
         var filterCoefs = getDualBandFilterCoefs(
             crossoverFrequency, sampleRate);
@@ -66,7 +102,8 @@ describe('FOAPhaseMatchedFilter', function () {
         context.startRendering().then(function (renderedBuffer) {
           var actualBus = new AudioBus(4, renderLength, sampleRate);
           actualBus.copyFromAudioBuffer(renderedBuffer);
-          hipassBus.compareWith(actualBus, 0.01);
+          var result = hipassBus.compareWith(actualBus, TEST_THRESHOLD);
+          expect(result).to.equal(true);
 
           done();
         });
