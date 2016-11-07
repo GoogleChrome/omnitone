@@ -96,10 +96,14 @@ function FOAPhaseMatchedFilter (context) {
   // Apply gain correction to hi-passed pressure and velocity components:
   // Inverting sign is necessary as the low-passed and high-passed portion are
   // out-of-phase after the filtering.
-  this._gainHighW.gain.value = -1 * GAIN_COEFFICIENTS[0];
-  this._gainHighY.gain.value = -1 * GAIN_COEFFICIENTS[1];
-  this._gainHighZ.gain.value = -1 * GAIN_COEFFICIENTS[2];
-  this._gainHighX.gain.value = -1 * GAIN_COEFFICIENTS[3];
+  // this._gainHighW.gain.value = -1 * GAIN_COEFFICIENTS[0];
+  // this._gainHighY.gain.value = -1 * GAIN_COEFFICIENTS[1];
+  // this._gainHighZ.gain.value = -1 * GAIN_COEFFICIENTS[2];
+  // this._gainHighX.gain.value = -1 * GAIN_COEFFICIENTS[3];
+  this._gainHighW.gain.setValueAtTime(-GAIN_COEFFICIENTS[0], 0);
+  this._gainHighY.gain.setValueAtTime(-GAIN_COEFFICIENTS[1], 0);
+  this._gainHighZ.gain.setValueAtTime(-GAIN_COEFFICIENTS[2], 0);
+  this._gainHighX.gain.setValueAtTime(-GAIN_COEFFICIENTS[3], 0);
 
   // Input/output Proxy.
   this.input = this._input;
