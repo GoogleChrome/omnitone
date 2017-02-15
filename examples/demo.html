@@ -17,7 +17,7 @@
 <head>
   <meta charset="utf-8">
   <title>A Simple Demo: Omnitone</title>
-  <script src="../build/omnitone.js"></script>
+  <script src="../build/omnitone.min.js"></script>
   <style>
     h2 {
       font-family: sans-serif; 
@@ -38,14 +38,13 @@
 <body>
   <h2>Select the sound source to play.</h2>
   <h2>Use headphones for the full-sphere surround sound.</h2>
-  <p id="rotation">please</p>
+  <p id="rotation"></p>
   <br>
   <select id="eSelectSource" name="dropdown" disabled>
     <option value="speech" selected="selected">Speech</option>
     <option value="warbird">Airplanes</option>
   </select>
   <button id="eButtonPlayback" disabled>Play</button>
-
 
   <script>
     var audioSources = {
