@@ -24,7 +24,7 @@ describe('FOARotator', function () {
   // A common task for router tests. Create OAC for rendering.
   beforeEach(function (done) {
     context = new OfflineAudioContext(4, renderLength, sampleRate);
-    testBuffer = createTestBuffer(context, [0, 1, 2, 3], renderLength);
+    testBuffer = createConstantBuffer(context, [0, 1, 2, 3], renderLength);
     done();
   });
 

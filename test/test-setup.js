@@ -20,21 +20,44 @@ var should = chai.should();
 /**
  * Create a buffer for testing. Each channel contains a stream of single,
  * user-defined value.
- * @param {AudioContext}  context     AudioContext.
- * @param {Array}         contents    User-defined value for each channel.
- * @return {AudioBuffer}              A created buffer.
+ * @param {AudioContext} context    AudioContext.
+ * @param {Array} values            User-defined constant value for each
+ *                                  channel.
+ * @param {Number} length           Buffer length in samples.
+ * @return {AudioBuffer}
  */
-function createTestBuffer(context, contents, length) {
-  var testBuffer = context.createBuffer(
-      contents.length, length, context.sampleRate);
+function createConstantBuffer(context, values, length) {
+  var constantBuffer = context.createBuffer(
+      values.length, length, context.sampleRate);
 
-  for (var channel = 0; channel < testBuffer.numberOfChannels; channel++) {
-    var channelData = testBuffer.getChannelData(channel);
+  for (var channel = 0; channel < constantBuffer.numberOfChannels; channel++) {
+    var channelData = constantBuffer.getChannelData(channel);
     for (var index = 0; index < channelData.length; index++)
-      channelData[index] = contents[channel];
+      channelData[index] = values[channel];
   }
 
-  return testBuffer;
+  return constantBuffer;
+}
+
+
+/**
+ * Create a impulse buffer for testing. Each channel contains a single unity
+ * value (1.0) at the beginning and the rest of content is all zero.
+ * @param  {AudioContext} context     AudioContext
+ * @param  {Number} numberOfChannels  Channel count.
+ * @param  {Number} length            Buffer length in samples.
+ * @return {AudioBuffer}
+ */
+function createImpulseBuffer(context, numberOfChannels, length) {
+  var impulseBuffer = context.createBuffer(
+      numberOfChannels, length, context.sampleRate);
+
+  for (var channel = 0; channel < impulseBuffer.numberOfChannels; channel++) {
+    var channelData = impulseBuffer.getChannelData(channel);
+    channelData[0] = 1.0;
+  }
+
+  return impulseBuffer;
 }
 
 
@@ -182,8 +205,9 @@ AudioBus.prototype.compareWith = function (otherAudioBus, threshold) {
     for (var i = 0; i < this.length; ++i) {
       var absDiff = Math.abs(channelDataA[i] - channelDataB[i]);
       if (absDiff > threshold) {
-        console.log('ERROR: at the index ' + i + ' (' + absDiff + ' > '
-            + threshold + ').');
+        console.log('ERROR: [index ' + i + '] this = ' + channelDataA[i]
+            + ' other = ' +  channelDataB[i]
+            + ' (absDiff = ' + absDiff + ', threshold = ' + threshold + ').');
         passed = false;
       }
     }

@@ -1,4 +1,9 @@
 .DS_Store
-bower_components/
 node_modules/
-temp/
+pvt/
+
+.firebaserc
+404.html
+database.rules.json
+firebase.json
+./index.html

@@ -1,1 +1,16 @@
+# NPM modules must include the production build and related files.
+doc/
 examples/
+pvt/
+src/
+test/
+
+.firebaserc
+.gitignore
+404.html
+CONTRIBUTING.md
+database.rules.json
+firebase.json
+index.html
+webpack.config.all.js
+webpack.config.js
