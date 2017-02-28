@@ -137,7 +137,7 @@
       var divRotator = document.getElementById('eRotator');
 
       // called if HTML selector is changed
-      selectRotation = function (value) {
+      var selectRotation = function (value) {
         var direction = predefinedDirections[value];
         updateDirection(direction[0], direction[1], direction[2]);
       };
@@ -177,7 +177,7 @@
 
       selectRotation(0);
 
-      var gamepad = false;
+      var gamepadFound = false;
       var axes = [ 0,0,0 ];
 
       // check checks for gamepads or query the existing gamepad for changes
@@ -190,8 +190,8 @@
         for (var i = 0; i < gamepads.length; ++i) {
           var pad = gamepads[i];
           if (pad != null) {
-            if (!gamepad) {
-              gamepad=true;
+            if (!gamepadFound) {
+              gamepadFound=true;
               divRotator.style.display = 'none';
             }
             if (axes[0] != pad.axes[0] || axes[1] != pad.axes[1]
@@ -207,10 +207,10 @@
             return;
           }
         }
-        if (gamepad) {
+        if (gamepadFound) {
           divRotator.style.display = 'block';
           selectRotation(0);
-          gamepad = false;
+          gamepadFound = false;
         }
         setTimeout(runAnimation, 500);
       }
