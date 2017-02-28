@@ -1,5 +1,5 @@
 <!--
-  Copyright 2016 Google Inc. All Rights Reserved.
+  Copyright 2017 Google Inc. All Rights Reserved.
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
   You may obtain a copy of the License at
@@ -16,11 +16,12 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>A Simple Demo: Omnitone with Headtracking</title>
+  <title>A Simple Demo: Omnitone with Headtracking realized via a
+    Gamepad</title>
   <script src="../build/omnitone.min.js"></script>
   <style>
     h2 {
-      font-family: sans-serif; 
+      font-family: sans-serif;
     }
 
     button {
@@ -36,9 +37,30 @@
   </style>
 </head>
 <body>
+  <h1>Omnitone with Headtracking realized via a Gamepad</h1>
   <h2>Select the sound source to play.</h2>
   <h2>Use headphones for the full-sphere surround sound.</h2>
-  <p id="rotation">Please connect a gamepad (or a headtracker emulating a gamepad) to enable an 3D audio playback that considers your head rotations.</p>
+  <div id="eRotator">
+    <p>
+      Please connect a gamepad (or a
+      <a href="https://www.google.de/search?q=headtracker+gamepad">headtracker
+        emulating a gamepad</a>) to enable a 3D audio playback that
+      considers your head rotations.<br/> Without a gamepad, you can still select
+      from predefined looking directions:
+    </p>
+    <select name="eSelectRotation" size="1"
+            onchange="selectRotation(this.value)">
+      <option value="0" selected>forward</option>
+      <option value="1">backward</option>
+      <option value="2">left</option>
+      <option value="3">right</option>
+      <option value="4">up</option>
+      <option value="5">down</option>
+      <option value="6">head on your right shoulder</option>
+      <option value="7">head on your left shoulder</option>
+    </select>
+  </div>
+  <p id="eRotation"></p>
   <br>
   <select id="eSelectSource" name="dropdown" disabled>
     <option value="speech" selected="selected">Speech</option>
@@ -54,6 +76,16 @@
 
     var buttonPlayback, selectSource;
     var yaw, pitch, roll;
+    var predefinedDirections = [
+      [ 0, 0, 0 ],          // forward
+      [ Math.PI, 0, 0 ],    // backward
+      [ -Math.PI/2, 0, 0 ], // left
+      [ Math.PI/2, 0, 0 ],  // right
+      [ 0, Math.PI/2, 0 ],  // up
+      [ 0, -Math.PI/2, 0 ], // down
+      [ 0, 0, Math.PI/2 ],  // head on right shoulder
+      [ 0, 0, -Math.PI/2 ]  // head on left shoulder
+    ];
 
     window.addEventListener('load', function () {
 
@@ -92,68 +124,95 @@
           audioElement.play();
       };
 
-      var rotator;
-      
       // Initialize the decoder and activate the button when ready.
       decoder.initialize().then(function () {
         buttonPlayback.disabled = false;
         selectSource.disabled = false;
-        rotator = Omnitone.createFOARotator(audioContext);
         window.requestAnimationFrame(runAnimation);
       }, function (onInitializationError) {
         console.error(onInitializationError);
       });
 
-      var textRotation = document.getElementById('rotation');
+      var textRotation = document.getElementById('eRotation');
+      var divRotator = document.getElementById('eRotator');
 
+      // called if HTML selector is changed
+      selectRotation = function (value) {
+        var direction = predefinedDirections[value];
+        updateDirection(direction[0], direction[1], direction[2]);
+      };
+
+      // sets the decoder's rotation matrix and displays the angles
+      // Tait–Bryan angles represent rotations about three distinct axes
+      // z-y’-x″ (intrinsic rotations) are known as: yaw, pitch and roll
+      function updateDirection(yaw, pitch, roll) {
+
+        // http://mathworld.wolfram.com/EulerAngles.html
+        // theta is pitch, psi is roll, and  phi is yaw.
+        // but do not ask me why this decoder uses a different convention:
+        var theta = yaw;
+        var psi = pitch;
+        var phi = roll;
+
+        decoder.setRotationMatrix([
+          Math.cos(theta) * Math.cos(phi),
+          Math.cos(theta) * Math.sin(phi),
+          -Math.sin(theta),
+          Math.sin(psi) * Math.sin(theta) * Math.cos(phi)
+            - Math.cos(psi) * Math.sin(phi),
+          Math.sin(psi) * Math.sin(theta) * Math.sin(phi)
+            + Math.cos(psi) * Math.cos(phi),
+          Math.cos(theta) * Math.sin(psi),
+          Math.cos(psi) * Math.sin(theta) * Math.cos(phi)
+            + Math.sin(psi) * Math.sin(phi),
+          Math.cos(psi) * Math.sin(theta) * Math.sin(phi)
+            - Math.sin(psi) * Math.cos(phi),
+          Math.cos(theta) * Math.cos(psi)
+        ]);
+
+        textRotation.innerHTML = 'yaw ' + Math.round(yaw * 180 / Math.PI)
+          + ' pitch ' + Math.round(pitch * 180 / Math.PI)
+          + ' roll ' + Math.round(roll * 180 / Math.PI);
+      }
+
+      selectRotation(0);
+
+      var gamepad = false;
+      var axes = [ 0,0,0 ];
+
+      // check checks for gamepads or query the existing gamepad for changes
       function runAnimation() {
 
         // look for a Gamepad and check, whether is has changed it axes values.
-        var gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads() : []);
-        var changed = false;
+        var gamepads = navigator.getGamepads ? navigator.getGamepads() :
+          (navigator.webkitGetGamepads ? navigator.webkitGetGamepads()
+            : []);
         for (var i = 0; i < gamepads.length; ++i) {
           var pad = gamepads[i];
           if (pad != null) {
-            if (roll != pad.axes[2] || pitch != pad.axes[1] || yaw != pad.axes[0]) {
-              changed = true;
-              yaw = pad.axes[0];
-              pitch = pad.axes[1];
-              roll = pad.axes[2];
-              textRotation.innerHTML = "yaw " + Math.round(yaw * 180) 
-                + " pitch " + Math.round(pitch * 180) 
-                + " roll " + Math.round(roll * 180);
+            if (!gamepad) {
+              gamepad=true;
+              divRotator.style.display = 'none';
             }
-            break;
+            if (axes[0] != pad.axes[0] || axes[1] != pad.axes[1]
+                || axes[2]  != pad.axes[2]) {
+              axes[0] = pad.axes[0];
+              axes[1] = pad.axes[1];
+              axes[2] = pad.axes[2];
+              updateDirection(axes[0] * Math.PI,
+                             axes[1] * Math.PI,
+                             axes[2] * Math.PI);
+            }
+            window.requestAnimationFrame(runAnimation);
+            return;
           }
         }
-
-        if (changed) {
-          // from http://mathworld.wolfram.com/EulerAngles.html
-          // down is back
-          
-          var phi = yaw * Math.PI; 
-          // 1. the first rotation is by an angle phi about the z-axis using D,
-          
-          var theta = pitch * Math.PI; 
-          // the second rotation is by an angle theta in [0,pi] about the former x-axis (now x^') using C, and
-          
-          var psi = roll * Math.PI;   
-          //3. the third rotation is by an angle psi about the former z-axis (now z^') using B.
-
-          rotator.setRotationMatrix([
-            Math.cos(psi) * Math.cos(phi) - Math.cos(theta) * Math.sin(phi) * Math.sin(psi),
-            Math.cos(psi) * Math.sin(phi) + Math.cos(theta) * Math.cos(phi) * Math.sin(psi),
-            Math.sin(psi) * Math.sin(theta),
-            -Math.sin(psi) * Math.cos(phi) - Math.cos(theta) * Math.sin(phi) * Math.cos(psi),
-            -Math.sin(psi) * Math.sin(phi) + Math.cos(theta) * Math.cos(phi) * Math.cos(psi),
-            Math.cos(psi) * Math.sin(theta),
-            Math.sin(theta) * Math.sin(phi),
-            -Math.sin(theta) * Math.cos(phi),
-            Math.cos(theta)
-          ]);
-          decoder.setRotationMatrix(rotator.getRotationMatrix());
+        if (gamepad) {
+          divRotator.style.display = 'block';
+          selectRotation(0);
+          gamepad = false;
         }
-        window.requestAnimationFrame(runAnimation);
+        setTimeout(runAnimation, 500);
       }
     });
 
