@@ -1,0 +1,221 @@
+<!--
+  Copyright 2017 Google Inc. All Rights Reserved.
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>A Simple Demo: Omnitone with Headtracking realized via a
+    Gamepad</title>
+  <script src="../build/omnitone.min.js"></script>
+  <style>
+    h2 {
+      font-family: sans-serif;
+    }
+
+    button {
+      width: 120px;
+      height: 24px;
+      font-weight: bold;
+    }
+
+    select {
+      width: 120px;
+      font-size: 24px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Omnitone with Headtracking realized via a Gamepad</h1>
+  <h2>Select the sound source to play.</h2>
+  <h2>Use headphones for the full-sphere surround sound.</h2>
+  <div id="eRotator">
+    <p>
+      Please connect a gamepad (or a
+      <a href="https://www.google.de/search?q=headtracker+gamepad">headtracker
+        emulating a gamepad</a>) to enable a 3D audio playback that
+      considers your head rotations.<br/> Without a gamepad, you can still select
+      from predefined looking directions:
+    </p>
+    <select name="eSelectRotation" size="1"
+            onchange="selectRotation(this.value)">
+      <option value="0" selected>forward</option>
+      <option value="1">backward</option>
+      <option value="2">left</option>
+      <option value="3">right</option>
+      <option value="4">up</option>
+      <option value="5">down</option>
+      <option value="6">head on your right shoulder</option>
+      <option value="7">head on your left shoulder</option>
+    </select>
+  </div>
+  <p id="eRotation"></p>
+  <br>
+  <select id="eSelectSource" name="dropdown" disabled>
+    <option value="speech" selected="selected">Speech</option>
+    <option value="warbird">Airplanes</option>
+  </select>
+  <button id="eButtonPlayback" disabled>Play</button>
+
+  <script>
+    var audioSources = {
+      'speech': 'resources/4ch_B_FuMaNorm_FuMaOrd_speech.wav',
+      'warbird': 'resources/jlwarbirds3.amb'
+    };
+
+    var buttonPlayback, selectSource;
+    var yaw, pitch, roll;
+    var predefinedDirections = [
+      [ 0, 0, 0 ],          // forward
+      [ Math.PI, 0, 0 ],    // backward
+      [ -Math.PI/2, 0, 0 ], // left
+      [ Math.PI/2, 0, 0 ],  // right
+      [ 0, Math.PI/2, 0 ],  // up
+      [ 0, -Math.PI/2, 0 ], // down
+      [ 0, 0, Math.PI/2 ],  // head on right shoulder
+      [ 0, 0, -Math.PI/2 ]  // head on left shoulder
+    ];
+
+    window.addEventListener('load', function () {
+
+      // Set up the context and the audio element.
+      var audioContext = new AudioContext();
+      var audioElement = document.createElement('audio');
+      audioElement.loop = true;
+      audioElement.crossOrigin = 'anonymous';
+      audioElement.src = audioSources['speech'];
+
+      // Create a decoder.
+      var decoder = Omnitone.createFOADecoder(audioContext, audioElement, {
+        // The example audio is in the FuMa ordering (W,X,Y,Z). So remap the
+        // channels to the ACN format.
+        channelMap: [0, 3, 1, 2]
+      });
+
+      // Handles UI.
+      buttonPlayback = document.getElementById('eButtonPlayback');
+      selectSource = document.getElementById('eSelectSource');
+
+      buttonPlayback.onclick = function (event) {
+        if (event.target.textContent === 'Play') {
+          event.target.textContent = 'Pause';
+          audioElement.play();
+        } else {
+          event.target.textContent = 'Play';
+          audioElement.pause();
+        }
+      };
+
+      selectSource.onchange = function (event) {
+        audioElement.src = audioSources[event.target.value];
+        audioElement.load();
+        if (buttonPlayback.textContent === 'Pause')
+          audioElement.play();
+      };
+
+      // Initialize the decoder and activate the button when ready.
+      decoder.initialize().then(function () {
+        buttonPlayback.disabled = false;
+        selectSource.disabled = false;
+        window.requestAnimationFrame(runAnimation);
+      }, function (onInitializationError) {
+        console.error(onInitializationError);
+      });
+
+      var textRotation = document.getElementById('eRotation');
+      var divRotator = document.getElementById('eRotator');
+
+      // called if HTML selector is changed
+      var selectRotation = function (value) {
+        var direction = predefinedDirections[value];
+        updateDirection(direction[0], direction[1], direction[2]);
+      };
+
+      // sets the decoder's rotation matrix and displays the angles
+      // Tait–Bryan angles represent rotations about three distinct axes
+      // z-y’-x″ (intrinsic rotations) are known as: yaw, pitch and roll
+      function updateDirection(yaw, pitch, roll) {
+
+        // http://mathworld.wolfram.com/EulerAngles.html
+        // theta is pitch, psi is roll, and  phi is yaw.
+        // but do not ask me why this decoder uses a different convention:
+        var theta = yaw;
+        var psi = pitch;
+        var phi = roll;
+
+        decoder.setRotationMatrix([
+          Math.cos(theta) * Math.cos(phi),
+          Math.cos(theta) * Math.sin(phi),
+          -Math.sin(theta),
+          Math.sin(psi) * Math.sin(theta) * Math.cos(phi)
+            - Math.cos(psi) * Math.sin(phi),
+          Math.sin(psi) * Math.sin(theta) * Math.sin(phi)
+            + Math.cos(psi) * Math.cos(phi),
+          Math.cos(theta) * Math.sin(psi),
+          Math.cos(psi) * Math.sin(theta) * Math.cos(phi)
+            + Math.sin(psi) * Math.sin(phi),
+          Math.cos(psi) * Math.sin(theta) * Math.sin(phi)
+            - Math.sin(psi) * Math.cos(phi),
+          Math.cos(theta) * Math.cos(psi)
+        ]);
+
+        textRotation.innerHTML = 'yaw ' + Math.round(yaw * 180 / Math.PI)
+          + ' pitch ' + Math.round(pitch * 180 / Math.PI)
+          + ' roll ' + Math.round(roll * 180 / Math.PI);
+      }
+
+      selectRotation(0);
+
+      var gamepadFound = false;
+      var axes = [ 0,0,0 ];
+
+      // check checks for gamepads or query the existing gamepad for changes
+      function runAnimation() {
+
+        // look for a Gamepad and check, whether is has changed it axes values.
+        var gamepads = navigator.getGamepads ? navigator.getGamepads() :
+          (navigator.webkitGetGamepads ? navigator.webkitGetGamepads()
+            : []);
+        for (var i = 0; i < gamepads.length; ++i) {
+          var pad = gamepads[i];
+          if (pad != null) {
+            if (!gamepadFound) {
+              gamepadFound=true;
+              divRotator.style.display = 'none';
+            }
+            if (axes[0] != pad.axes[0] || axes[1] != pad.axes[1]
+                || axes[2]  != pad.axes[2]) {
+              axes[0] = pad.axes[0];
+              axes[1] = pad.axes[1];
+              axes[2] = pad.axes[2];
+              updateDirection(axes[0] * Math.PI,
+                             axes[1] * Math.PI,
+                             axes[2] * Math.PI);
+            }
+            window.requestAnimationFrame(runAnimation);
+            return;
+          }
+        }
+        if (gamepadFound) {
+          divRotator.style.display = 'block';
+          selectRotation(0);
+          gamepadFound = false;
+        }
+        setTimeout(runAnimation, 500);
+      }
+    });
+
+  </script>
+</body>
+</html>
