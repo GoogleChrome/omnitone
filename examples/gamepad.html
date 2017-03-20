@@ -16,38 +16,21 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Gamepad: Omnitone with head tracking via Gamepad</title>
+  <title>Example: Head tracking via Gamepad</title>
+  <script src="audiocontext-shim.js"></script>
   <script src="../build/omnitone.min.js"></script>
-  <style>
-    h2 {
-      font-family: sans-serif;
-    }
-    button {
-      width: 120px;
-      height: 34px;
-      font-size: 24px;
-    }
-    select {
-      width: 120px;
-      font-size: 24px;
-    }
-    #eDivDirection {
-      padding: 10px;
-      font-family: monospace;
-      white-space: pre;
-    }
-  </style>
+  <link rel="stylesheet" href="example.css">
 </head>
 <body>
-  <h1>Gamepad: Omnitone with head tracking via Gamepad</h1>
-  <p>Connect a game pad to control the rotation of sound field. More info on
-    GamepadAPI can be found at
+  <h1>Example: Head tracking via Gamepad</h1>
+  <p>Connect a game pad to control the rotation of sound field.</p>
+  <p>More info on GamepadAPI can be found at
     <a href="https://developer.mozilla.org/en-US/docs/Web/API/Gamepad_API/Using_the_Gamepad_API" target="_blank">
     MDN</a> or <a href="https://www.html5rocks.com/en/tutorials/doodles/gamepad/">
     HTML5Rocks</a>.</p>
 
   <div id="secSource">
-    <p>Use headphones for the full-sphere surround sound.</p>
+    <p>NOTE: Use headphones for the full-sphere surround sound.</p>
     <button id="eButtonPlayback" disabled>Play</button>
     <h2>Select the sound source to play.</h2>
     <select id="eSelectSource" name="dropdownSource" disabled>
@@ -103,11 +86,11 @@
 
 
     /**
-     * Sets the decoder's rotation matrix and calculates the angles. Note that 
-     * Omnitone decoder uses a different convention (theta = yaw, 
+     * Sets the decoder's rotation matrix and calculates the angles. Note that
+     * Omnitone decoder uses a different convention (theta = yaw,
      * psi = pitch, phi = roll).
      * See: http://mathworld.wolfram.com/EulerAngles.html
-     * 
+     *
      * @param  {Number} theta Pitch.
      * @param  {Number} psi Roll.
      * @param  {Number} phi Yaw.
@@ -129,7 +112,7 @@
         cosPsi * sinTheta * sinPhi - sinPsi * cosPhi,
         cosTheta * cosPsi
       ]);
-      
+
       divDirection.innerHTML =
           'YAW = ' + Math.round(theta * 180 / Math.PI).toFixed(2) +
           '\nPITCH = ' + Math.round(psi * 180 / Math.PI).toFixed(2) +

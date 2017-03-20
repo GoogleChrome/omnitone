@@ -26,11 +26,13 @@ var Omnitone = {};
 
 // Internal dependencies.
 var AudioBufferManager = require('./audiobuffer-manager.js');
+var FOAConvolver = require('./foa-convolver.js');
 var FOARouter = require('./foa-router.js');
 var FOARotator = require('./foa-rotator.js');
 var FOAPhaseMatchedFilter = require('./foa-phase-matched-filter.js');
 var FOAVirtualSpeaker = require('./foa-virtual-speaker.js');
 var FOADecoder = require('./foa-decoder.js');
+var FOARenderer = require('./foa-renderer.js');
 
 /**
  * Load audio buffers based on the speaker configuration map data.
@@ -45,6 +47,15 @@ Omnitone.loadAudioBuffers = function (context, speakerData) {
       resolve(buffers);
     }, reject);
   });
+};
+
+/**
+ * Create an instance of FOA Convolver. For parameters, refer the definition of
+ * Router class.
+ * @return {Object}
+ */
+Omnitone.createFOAConvolver = function (context, options) {
+  return new FOAConvolver(context, options);
 };
 
 /**
@@ -97,6 +108,18 @@ Omnitone.createFOAVirtualSpeaker = function (context, options) {
  */
 Omnitone.createFOADecoder = function (context, videoElement, options) {
   return new FOADecoder(context, videoElement, options);
+};
+
+/**
+ * Create a singleton FOARenderer instance.
+ * @param {AudioContext} context      Associated AudioContext.
+ * @param {Object} options            Options.
+ * @param {String} options.HRIRUrl    Optional HRIR URL.
+ * @param {Number} options.postGainDB Optional post-decoding gain in dB.
+ * @param {Array} options.channelMap  Optional custom channel map.
+ */
+Omnitone.createFOARenderer = function (context, options) {
+  return new FOARenderer(context, options);
 };
 
 module.exports = Omnitone;

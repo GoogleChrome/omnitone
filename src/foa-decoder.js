@@ -35,9 +35,6 @@ var HRTFSET_URL = 'https://raw.githubusercontent.com/google/spatial-media/master
 // Post gain compensation value.
 var POST_GAIN_DB = 0;
 
-// The default channel map. This assumes the media uses ACN channel ordering.
-var CHANNEL_MAP = [0, 1, 2, 3];
-
 
 /**
  * @class Omnitone FOA decoder class.
@@ -57,7 +54,7 @@ function FOADecoder (context, videoElement, options) {
 
   this._postGainDB = POST_GAIN_DB;
   this._HRTFSetUrl = HRTFSET_URL;
-  this._channelMap = CHANNEL_MAP;
+  this._channelMap = FOARouter.CHANNEL_MAP.DEFAULT; // ACN
 
   if (options) {
     if (options.postGainDB)
@@ -93,8 +90,9 @@ FOADecoder.prototype.initialize = function () {
 
   // Rerouting channels if necessary.
   var channelMapString = this._channelMap.toString();
-  if (channelMapString !== CHANNEL_MAP.toString()) {
-    Utils.log('Remapping channels ([0,1,2,3] -> ['
+  var defaultChannelMapString = FOARouter.CHANNEL_MAP.DEFAULT.toString();
+  if (channelMapString !== defaultChannelMapString) {
+    Utils.log('Remapping channels ([' + defaultChannelMapString + '] -> ['
       + channelMapString + '])');
   }
 

@@ -108,12 +108,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	// Internal dependencies.
 	var AudioBufferManager = __webpack_require__(2);
-	var FOARouter = __webpack_require__(4);
-	var FOARotator = __webpack_require__(5);
-	var FOAPhaseMatchedFilter = __webpack_require__(6);
-	var FOAVirtualSpeaker = __webpack_require__(7);
-	var FOADecoder = __webpack_require__(8);
-	var Utils = __webpack_require__(3);
+	var FOAConvolver = __webpack_require__(4);
+	var FOARouter = __webpack_require__(5);
+	var FOARotator = __webpack_require__(6);
+	var FOAPhaseMatchedFilter = __webpack_require__(7);
+	var FOAVirtualSpeaker = __webpack_require__(8);
+	var FOADecoder = __webpack_require__(9);
+	var FOARenderer = __webpack_require__(12);
 
 	/**
 	 * Load audio buffers based on the speaker configuration map data.
@@ -128,6 +129,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	      resolve(buffers);
 	    }, reject);
 	  });
+	};
+
+	/**
+	 * Create an instance of FOA Convolver. For parameters, refer the definition of
+	 * Router class.
+	 * @return {Object}
+	 */
+	Omnitone.createFOAConvolver = function (context, options) {
+	  return new FOAConvolver(context, options);
 	};
 
 	/**
@@ -180,6 +190,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	Omnitone.createFOADecoder = function (context, videoElement, options) {
 	  return new FOADecoder(context, videoElement, options);
+	};
+
+	/**
+	 * Create a singleton FOARenderer instance.
+	 * @param {AudioContext} context      Associated AudioContext.
+	 * @param {DOMElement} videoElement   Video or Audio DOM element to be streamed.
+	 * @param {Object} options            Options.
+	 * @param {String} options.HRIRUrl    Optional HRIR URL.
+	 * @param {Number} options.postGainDB Optional post-decoding gain in dB.
+	 * @param {Array} options.channelMap  Optional custom channel map.
+	 */
+	Omnitone.createFOARenderer = function (context, videoElement, options) {
+	  return new FOARenderer(context, videoElement, options);
 	};
 
 	module.exports = Omnitone;
@@ -236,7 +259,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    // Check for duplicates filename and quit if it happens.
 	    if (this._loadingTasks.hasOwnProperty(fileInfo.name)) {
-	      Utils.LOG('Duplicated filename when loading: ' + fileInfo.name);
+	      Utils.log('Duplicated filename when loading: ' + fileInfo.name);
 	      return;
 	    }
 
@@ -256,16 +279,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	    if (xhr.status === 200) {
 	      that._context.decodeAudioData(xhr.response,
 	        function (buffer) {
-	          // Utils.LOG('File loaded: ' + fileInfo.url);
+	          // Utils.log('File loaded: ' + fileInfo.url);
 	          that._done(fileInfo.name, buffer);
 	        },
 	        function (message) {
-	          Utils.LOG('Decoding failure: '
+	          Utils.log('Decoding failure: '
 	            + fileInfo.url + ' (' + message + ')');
 	          that._done(fileInfo.name, null);
 	        });
 	    } else {
-	      Utils.LOG('XHR Error: ' + fileInfo.url + ' (' + xhr.statusText 
+	      Utils.log('XHR Error: ' + fileInfo.url + ' (' + xhr.statusText 
 	        + ')');
 	      that._done(fileInfo.name, null);
 	    }
@@ -273,7 +296,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  // TODO: fetch local resources if XHR fails.
 	  xhr.onerror = function (event) {
-	    Utils.LOG('XHR Network failure: ' + fileInfo.url);
+	    Utils.log('XHR Network failure: ' + fileInfo.url);
 	    that._done(fileInfo.name, null);
 	  };
 
@@ -345,7 +368,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @type {Function}
 	 * @param {any} Message to be printed out.
 	 */
-	exports.LOG = function () {
+	exports.log = function () {
 	  window.console.log.apply(window.console, [
 	    '%c[Omnitone]%c '
 	      + Array.prototype.slice.call(arguments).join(' ') + ' %c(@'
@@ -356,9 +379,184 @@ return /******/ (function(modules) { // webpackBootstrap
 	  ]);
 	};
 
+	/**
+	 * A 4x4 matrix inversion utility.
+	 * @param {Array} out   the receiving matrix.
+	 * @param {Array} a     the source matrix.
+	 * @returns {Array} out
+	 */
+	exports.invertMatrix4 = function (out, a) {
+	  var a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3],
+	      a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7],
+	      a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11],
+	      a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15],
+
+	      b00 = a00 * a11 - a01 * a10,
+	      b01 = a00 * a12 - a02 * a10,
+	      b02 = a00 * a13 - a03 * a10,
+	      b03 = a01 * a12 - a02 * a11,
+	      b04 = a01 * a13 - a03 * a11,
+	      b05 = a02 * a13 - a03 * a12,
+	      b06 = a20 * a31 - a21 * a30,
+	      b07 = a20 * a32 - a22 * a30,
+	      b08 = a20 * a33 - a23 * a30,
+	      b09 = a21 * a32 - a22 * a31,
+	      b10 = a21 * a33 - a23 * a31,
+	      b11 = a22 * a33 - a23 * a32,
+
+	      det = b00 * b11 - b01 * b10 + b02 * b09 +
+	            b03 * b08 - b04 * b07 + b05 * b06;
+
+	  if (!det)
+	    return null;
+	  det = 1.0 / det;
+
+	  out[0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;
+	  out[1] = (a02 * b10 - a01 * b11 - a03 * b09) * det;
+	  out[2] = (a31 * b05 - a32 * b04 + a33 * b03) * det;
+	  out[3] = (a22 * b04 - a21 * b05 - a23 * b03) * det;
+	  out[4] = (a12 * b08 - a10 * b11 - a13 * b07) * det;
+	  out[5] = (a00 * b11 - a02 * b08 + a03 * b07) * det;
+	  out[6] = (a32 * b02 - a30 * b05 - a33 * b01) * det;
+	  out[7] = (a20 * b05 - a22 * b02 + a23 * b01) * det;
+	  out[8] = (a10 * b10 - a11 * b08 + a13 * b06) * det;
+	  out[9] = (a01 * b08 - a00 * b10 - a03 * b06) * det;
+	  out[10] = (a30 * b04 - a31 * b02 + a33 * b00) * det;
+	  out[11] = (a21 * b02 - a20 * b04 - a23 * b00) * det;
+	  out[12] = (a11 * b07 - a10 * b09 - a12 * b06) * det;
+	  out[13] = (a00 * b09 - a01 * b07 + a02 * b06) * det;
+	  out[14] = (a31 * b01 - a30 * b03 - a32 * b00) * det;
+	  out[15] = (a20 * b03 - a21 * b01 + a22 * b00) * det;
+
+	  return out;
+	}
+
 
 /***/ },
 /* 4 */
+/***/ function(module, exports) {
+
+	/**
+	 * Copyright 2017 Google Inc. All Rights Reserved.
+	 * Licensed under the Apache License, Version 2.0 (the "License");
+	 * you may not use this file except in compliance with the License.
+	 * You may obtain a copy of the License at
+	 *
+	 *     http://www.apache.org/licenses/LICENSE-2.0
+	 *
+	 * Unless required by applicable law or agreed to in writing, software
+	 * distributed under the License is distributed on an "AS IS" BASIS,
+	 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	 * See the License for the specific language governing permissions and
+	 * limitations under the License.
+	 */
+
+	/**
+	 * @fileOverview A collection of convolvers. Can be used for the optimized FOA
+	 *               binaural rendering. (e.g. SH-MaxRe HRTFs)
+	 */
+
+	'use strict';
+
+	/**
+	 * @class FOAConvolver
+	 * @description A collection of 2 stereo convolvers for 4-channel FOA stream.
+	 * @param {AudioContext} context        Associated AudioContext.
+	 * @param {Object} options              Options for speaker.
+	 * @param {AudioBuffer} options.IR      Stereo IR buffer for HRTF convolution.
+	 * @param {Number} options.gain         Post-gain for the speaker.
+	 */
+	function FOAConvolver (context, options) {
+	  if (options.IR.numberOfChannels !== 4)
+	    throw 'IR does not have 4 channels. cannot proceed.';
+
+	  this._active = false;
+
+	  this._context = context;
+
+	  this._input = this._context.createChannelSplitter(4);
+	  this._mergerWY = this._context.createChannelMerger(2);
+	  this._mergerZX = this._context.createChannelMerger(2);
+	  this._convolverWY = this._context.createConvolver();
+	  this._convolverZX = this._context.createConvolver();
+	  this._splitterWY = this._context.createChannelSplitter(2);
+	  this._splitterZX = this._context.createChannelSplitter(2);
+	  this._inverter = this._context.createGain();
+	  this._mergerBinaural = this._context.createChannelMerger(2);
+	  this._summingBus = this._context.createGain();
+
+	  // Group W and Y, then Z and X.
+	  this._input.connect(this._mergerWY, 0, 0);
+	  this._input.connect(this._mergerWY, 1, 1);
+	  this._input.connect(this._mergerZX, 2, 0);
+	  this._input.connect(this._mergerZX, 3, 1);
+
+	  // Create a network of convolvers using splitter/merger.
+	  this._mergerWY.connect(this._convolverWY);
+	  this._mergerZX.connect(this._convolverZX);
+	  this._convolverWY.connect(this._splitterWY);
+	  this._convolverZX.connect(this._splitterZX);
+	  this._splitterWY.connect(this._mergerBinaural, 0, 0);
+	  this._splitterWY.connect(this._mergerBinaural, 0, 1);
+	  this._splitterWY.connect(this._mergerBinaural, 1, 0);
+	  this._splitterWY.connect(this._inverter, 1, 0);
+	  this._inverter.connect(this._mergerBinaural, 0, 1);
+	  this._splitterZX.connect(this._mergerBinaural, 0, 0);
+	  this._splitterZX.connect(this._mergerBinaural, 0, 1);
+	  this._splitterZX.connect(this._mergerBinaural, 1, 0);
+	  this._splitterZX.connect(this._mergerBinaural, 1, 1);
+
+	  this._convolverWY.normalize = false;
+	  this._convolverZX.normalize = false;
+
+	  // Generate 2 stereo buffers from a 4-channel IR.
+	  this._setHRIRBuffers(options.IR);
+
+	  // For asymmetric degree.
+	  this._inverter.gain.value = -1;
+
+	  // Input/Output proxy.
+	  this.input = this._input;
+	  this.output = this._summingBus;
+
+	  this.enable();
+	}
+
+	FOAConvolver.prototype._setHRIRBuffers = function (hrirBuffer) {
+	  // Use 2 stereo convolutions. This is because the mono convolution wastefully
+	  // produces the stereo output with the same content.
+	  this._hrirWY = this._context.createBuffer(2, hrirBuffer.length,
+	                                            hrirBuffer.sampleRate);
+	  this._hrirZX = this._context.createBuffer(2, hrirBuffer.length,
+	                                            hrirBuffer.sampleRate);
+
+	  // We do this because Safari does not support copyFromChannel/copyToChannel.
+	  this._hrirWY.getChannelData(0).set(hrirBuffer.getChannelData(0));
+	  this._hrirWY.getChannelData(1).set(hrirBuffer.getChannelData(1));
+	  this._hrirZX.getChannelData(0).set(hrirBuffer.getChannelData(2));
+	  this._hrirZX.getChannelData(1).set(hrirBuffer.getChannelData(3));
+
+	  // After these assignments, the channel data in the buffer is immutable in
+	  // FireFox. (i.e. neutered)
+	  this._convolverWY.buffer = this._hrirWY;
+	  this._convolverZX.buffer = this._hrirZX;
+	};
+
+	FOAConvolver.prototype.enable = function () {
+	  this._mergerBinaural.connect(this._summingBus);
+	  this._active = true;
+	};
+
+	FOAConvolver.prototype.disable = function () {
+	  this._mergerBinaural.disconnect();
+	  this._active = false;
+	};
+
+	module.exports = FOAConvolver;
+
+
+/***/ },
+/* 5 */
 /***/ function(module, exports) {
 
 	/**
@@ -383,17 +581,28 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *               between various platforms.
 	 */
 
-	var DEFAULT_CHANNEL_MAP = [0, 1, 2, 3];
-	var IOS_CHANNEL_MAP = [2, 0, 1, 3];
-	var FUMA_2_ACN_CHANNEL_MAP = [0, 3, 1, 2];
+
+	/**
+	 * Channel map dictionary for various mapping scheme.
+	 *
+	 * @type {Object}
+	 */
+	var CHANNEL_MAP = {
+	  // ACN, default channel map. Works correctly on Chrome and FireFox. (FFMpeg)
+	  DEFAULT: [0, 1, 2, 3],
+	  // Safari's decoder works differently on 4-channel stream.
+	  APPLE: [2, 0, 1, 3],
+	  // ACN -> FuMa conversion.
+	  FUMA: [0, 3, 1, 2]
+	};
 
 
 	/**
 	 * @class A simple channel re-router.
-	 * @param {AudioContext} context      Associated AudioContext.
+	 * @param {AudioContext} context Associated AudioContext.
 	 * @param {Array} channelMap  Routing destination array.
 	 *                                    e.g.) Chrome: [0, 1, 2, 3],
-	 *                                    iOS: [2, 0, 1, 3]
+	 *                                    Apple(Safari): [2, 0, 1, 3]
 	 */
 	function FOARouter (context, channelMap) {
 	  this._context = context;
@@ -401,18 +610,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	  this._splitter = this._context.createChannelSplitter(4);
 	  this._merger = this._context.createChannelMerger(4);
 
-	  this._channelMap = channelMap || DEFAULT_CHANNEL_MAP;
+	  this._channelMap = channelMap || CHANNEL_MAP.DEFAULT;
 
 	  this._splitter.connect(this._merger, 0, this._channelMap[0]);
 	  this._splitter.connect(this._merger, 1, this._channelMap[1]);
 	  this._splitter.connect(this._merger, 2, this._channelMap[2]);
 	  this._splitter.connect(this._merger, 3, this._channelMap[3]);
-	  
+
 	  // input/output proxy.
 	  this.input = this._splitter;
 	  this.output = this._merger;
 	}
 
+
+	/**
+	 * Set a channel map array.
+	 *
+	 * @param {Array} channelMap A custom channel map for FOA stream.
+	 */
 	FOARouter.prototype.setChannelMap = function (channelMap) {
 	  if (!channelMap)
 	    return;
@@ -425,11 +640,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	  this._splitter.connect(this._merger, 3, this._channelMap[3]);
 	}
 
+
+	/**
+	 * Static channel map dictionary.
+	 *
+	 * @static
+	 * @type {Object}
+	 */
+	FOARouter.CHANNEL_MAP = CHANNEL_MAP;
+
+
 	module.exports = FOARouter;
 
 
 /***/ },
-/* 5 */
+/* 6 */
 /***/ function(module, exports) {
 
 	/**
@@ -527,7 +752,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	/**
-	 * Set 3x3 matrix for soundfield rotation.
+	 * Set 3x3 matrix for soundfield rotation. (gl-matrix.js style)
 	 * @param {Array} rotationMatrix    A 3x3 matrix of soundfield rotation. The
 	 *                                  matrix is in the row-major representation.
 	 */
@@ -543,6 +768,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	  this._m8.gain.value = rotationMatrix[8];
 	};
 
+	/**
+	 * Set 4x4 matrix for soundfield rotation. (Three.js style)
+	 * @param {Array} rotationMatrix4   A 4x4 matrix of soundfield rotation.
+	 */
+	FOARotator.prototype.setRotationMatrix4 = function (rotationMatrix4) {
+	  this._m0.gain.value = rotationMatrix4[0];
+	  this._m1.gain.value = rotationMatrix4[1];
+	  this._m2.gain.value = rotationMatrix4[2];
+	  this._m3.gain.value = rotationMatrix4[4];
+	  this._m4.gain.value = rotationMatrix4[5];
+	  this._m5.gain.value = rotationMatrix4[6];
+	  this._m6.gain.value = rotationMatrix4[8];
+	  this._m7.gain.value = rotationMatrix4[9];
+	  this._m8.gain.value = rotationMatrix4[10];
+	};
 
 	/**
 	 * Returns the current rotation matrix.
@@ -562,7 +802,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 6 */
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -591,8 +831,22 @@ return /******/ (function(modules) { // webpackBootstrap
 	var Utils = __webpack_require__(3);
 
 	// Static parameters.
-	var FREQUENCY = 700;
-	var COEFFICIENTS = [1.4142, 0.8166, 0.8166, 0.8166];
+	var CROSSOVER_FREQUENCY = 690;
+	var GAIN_COEFFICIENTS = [1.4142, 0.8166, 0.8166, 0.8166];
+
+	// Helper: generate the coefficients for dual band filter.
+	function generateDualBandCoefficients(crossoverFrequency, sampleRate) {
+	  var k = Math.tan(Math.PI * crossoverFrequency / sampleRate),
+	      k2 = k * k,
+	      denominator = k2 + 2 * k + 1;
+
+	  return {
+	    lowpassA: [1, 2 * (k2 - 1) / denominator, (k2 - 2 * k + 1) / denominator],
+	    lowpassB: [k2 / denominator, 2 * k2 / denominator, k2 / denominator],
+	    hipassA: [1, 2 * (k2 - 1) / denominator, (k2 - 2 * k + 1) / denominator],
+	    hipassB: [1 / denominator, -2 * 1 / denominator, 1 / denominator]
+	  };
+	}
 
 	/**
 	 * @class FOAPhaseMatchedFilter
@@ -606,23 +860,18 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  this._input = this._context.createGain();
 
-	  // TODO: calculate the freq/reso based on the context sample rate.
 	  if (!this._context.createIIRFilter) {
-	    Utils.LOG('IIR filter is missing. Using Biquad filter instead.');
+	    Utils.log('IIR filter is missing. Using Biquad filter instead.');
 	    this._lpf = this._context.createBiquadFilter();
 	    this._hpf = this._context.createBiquadFilter();
-	    this._lpf.frequency.value = FREQUENCY;
-	    this._hpf.frequency.value = FREQUENCY;
+	    this._lpf.frequency.value = CROSSOVER_FREQUENCY;
+	    this._hpf.frequency.value = CROSSOVER_FREQUENCY;
 	    this._hpf.type = 'highpass';
 	  } else {
-	    this._lpf = this._context.createIIRFilter(
-	      [0.00058914319, 0.0011782864, 0.00058914319],
-	      [1, -1.9029109, 0.90526748]
-	    );
-	    this._hpf = this._context.createIIRFilter(
-	      [0.95204461, -1.9040892, 0.95204461],
-	      [1, -1.9029109, 0.90526748]
-	    );
+	    var coef = generateDualBandCoefficients(
+	        CROSSOVER_FREQUENCY, this._context.sampleRate);
+	    this._lpf = this._context.createIIRFilter(coef.lowpassB, coef.lowpassA);
+	    this._hpf = this._context.createIIRFilter(coef.hipassB, coef.hipassA);
 	  }
 
 	  this._splitterLow = this._context.createChannelSplitter(4);
@@ -647,17 +896,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	  this._input.connect(this._lpf);
 	  this._lpf.connect(this._splitterLow);
 	  this._splitterLow.connect(this._merger, 0, 0);
-	  this._splitterLow.connect(this._merger, 0, 1);
-	  this._splitterLow.connect(this._merger, 0, 2);
-	  this._splitterLow.connect(this._merger, 0, 3);
+	  this._splitterLow.connect(this._merger, 1, 1);
+	  this._splitterLow.connect(this._merger, 2, 2);
+	  this._splitterLow.connect(this._merger, 3, 3);
 
 	  // Apply gain correction to hi-passed pressure and velocity components:
 	  // Inverting sign is necessary as the low-passed and high-passed portion are
 	  // out-of-phase after the filtering.
-	  this._gainHighW.gain.value = -1 * COEFFICIENTS[0];
-	  this._gainHighY.gain.value = -1 * COEFFICIENTS[1];
-	  this._gainHighZ.gain.value = -1 * COEFFICIENTS[2];
-	  this._gainHighX.gain.value = -1 * COEFFICIENTS[3];
+	  var now = this._context.currentTime;
+	  this._gainHighW.gain.setValueAtTime(-1 * GAIN_COEFFICIENTS[0], now);
+	  this._gainHighY.gain.setValueAtTime(-1 * GAIN_COEFFICIENTS[1], now);
+	  this._gainHighZ.gain.setValueAtTime(-1 * GAIN_COEFFICIENTS[2], now);
+	  this._gainHighX.gain.setValueAtTime(-1 * GAIN_COEFFICIENTS[3], now);
 
 	  // Input/output Proxy.
 	  this.input = this._input;
@@ -668,7 +918,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 7 */
+/* 8 */
 /***/ function(module, exports) {
 
 	/**
@@ -762,7 +1012,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 8 */
+/* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -788,22 +1038,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	var AudioBufferManager = __webpack_require__(2);
-	var FOARouter = __webpack_require__(4);
-	var FOARotator = __webpack_require__(5);
-	var FOAPhaseMatchedFilter = __webpack_require__(6);
-	var FOAVirtualSpeaker = __webpack_require__(7);
-	var FOASpeakerData = __webpack_require__(9);
+	var FOARouter = __webpack_require__(5);
+	var FOARotator = __webpack_require__(6);
+	var FOAPhaseMatchedFilter = __webpack_require__(7);
+	var FOAVirtualSpeaker = __webpack_require__(8);
+	var FOASpeakerData = __webpack_require__(10);
 	var Utils = __webpack_require__(3);
-	var SystemVersion = __webpack_require__(10);
+	var SystemVersion = __webpack_require__(11);
 
 	// By default, Omnitone fetches IR from the spatial media repository.
 	var HRTFSET_URL = 'https://raw.githubusercontent.com/google/spatial-media/master/support/hrtfs/cube/';
 
 	// Post gain compensation value.
 	var POST_GAIN_DB = 0;
-
-	// The default channel map. This assumes the media uses ACN channel ordering.
-	var CHANNEL_MAP = [0, 1, 2, 3];
 
 
 	/**
@@ -824,7 +1071,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  this._postGainDB = POST_GAIN_DB;
 	  this._HRTFSetUrl = HRTFSET_URL;
-	  this._channelMap = CHANNEL_MAP;
+	  this._channelMap = FOARouter.CHANNEL_MAP.DEFAULT; // ACN
 
 	  if (options) {
 	    if (options.postGainDB)
@@ -846,6 +1093,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	      coef: FOASpeakerData[i].coef
 	    });
 	  }
+
+	  this._tempMatrix4 = new Float32Array(16);
 	}
 
 	/**
@@ -853,13 +1102,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @return {Promise}
 	 */
 	FOADecoder.prototype.initialize = function () {
-	  Utils.LOG('Version: ' + SystemVersion);
-	  Utils.LOG('Initializing... (mode: ' + this._decodingMode + ')');
+	  Utils.log('Version: ' + SystemVersion);
+	  Utils.log('Initializing... (mode: ' + this._decodingMode + ')');
 
 	  // Rerouting channels if necessary.
 	  var channelMapString = this._channelMap.toString();
-	  if (channelMapString !== CHANNEL_MAP.toString()) {
-	    Utils.LOG('Remapping channels ([0,1,2,3] -> ['
+	  var defaultChannelMapString = FOARouter.CHANNEL_MAP.DEFAULT.toString();
+	  if (channelMapString !== defaultChannelMapString) {
+	    Utils.log('Remapping channels ([' + defaultChannelMapString + '] -> ['
 	      + channelMapString + '])');
 	  }
 
@@ -881,7 +1131,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  // Get the linear amplitude from the post gain option, which is in decibel.
 	  var postGainLinear = Math.pow(10, this._postGainDB/20);
-	  Utils.LOG('Gain compensation: ' + postGainLinear + ' (' + this._postGainDB
+	  Utils.log('Gain compensation: ' + postGainLinear + ' (' + this._postGainDB
 	    + 'dB)');
 
 	  // This returns a promise so developers can use the decoder when it is ready.
@@ -903,7 +1153,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // Set the decoding mode.
 	        me.setMode(me._decodingMode);
 	        me._isDecoderReady = true;
-	        Utils.LOG('HRTF IRs are loaded successfully. The decoder is ready.');
+	        Utils.log('HRTF IRs are loaded successfully. The decoder is ready.');
 
 	        resolve();
 	      }, reject);
@@ -917,6 +1167,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	FOADecoder.prototype.setRotationMatrix = function (rotationMatrix) {
 	  this._foaRotator.setRotationMatrix(rotationMatrix);
+	};
+
+
+	/**
+	 * Update the rotation matrix from a Three.js camera object.
+	 * @param  {Object} cameraMatrix      The Matrix4 obejct of Three.js the camera.
+	 */
+	FOADecoder.prototype.setRotationMatrixFromCamera = function (cameraMatrix) {
+	  // Extract the inner array elements and inverse. (The actual view rotation is
+	  // the opposite of the camera movement.)
+	  Utils.invertMatrix4(this._tempMatrix4, cameraMatrix.elements);
+	  this._foaRotator.setRotationMatrix4(this._tempMatrix4);
 	};
 
 	/**
@@ -960,14 +1222,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	      break;
 	  }
 
-	  Utils.LOG('Decoding mode changed. (' + mode + ')');
+	  Utils.log('Decoding mode changed. (' + mode + ')');
 	};
 
 	module.exports = FOADecoder;
 
 
 /***/ },
-/* 9 */
+/* 10 */
 /***/ function(module, exports) {
 
 	/**
@@ -1042,7 +1304,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 10 */
+/* 11 */
 /***/ function(module, exports) {
 
 	/**
@@ -1070,7 +1332,217 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * Omnitone library version
 	 * @type {String}
 	 */
-	module.exports = '0.1.6';
+	module.exports = '0.2.0';
+
+
+/***/ },
+/* 12 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * Copyright 2017 Google Inc. All Rights Reserved.
+	 * Licensed under the Apache License, Version 2.0 (the "License");
+	 * you may not use this file except in compliance with the License.
+	 * You may obtain a copy of the License at
+	 *
+	 *     http://www.apache.org/licenses/LICENSE-2.0
+	 *
+	 * Unless required by applicable law or agreed to in writing, software
+	 * distributed under the License is distributed on an "AS IS" BASIS,
+	 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	 * See the License for the specific language governing permissions and
+	 * limitations under the License.
+	 */
+
+	'use strict';
+
+	/**
+	 * @fileOverview Omnitone FOA decoder.
+	 */
+	var AudioBufferManager = __webpack_require__(2);
+	var FOARouter = __webpack_require__(5);
+	var FOARotator = __webpack_require__(6);
+	var FOAConvolver = __webpack_require__(4);
+	var Utils = __webpack_require__(3);
+	var SystemVersion = __webpack_require__(11);
+
+	// HRIR for optimized FOA rendering.
+	var SH_MAXRE_HRIR_URL = 'resources/sh_hrir_o_1.wav';
+
+
+	/**
+	 * @class Omnitone FOA renderer class. Uses the optimized convolution technique.
+	 * @param {AudioContext} context          Associated AudioContext.
+	 * @param {Object} options
+	 * @param {String} options.HRIRUrl        Optional HRIR URL.
+	 * @param {String} options.renderingMode  Rendering mode.
+	 * @param {Array} options.channelMap      Custom channel map.
+	 */
+	function FOARenderer (context, options) {
+	  this._context = context;
+
+	  // Priming internal setting with |options|.
+	  this._HRIRUrl = SH_MAXRE_HRIR_URL;
+	  this._channelMap = FOARouter.CHANNEL_MAP.DEFAULT;
+	  this._renderingMode = 'ambisonic';
+	  if (options) {
+	    if (options.HRIRUrl)
+	      this._HRIRUrl = options.HRIRUrl;
+	    if (options.renderingMode)
+	      this._renderingMode = options.renderingMode;
+	    if (options.channelMap)
+	      this._channelMap = options.channelMap;
+	  }
+
+	  this._isRendererReady = false;
+	}
+
+
+	/**
+	 * Initialize and load the resources for the decode.
+	 * @return {Promise}
+	 */
+	FOARenderer.prototype.initialize = function () {
+	  Utils.log('Version: ' + SystemVersion);
+	  Utils.log('Initializing... (mode: ' + this._renderingMode + ')');
+	  Utils.log('Rendering via SH-MaxRE convolution.');
+
+	  this._tempMatrix4 = new Float32Array(16);
+
+	  return new Promise(this._initializeCallback);
+	};
+
+
+	/**
+	 * Internal callback handler for |initialize| method.
+	 * @param {Function} resolve Promise resolution.
+	 * @param {Function} reject Promise rejection.
+	 */
+	FOARenderer.prototype._initializeCallback = function (resolve, reject) {
+	  new AudioBufferManager(
+	      this._context,
+	      [{ name: 'FOA_HRIR_AUDIOBUFFER', url: this._HRIRUrl }],
+	      function (buffers) {
+	        this.input = this._context.createGain();
+	        this._bypass = this._context.createGain();
+	        this._foaRouter = new FOARouter(this._context, this._channelMap);
+	        this._foaRotator = new FOARotator(this._context);
+	        this._foaConvolver = new FOAConvolver(this._context, {
+	            IR: buffers.get('FOA_HRIR_AUDIOBUFFER')
+	          });
+	        this.output = this._context.createGain();
+
+	        this.input.connect(this._foaRouter.input);
+	        this.input.connect(this._bypass);
+	        this._foaRouter.output.connect(this._foaRotator.input);
+	        this._foaRotator.output.connect(this._foaConvolver.input);
+	        this._foaConvolver.output.connect(this.output);
+
+	        this.setChannelMap(this._channelMap);
+	        this.setMode(this._renderingMode);
+
+	        this._isRendererReady = true;
+	        Utils.log('HRIRs are loaded successfully. The renderer is ready.');
+	        resolve();
+	      }.bind(this),
+	      function (error) {
+	        Utils.log('Initialization failed: ' + error);
+	        reject();
+	      });
+	};
+
+	/**
+	 * Set the channel map.
+	 * @param {Array} channelMap          A custom channel map for FOA stream.
+	 */
+	FOARenderer.prototype.setChannelMap = function (channelMap) {
+	  if (!this._isRendererReady)
+	    return;
+
+	  if (channelMap.toString() !== this._channelMap.toString()) {
+	    Utils.log('Remapping channels ([' + this._channelMap.toString() + '] -> ['
+	      + channelMap.toString() + ']).');
+	    this._channelMap = channelMap.slice();
+	    this._foaRouter.setChannelMap(this._channelMap);
+	  }
+	};
+
+	/**
+	 * Set the rotation matrix for the sound field rotation.
+	 * @param {Array} rotationMatrix      3x3 rotation matrix (row-major
+	 *                                    representation)
+	 */
+	FOARenderer.prototype.setRotationMatrix = function (rotationMatrix) {
+	  if (!this._isRendererReady)
+	    return;
+
+	  this._foaRotator.setRotationMatrix(rotationMatrix);
+	};
+
+
+	/**
+	 * Update the rotation matrix from a Three.js camera object.
+	 * @param  {Object} cameraMatrix      The Matrix4 obejct of Three.js the camera.
+	 */
+	FOARenderer.prototype.setRotationMatrixFromCamera = function (cameraMatrix) {
+	  if (!this._isRendererReady)
+	    return;
+	  
+	  // Extract the inner array elements and inverse. (The actual view rotation is
+	  // the opposite of the camera movement.)
+	  Utils.invertMatrix4(this._tempMatrix4, cameraMatrix.elements);
+	  this._foaRotator.setRotationMatrix4(this._tempMatrix4);
+	};
+
+
+	/**
+	 * Set the decoding mode.
+	 * @param {String} mode               Decoding mode. When the mode is 'bypass'
+	 *                                    the decoder is disabled and bypass the
+	 *                                    input stream to the output. Setting the
+	 *                                    mode to 'ambisonic' activates the decoder.
+	 *                                    When the mode is 'off', all the
+	 *                                    processing is completely turned off saving
+	 *                                    the CPU power.
+	 */
+	FOARenderer.prototype.setMode = function (mode) {
+	  if (mode === this._renderingMode)
+	    return;
+
+	  switch (mode) {
+	    // Bypass mode: The convolution path is disabled, disconnected (thus consume
+	    // no CPU). Use bypass gain node to pass-through the input stream.
+	    case 'bypass':
+	      this._renderingMode = 'bypass';
+	      this._foaConvolver.disable();
+	      this._bypass.connect(this.output);
+	      break;
+
+	    // Ambisonic mode: Use the convolution and shut down the bypass path.
+	    case 'ambisonic':
+	      this._renderingMode = 'ambisonic';
+	      this._foaConvolver.enable();
+	      this._bypass.disconnect();
+	      break;
+
+	    // Off mode: Shut down all sound from the renderer.
+	    case 'off':
+	      this._renderingMode = 'off';
+	      this._foaConvolver.disable();
+	      this._bypass.disconnect();
+	      break;
+
+	    default:
+	      // Unsupported mode. Ignore it.
+	      Utils.log('Rendering mode "' + mode + '" is not supported.');
+	      return;
+	  }
+
+	  Utils.log('Rendering mode changed. (' + mode + ')');
+	};
+
+
+	module.exports = FOARenderer;
 
 
 /***/ }

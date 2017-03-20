@@ -111,14 +111,20 @@ AudioBufferManager.prototype._updateProgress = function (filename) {
       numberOfFailedTask++;
   }
 
-  if (typeof this._progress === 'function')
+  if (typeof this._progress === 'function') {
     this._progress(filename, numberOfFinishedTasks, numberOfTasks);
+    return;
+  }
 
-  if (numberOfFinishedTasks === numberOfTasks)
+  if (numberOfFinishedTasks === numberOfTasks) {
     this._resolve(this._buffers);
+    return;
+  }
 
-  if (numberOfFinishedTasks + numberOfFailedTask === numberOfTasks)
+  if (numberOfFinishedTasks + numberOfFailedTask === numberOfTasks) {
     this._reject(this._buffers);
+    return;
+  }
 };
 
 module.exports = AudioBufferManager;
