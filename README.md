@@ -5,12 +5,15 @@ Omnitone is a robust implementation of [FOA (first-order-ambisonic)](https://en.
 See Omnitone in action:
 - __[Project Home](https://googlechrome.github.io/omnitone/#home)__
 - __[JauntVR Gallery: Music](https://www.jauntvr.com/lobby/MusicLobby)__
+- __[Plan8 Ambisonic Player](http://labs.plan8.se/ambisonics-webplayer/)__
+- __[Forge.js](http://forgejs.org/samples/ambisonics)__
 
-The implementation of Omnitone is based on the [Google spatial media](https://github.com/google/spatial-media) specification. The input audio stream must be configured to ACN channel layout with SN3D normalization.
+The implementation of Omnitone is based on the [Google spatial media](https://github.com/google/spatial-media) specification. The FOA input stream must be configured to ACN channel layout with SN3D normalization.
 
 - [Installation](#installation)
 - [Usage](#usage)
 - [Advanced Usage](#advanced-usage)
+  + __[FOARenderer](#foarenderer) (NEW in 0.2.0)__
   + [FOADecoder](#foadecoder)
   + [FOARouter](#foarouter)
   + [FOARotator](#foarotator)
@@ -24,7 +27,7 @@ The implementation of Omnitone is based on the [Google spatial media](https://gi
 
 ## How it works
 
-Omnitone is a high-level library that abstracts various technical layers of the spatial audio processing. The input audio stream can be either a media element (video or audio tags) or a multichannel web audio source. The rotation of the sound field also can be easily linked to the mobile phone's sensor or the on-screen user interaction.
+Omnitone abstracts various technical layers of audio spatialization. The input audio stream can be either a media element (video or audio tags) or a multichannel web audio source. The rotation of the sound field also can be easily linked to the mobile phone's sensor or the on-screen user interaction.
 
 <p align="center">
     <img src="https://raw.githubusercontent.com/GoogleChrome/omnitone/master/doc/diagram-omnitone.png" alt="Omnitone Diagram">
@@ -33,7 +36,7 @@ Omnitone is a high-level library that abstracts various technical layers of the 
 
 ## Installation
 
-Omnitone is designed to be used for the web projects, so the installation via [NPM](https://www.npmjs.com/) is recommended. Alternatively, you can clone or download this repository and use the library script file as usual.
+Omnitone is designed to be used for the web front-end projects. So [NPM](https://www.npmjs.com/) is recommended if you want to install the library to your web project. You can also clone this repository and use the library file as usual.
 
 ```bash
 npm install omnitone
@@ -45,10 +48,49 @@ npm install omnitone
 The first step is to include the library file in an HTML document.
 
 ```html
-<script src="omnitone.min.js"></script>
+<!-- Use Omnitone from installed node_modules/ -->
+<script src="node_modules/omnitone/build/omnitone.min.js"></script>
+
+<!-- if you prefer to use CDN -->
+<script src="https://cdn.rawgit.com/GoogleChrome/omnitone/962089ca/build/omnitone.min.js"></script>
 ```
 
-The decoder requires an `<audio>` or `<video>` element and `AudioContext`. The following is an example of how to set up the context and the element for Omnitone.
+There are two different ways of rendering the ambisonic input stream with Omnitone.
+
+- [FOARenderer (Optimized)](#foarenderer-optimized)
+- [FOADeocoder (Fully-configurable)](#foadeocoder-fully-configurable)
+
+### FOARenderer (Optimized)
+
+Newly introduced with the version 0.2.0, `FOARenderer` is a highly optimized ambisonic renderer that outperforms the original renderer by __~100%__. The renderer instance also behaves like an AudioNode, so it can be integrated to the existing WebAudio audio graph easily.
+
+```js
+// Set up an audio element to feed the ambisonic source audio feed.
+var audioElement = document.createElement('audio');
+audioElement.src = 'audio-file-foa-acn.wav';
+
+// Create AudioContext, MediaElementSourceNode and FOARenderer.
+var audioContext = new AudioContext();
+var audioElementSource =
+    audioContext.createMediaElementSource(audioElement);
+var foaRenderer = Omnitone.createFOARenderer(audioContext, {
+    HRIRUrl: 'https://cdn.rawgit.com/GoogleChrome/omnitone/962089ca/build/resources/sh_hrir_o_1.wav'
+  });
+
+// Make connection and start play.
+foaRenderer.initialize().then(function () {
+    audioElementSource.connect(foaRenderer.input);
+    foaRenderer.output.connect(audioContext.destination);
+    audioElement.play();
+  });
+}
+```
+
+Currently the HRIR for `FOARenderer` is available on Omnitone's repository. If you do not need a configurable audio path for ambisonic rendering, `FOARenderer` is strongly recommended. See the example [here](https://cdn.rawgit.com/GoogleChrome/omnitone/962089ca/examples/foa-renderer.html).
+
+### FOADeocoder (Fully-configurable)
+
+The `FOADecoder` directly takes `<audio>` or `<video>` element along with the associated `AudioContext`. This object is a thin wrapper of building blocks described in the [advanced usage](#advanced-usage).
 
 ```js
 // Prepare audio element to feed the ambisonic source audio feed.
@@ -67,33 +109,40 @@ decoder.initialize().then(function () {
 });
 ```
 
-The decoder constructor accepts the context and the element as arguments. Omnitone uses [HRIRs](https://github.com/google/spatial-media/tree/master/support/hrtfs/cube) from Google spatial media repository, but you can use a custom set of HRIR files as well. The initialization of a decoder instance returns a promise which resolves when the resources (i.e. impulse responses) are fully loaded.
+The decoder constructor accepts the context and the element as arguments. `FOADecoder` uses [HRIRs](https://github.com/google/spatial-media/tree/master/support/hrtfs/cube) from Google spatial media repository, but you can use a custom set of HRIR files as well. The initialization of a decoder instance returns a promise which resolves when the resources (i.e. impulse responses) are fully loaded. See the example [here](https://cdn.rawgit.com/GoogleChrome/omnitone/962089ca/examples/foa-decoder.html).
+
+### Basic Features: Rotation, ChannelMap, Rendering Mode
 
 The rotation matrix (3x3, row-major) in the decoder can be updated inside of the graphics render loop. This operation rotates the entire sound field. The rotation matrix is commonly derived from the quaternion of the orientation sensor on the VR headset or the smartphone. Also Omnitone converts the coordinate system from the WebGL space to the audio space internally, so you need not to transform the matrix manually.
 
 ```js
-// Rotate the sound field.
-decoder.setRotationMatrix(rotationMatrix);
+// Sound field rotation with 3x3 matrix.
+foaRenderer.setRotationMatrix(rotationMatrix);
+foaDecoder.setRotationMatrix(rotationMatrix);
 ```
 
 If you prefer to work with 4x4 rotation matrix (e.g. Three.js camera), you can use the following method instead.
 
 ```js
-// Rotate the sound field based on a Three.js camera object.
-decoder.setRotationMatrixFromCamera(camera.matrix);
+// Rotate the sound field by passing Three.js camera object. (4x4 matrix)
+foaRenderer.setRotationMatrixFromCamera(camera.matrix);
+foaDecoder.setRotationMatrixFromCamera(camera.matrix);
 ```
 
-Use `setMode` method to change the setting of the decoder. This is useful when the media source does not have spatially encoded (e.g. stereo or mono) or when you want to reduce the CPU usage or the power consumption by disabling the decoder.
+Use `setRenderingMode` or `setMode` method to change the setting of the decoder. This is useful when the media source does not have spatially encoded (e.g. stereo or mono) or when you want to reduce the CPU usage or the power consumption by disabling the decoder.
 
 ```js
 // Mono or regular multi-channel layouts.
-decoder.setMode('bypass');
+foaRenderer.setRenderingMode('bypass');
+foaDecoder.setMode('bypass');
 
-// Ambisonically decoded audio stream.
-decoder.setMode('ambisonic');
+// Use ambisonic rendering.
+foaRenderer.setRenderingMode('ambisonic');
+foaDecoder.setMode('ambisonic');
 
 // Disable encoding completely. (audio processing disabled)
-decoder.setMode('off');
+foaRenderer.setRenderingMode('off');
+foaDecoder.setMode('off');
 ```
 
 
@@ -101,12 +150,37 @@ decoder.setMode('off');
 
 Omnitone also provides various building blocks for the first-order-ambisonic decoding and the binaural rendering. The `FOADecoder` is just a ready-made object built with those components. You can create them and connect together build your own decoding mechanism.
 
-### FOADecoder
+### FOARenderer
 
-`FOADecoder` is a ready-made FOA decoder and binaural renderer. If you need to use the spatialization without any custom configuration, this is the simplest way of using Omnitone.
+`FOARenderer` is an optimized FOA stream binaural renderer based on SH-MaxRe HRIR. It uses a specially crafted HRIR for the optimized audio processing, and the URL for HRIR is shown below. `FOARenderer` must be initialized before its usage.
 
 ```js
-var decoder = Omnitone.createFOADecoder(context, element, {
+var foaRenderer = Omnitone.createFOARenderer(audioContext, {
+  HRIRUrl: 'https://cdn.rawgit.com/GoogleChrome/omnitone/962089ca/build/resources/sh_hrir_o_1.wav',
+  channelMap: [0, 1, 2, 3]
+});
+
+foaRenderer.initialize().then(/* do stuff when FOARenderer is ready. */);
+```
+
+* context (AudioContext): an AudioContext object.
+* options (Object): options for decoder.
+    - HRIRUrl (String): URL for the SH-MaxRe HRIR.
+    - channelMap (Array): A custom channel map.
+
+```js
+foaRenderer.input   // A GainNode as an input of FOARenderer.
+foaRenderer.output  // A GainNode as an output of FOARenderer.
+```
+
+Note that a `FOARenderer` instance has `input` and `output` GainNode. These nodes can be connected to the other AudioNodes for pre/post-processing.
+
+### FOADecoder
+
+`FOADecoder` is a ready-made package of ambisonic gain decoder and binaural renderer.
+
+```js
+var foaDecoder = Omnitone.createFOADecoder(context, element, {
   HRTFSetUrl: 'YOUR_HRTF_SET_URL',
   postGainDB: 0,
   channelMap: [0, 1, 2, 3]
@@ -224,7 +298,7 @@ Omnitone is designed to run any browser that supports Web Audio API, however, it
 
 ## Acknowledgments
 
-Special thanks to Julius Kammerl, Dillon Cower, Boris Smus and Brandon Jones for their help on this project. We are also grateful to Tim Fain and Jaunt VR for their permission to use beautiful VR contents in the demo.
+Special thanks to Boris Smus, Brandon Jones, Dillon Cower, Drew Allen, Julius Kammerl and Marcin Gorzel for their help on this project. We are also grateful to Tim Fain and Jaunt VR for their permission to use beautiful VR contents in the demo.
 
 
 ## Support
