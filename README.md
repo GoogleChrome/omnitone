@@ -18,7 +18,7 @@ The implementation of Omnitone is based on the [Google spatial media](https://gi
   + [FOARouter](#foarouter)
   + [FOARotator](#foarotator)
   + [FOAPhaseMatchedFilter](#foaphasematchedfilter)
-  + [FORVirtualSpeaker](#forvirtualspeaker)
+  + [FOAVirtualSpeaker](#foavirtualspeaker)
 - [Building](#building)
 - [Test](#test)
 - [Audio Codec compatibility](#audio-codec-compatibility)
