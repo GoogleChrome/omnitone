@@ -1,11 +1,14 @@
 # Omnitone: Spatial Audio on the Web
 
+[![Build Status](https://travis-ci.org/GoogleChrome/omnitone.svg?branch=master)](https://travis-ci.org/GoogleChrome/omnitone)
+
 Omnitone is a robust implementation of [FOA (first-order-ambisonic)](https://en.wikipedia.org/wiki/Ambisonics) decoder with binaural rendering written in Web Audio API. Its decoding process is based on multiple gain nodes for ambisonic gain matrix and convolutions for [HRTF](https://en.wikipedia.org/wiki/Head-related_transfer_function) binaural rendering, ensuring the optimum performance.
 
 See Omnitone in action:
 - __[Project Home](https://googlechrome.github.io/omnitone/#home)__
 - __[JauntVR Gallery: Music](https://www.jauntvr.com/lobby/MusicLobby)__
 - __[Plan8 Ambisonic Player](http://labs.plan8.se/ambisonics-webplayer/)__
+
 - __[Forge.js](http://forgejs.org/samples/ambisonics)__
 
 The implementation of Omnitone is based on the [Google spatial media](https://github.com/google/spatial-media) specification. The FOA input stream must be configured to ACN channel layout with SN3D normalization.
@@ -20,7 +23,7 @@ The implementation of Omnitone is based on the [Google spatial media](https://gi
   + [FOAPhaseMatchedFilter](#foaphasematchedfilter)
   + [FOAVirtualSpeaker](#foavirtualspeaker)
 - [Building](#building)
-- [Test](#test)
+- __[Test](#test) (NEW in 0.2.1)__
 - [Audio Codec compatibility](#audio-codec-compatibility)
 - [Related Resources](#related-resouces)
 
@@ -280,7 +283,13 @@ npm run build-all   # build a minified library and copy static resources.
 
 ## Test
 
-Currently there is no sane way of testing web applications built with Web Audio API in the automated setting (e.g. Travis CI). To run unit tests locally, fire up the web server and load the index HTML page in the the `test` directory.
+Omnitone uses [Travis](https://travis-ci.org/) and [Karma](https://karma-runner.github.io/1.0/index.html) test runner for continuous integration. (The index HTML page for the local testing is deprecated in v0.2.1.) To run the test suite locally, you have to clone the repository, install dependencies and launch the test runner:
+
+```bash
+npm test
+```
+
+Note that unit tests require the promisified version of `OfflineAudioContext`, so they might not run on outdate browsers. Omnitone's Travis CI is using the latest stable version of Chrome.
 
 
 ## Audio Codec Compatibility
@@ -291,7 +300,6 @@ Omnitone is designed to run any browser that supports Web Audio API, however, it
 ## Related Resources
 
 * [Google Spatial Media](https://github.com/google/spatial-media)
-* [VR view](https://developers.google.com/vr/concepts/vrview/)
 * [Web Audio API](https://webaudio.github.io/web-audio-api/)
 * [WebVR](https://webvr.info/)
 
