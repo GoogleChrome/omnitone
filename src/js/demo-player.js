@@ -24,7 +24,7 @@
 window.OmnitoneDemoPlayer = (function () {
 
   // Player information
-  var VERSION = '0.1.4.0007';
+  var VERSION = '0.2.0.0000';
 
   // The GL video mapping is 180 degree opposite.
   // TODO: fix this in vr-panorama.js
@@ -58,7 +58,8 @@ window.OmnitoneDemoPlayer = (function () {
 
   // WebAudio related.
   var _audioContext;
-  var _foaDecoder;
+  var _videoElementSource;
+  var _foaRenderer;
   var _rotationQuaternion = quat.create();
   var _rotationMatrix = mat3.create();
 
@@ -71,7 +72,7 @@ window.OmnitoneDemoPlayer = (function () {
 
 
   /**
-   *
+   * Demo-player-specific log printer.
    */
   function PLAYERLOG () {
     window.console.log.apply(window.console, [
@@ -86,7 +87,7 @@ window.OmnitoneDemoPlayer = (function () {
 
 
   /**
-   *
+   * Helper for detecting browser info.
    */
   function getBrowserInfo () {
     var ua = navigator.userAgent;
@@ -112,7 +113,7 @@ window.OmnitoneDemoPlayer = (function () {
 
 
   /**
-   * Perform the browser/platform check and fail early if necessary.
+   * Performs the browser/platform check and fail early if necessary.
    * @param  {[type]} browserInfo [description]
    */
   function checkCompatibility (playerOptions, browserInfo) {
@@ -144,7 +145,7 @@ window.OmnitoneDemoPlayer = (function () {
 
 
   /**
-   *
+   * Create the content data based on the system information.
    */
   function createContentData () {
     // Collect browser information.
@@ -207,8 +208,7 @@ window.OmnitoneDemoPlayer = (function () {
 
 
   /**
-   * [onResize description]
-   * @return {[type]} [description]
+   * |onresize| event handler.
    */
   function onResize () {
     if (_vrDisplay && _vrDisplay.isPresenting) {
@@ -228,8 +228,7 @@ window.OmnitoneDemoPlayer = (function () {
 
 
   /**
-   * [onVRRequestPresent description]
-   * @return {[type]} [description]
+   * |onVRRequestPresent| event handler. (webvr-polyfill)
    */
   function onVRRequestPresent() {
     _vrDisplay.requestPresent({
@@ -241,8 +240,7 @@ window.OmnitoneDemoPlayer = (function () {
 
 
   /**
-   * [onVRExitPresent description]
-   * @return {[type]} [description]
+   * |onVRExitPresent| event handler. (webvr-polyfill)
    */
   function onVRExitPresent() {
     _vrDisplay.exitPresent().then(function () {}, function () {
@@ -252,8 +250,7 @@ window.OmnitoneDemoPlayer = (function () {
 
 
   /**
-   * [_onVRPresentChange description]
-   * @return {[type]} [description]
+   * |onVRPresentChange| event handler. (webvr-polyfill)
    */
   function onVRPresentChange() {
     onResize();
@@ -274,8 +271,7 @@ window.OmnitoneDemoPlayer = (function () {
 
 
   /**
-   * [getVRDisplay description]
-   * @return {[type]} [description]
+   * getVRDisplay wrapper.
    */
   function getVRDisplay () {
     if (navigator.getVRDisplays) {
@@ -301,7 +297,8 @@ window.OmnitoneDemoPlayer = (function () {
 
 
   /**
-   *
+   * Initialize necessary resource for graphics; WebGL, Canvas, and Video
+   * Element.
    */
   function initializeGraphics () {
     // Get VRDisplay.
@@ -336,9 +333,9 @@ window.OmnitoneDemoPlayer = (function () {
       VRSamplesUtil.addError(
         'WebGL is not available for the demo player. ' +
         'Try again with other browser or a different machine.');
-      return;  
+      return;
     }
-    
+
     _glContext.enable(_glContext.DEPTH_TEST);
     _glContext.enable(_glContext.CULL_FACE);
 
@@ -355,7 +352,7 @@ window.OmnitoneDemoPlayer = (function () {
 
 
   /**
-   *
+   * Initialize audio resources; AudioContext and Omnitone.
    */
   function initializeAudio () {
     // The default channel layout for FFMPEG AAC channel ordering.
@@ -370,17 +367,16 @@ window.OmnitoneDemoPlayer = (function () {
       _audioContext = new AudioContext();
     }
 
-    // Create the Omnitone decoder instance.
-    _foaDecoder = Omnitone.createFOADecoder(_audioContext, _videoElement, {
-      postGainDB: _playerOptions.postGainDB,
-      channelMap: channelMap
+    // Create the Omnitone FOARenderer instance.
+    _videoElementSource = _audioContext.createMediaElementSource(_videoElement);
+    _foaRenderer = Omnitone.createFOARenderer(_audioContext, {
+      HRIRUrl: 'third-party/resources/sh_hrir_o_1.wav'
     });
   }
 
 
   /**
-   * [greetAudience description]
-   * @return {[type]} [description]
+   * Modal UI handler.
    */
   function greetAudience () {
     _videoElement.pause();
@@ -391,7 +387,7 @@ window.OmnitoneDemoPlayer = (function () {
     // Prepare the playback.
     _videoElement.currentTime = 0;
     _vrDisplay.resetPose();
-    _foaDecoder.setMode('ambisonic');
+    _foaRenderer.setRenderingMode('ambisonic');
 
     onResize();
 
@@ -412,10 +408,6 @@ window.OmnitoneDemoPlayer = (function () {
   }
 
 
-  /**
-   * [description]
-   * @return {[type]} [description]
-   */
   function getPoseMatrix (out, pose) {
     var orientation = pose.orientation;
     if (!orientation)
@@ -424,12 +416,6 @@ window.OmnitoneDemoPlayer = (function () {
   }
 
 
-  /**
-   * [renderSceneView description]
-   * @param  {[type]} poseMatrix [description]
-   * @param  {[type]} eye        [description]
-   * @return {[type]}            [description]
-   */
   function renderSceneView (poseMatrix, eye) {
     if (eye) {
       // FYI: When rendering a panorama do NOT offset the views by the IPD!
@@ -451,20 +437,17 @@ window.OmnitoneDemoPlayer = (function () {
 
 
   /**
-   * [updateFOARotationMatrix description]
-   * @param  {[type]} poseOrientation [description]
-   * @return {[type]}                 [description]
+   * Update the matrix for FOA sound field rotation.
    */
   function updateFOARotationMatrix(poseOrientation) {
     quat.invert(_rotationQuaternion, poseOrientation);
     mat3.fromQuat(_rotationMatrix, _rotationQuaternion);
-    _foaDecoder.setRotationMatrix(_rotationMatrix);
+    _foaRenderer.setRotationMatrix(_rotationMatrix);
   }
 
 
   /**
-   *
-   * @return {[type]} [description]
+   * Demo player driver.
    */
   function onAnimationFrame () {
     _glContext.clear(_glContext.COLOR_BUFFER_BIT | _glContext.DEPTH_BUFFER_BIT);
@@ -503,8 +486,7 @@ window.OmnitoneDemoPlayer = (function () {
 
 
   /**
-   * [onGallery description]
-   * @return {[type]} [description]
+   * UI event handler: onGallery.
    */
   function onGallery() {
     window.location.href = '../#gallery';
@@ -512,8 +494,7 @@ window.OmnitoneDemoPlayer = (function () {
 
 
   /**
-   * [onPlay description]
-   * @return {[type]} [description]
+   * UI event handler: onPlay.
    */
   function onPlay() {
     _videoElement.play();
@@ -523,8 +504,7 @@ window.OmnitoneDemoPlayer = (function () {
 
 
   /**
-   * [onPause description]
-   * @return {[type]} [description]
+   * UI event handler: onPause.
    */
   function onPause() {
     _videoElement.pause();
@@ -534,8 +514,7 @@ window.OmnitoneDemoPlayer = (function () {
 
 
   /**
-   * [onRewind description]
-   * @return {[type]} [description]
+   * UI event handler: onRewind.
    */
   function onRewind() {
     _videoElement.currentTime = 0;
@@ -561,9 +540,11 @@ window.OmnitoneDemoPlayer = (function () {
 
     return Promise.all([
       // Start initializing the Omnitone decoder. (loading HRTFs)
-      _foaDecoder.initialize(),
+      _foaRenderer.initialize(),
       _glPanoramicView.setVideoElement(_videoElement)
     ]).then(function () {
+      _videoElementSource.connect(_foaRenderer.input);
+      _foaRenderer.output.connect(_audioContext.destination);
       // The initialization of graphics/audio was successful. Make UI
       // interactive and greet the user.
       PLAYERLOG('Ready to play.');
