@@ -64,7 +64,7 @@ describe('FOAConvolver', function () {
 
     Omnitone.loadAudioBuffers(context, [{
         name: 'SH-MaxRe',
-        url: '../build/resources/sh_hrir_o_1.wav'
+        url: 'base/build/resources/sh_hrir_o_1.wav'
       }]).then(function (buffers) {
         foaSHMaxREBuffer = buffers.get('SH-MaxRe');
         done();
