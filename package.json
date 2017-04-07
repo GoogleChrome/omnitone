@@ -2,7 +2,7 @@
   "name": "omnitone",
   "version": "0.2.0",
   "description": "Spatial Audio Decoder in Web Audio API",
-  "main": "src/main.js",
+  "main": "build/omnitone.js",
   "keywords": [
     "spatial audio",
     "ambisonic",
