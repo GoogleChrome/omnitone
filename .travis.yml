@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 dist: trusty
 
 language: node_js
@@ -11,17 +10,12 @@ addons:
     packages:
       - google-chrome-stable
 
+before_install:
+  - '[ "${TRAVIS_NODE_VERSION}" != "0.8" ] || npm install -g npm@1.4.28'
+  - npm install -g npm@latest
+
 before_script:
   - export CHROME_BIN=chromium-browser
   - export DISPLAY=:99.0
   - sh -e /etc/init.d/xvfb start
   - sleep 3
-=======
-language: nodejs
-
-nodejs:
-  - 0.8
-
-before_script:
-  - export CHROME_BIN=chromium-browser
->>>>>>> f6c795e... piloting travis-karma CI testing
