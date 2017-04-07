@@ -1,6 +1,6 @@
-language: nodejs
+language: node_js
 
-nodejs:
+node_js:
   - 0.8
 
 before_script:
