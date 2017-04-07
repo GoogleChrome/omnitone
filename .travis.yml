@@ -1,0 +1,7 @@
+language: nodejs
+
+nodejs:
+  - 0.8
+
+before_script:
+  - export CHROME_BIN=chromium-browser
