@@ -64,7 +64,7 @@ module.exports = function(config) {
 
     // Custom launcher for Chrome on Travis CI.
     customLaunchers: {
-      chrome_travis_ci: {
+      Chrome_travis_ci: {
         base: 'Chrome',
         flags: ['--no-sandbox']
       }
@@ -83,7 +83,7 @@ module.exports = function(config) {
 
   // If the test runs on Travis, use custom launcher.
   if (process.env.TRAVIS) {
-    configuration.browsers = ['chrome_travis_ci'];
+    configuration.browsers = ['Chrome_travis_ci'];
   }
 
   config.set(configuration);
