@@ -3,7 +3,6 @@ doc/
 examples/
 pvt/
 src/
-test/
 
 .firebaserc
 .gitignore
@@ -12,5 +11,3 @@ CONTRIBUTING.md
 database.rules.json
 firebase.json
 index.html
-webpack.config.all.js
-webpack.config.js
