@@ -20,4 +20,5 @@ before_script:
   - sleep 3
 
 script:
+  - npm run build-all
   - npm test
