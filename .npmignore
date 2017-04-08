@@ -6,6 +6,7 @@ src/
 
 .firebaserc
 .gitignore
+.travis.yml
 404.html
 CONTRIBUTING.md
 database.rules.json

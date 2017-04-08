@@ -1,6 +1,6 @@
 # Omnitone: Spatial Audio on the Web
 
-[![Build Status](https://travis-ci.org/GoogleChrome/omnitone.svg?branch=master)](https://travis-ci.org/GoogleChrome/omnitone) [![npm version](https://badge.fury.io/js/omnitone.svg)](https://badge.fury.io/js/omnitone)
+[![Travis](https://img.shields.io/travis/GoogleChrome/omnitone.svg)](https://travis-ci.org/GoogleChrome/omnitone) [![npm](https://img.shields.io/npm/v/omnitone.svg?colorB=4bc51d)](https://www.npmjs.com/package/omnitone) [![GitHub license](https://img.shields.io/badge/license-Apache%202-brightgreen.svg)](https://raw.githubusercontent.com/GoogleChrome/omnitone/master/LICENSE)
 
 Omnitone is a robust implementation of [FOA (first-order-ambisonic)](https://en.wikipedia.org/wiki/Ambisonics) decoder with binaural rendering written in Web Audio API. Its decoding process is based on multiple gain nodes for ambisonic gain matrix and convolutions for [HRTF](https://en.wikipedia.org/wiki/Head-related_transfer_function) binaural rendering, ensuring the optimum performance.
 
