@@ -1,14 +1,11 @@
 # Omnitone: Spatial Audio on the Web
 
-[![Build Status](https://travis-ci.org/GoogleChrome/omnitone.svg?branch=master)](https://travis-ci.org/GoogleChrome/omnitone)
-
 Omnitone is a robust implementation of [FOA (first-order-ambisonic)](https://en.wikipedia.org/wiki/Ambisonics) decoder with binaural rendering written in Web Audio API. Its decoding process is based on multiple gain nodes for ambisonic gain matrix and convolutions for [HRTF](https://en.wikipedia.org/wiki/Head-related_transfer_function) binaural rendering, ensuring the optimum performance.
 
 See Omnitone in action:
 - __[Project Home](https://googlechrome.github.io/omnitone/#home)__
 - __[JauntVR Gallery: Music](https://www.jauntvr.com/lobby/MusicLobby)__
 - __[Plan8 Ambisonic Player](http://labs.plan8.se/ambisonics-webplayer/)__
-
 - __[Forge.js](http://forgejs.org/samples/ambisonics)__
 
 The implementation of Omnitone is based on the [Google spatial media](https://github.com/google/spatial-media) specification. The FOA input stream must be configured to ACN channel layout with SN3D normalization.
