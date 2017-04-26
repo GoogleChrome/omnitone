@@ -30,7 +30,7 @@ var Utils = require('./utils.js');
 var SystemVersion = require('./version.js');
 
 // By default, Omnitone fetches IR from the spatial media repository.
-var HRTFSET_URL = 'https://raw.githubusercontent.com/google/spatial-media/master/support/hrtfs/cube/';
+var HRTFSET_URL = 'https://raw.githubusercontent.com/GoogleChrome/omnitone/master/src/resources/';
 
 // Post gain compensation value.
 var POST_GAIN_DB = 0;
