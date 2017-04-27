@@ -1052,7 +1052,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var SystemVersion = __webpack_require__(11);
 
 	// By default, Omnitone fetches IR from the spatial media repository.
-	var HRTFSET_URL = 'https://raw.githubusercontent.com/GoogleChrome/omnitone/updating-cube-hrtf/src/resources';
+	var HRTFSET_URL = 'https://raw.githubusercontent.com/GoogleChrome/omnitone/master/build/resources/';
 
 	// Post gain compensation value.
 	var POST_GAIN_DB = 0;
