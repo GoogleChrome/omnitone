@@ -88,7 +88,7 @@ foaRenderer.initialize().then(function () {
 }
 ```
 
-Currently the HRIR for `FOARenderer` is available on Omnitone's repository. If you do not need a configurable audio path for ambisonic rendering, `FOARenderer` is strongly recommended. See the example [here](https://cdn.rawgit.com/GoogleChrome/omnitone/master/examples/foa-renderer.html).
+Currently the HRIR for `FOARenderer` is available on Omnitone's repository. If you do not need a configurable audio path for ambisonic rendering, `FOARenderer` is strongly recommended. See the example [here](https://cdn.rawgit.com/GoogleChrome/omnitone/0.2.2/examples/foa-renderer.html).
 
 ### FOADeocoder (Fully-configurable)
 
@@ -111,7 +111,7 @@ decoder.initialize().then(function () {
 });
 ```
 
-The decoder constructor accepts the context and the element as arguments. `FOADecoder` uses [HRIRs](https://github.com/google/spatial-media/tree/master/support/hrtfs/cube) from Google spatial media repository, but you can use a custom set of HRIR files as well. The initialization of a decoder instance returns a promise which resolves when the resources (i.e. impulse responses) are fully loaded. See the example [here](https://cdn.rawgit.com/GoogleChrome/omnitone/master/examples/foa-decoder.html).
+The decoder constructor accepts the context and the element as arguments. `FOADecoder` uses [HRIRs](https://github.com/google/spatial-media/tree/master/support/hrtfs/cube) from Google spatial media repository, but you can use a custom set of HRIR files as well. The initialization of a decoder instance returns a promise which resolves when the resources (i.e. impulse responses) are fully loaded. See the example [here](https://cdn.rawgit.com/GoogleChrome/omnitone/0.2.2/examples/foa-decoder.html).
 
 ### Basic Features: Rotation, ChannelMap, Rendering Mode
 
