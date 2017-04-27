@@ -15,7 +15,7 @@
 
 /**
  * See also:
- * https://github.com/google/spatial-media/tree/master/support/hrtfs/cube
+ * https://github.com/google/spatial-media/tree/master/spatial-audio
  */
 
 /**
@@ -25,43 +25,43 @@
  * @type {Array}
  */
 var FOASpeakerData = [{
-  name: 'E35.26_A135',
-  url: 'E35.26_A135_D1.4.wav',
+  name: 'E35_A135',
+  url: 'E35_A135.wav',
   gainFactor: 1,
   coef: [.1250, 0.216495, 0.21653, -0.216495]
 }, {
-  name: 'E35.26_A-135',
-  url: 'E35.26_A-135_D1.4.wav',
+  name: 'E35_A-135',
+  url: 'E35_A-135.wav',
   gainFactor: 1,
   coef: [.1250, -0.216495, 0.21653, -0.216495]
 }, {
-  name: 'E-35.26_A135',
-  url: 'E-35.26_A135_D1.4.wav',
+  name: 'E-35_A135',
+  url: 'E-35_A135.wav',
   gainFactor: 1,
   coef: [.1250, 0.216495, -0.21653, -0.216495]
 }, {
-  name: 'E-35.26_A-135',
-  url: 'E-35.26_A-135_D1.4.wav',
+  name: 'E-35_A-135',
+  url: 'E-35_A-135.wav',
   gainFactor: 1,
   coef: [.1250, -0.216495, -0.21653, -0.216495]
 }, {
-  name: 'E35.26_A45',
-  url: 'E35.26_A45_D1.4.wav',
+  name: 'E35_A45',
+  url: 'E35_A45.wav',
   gainFactor: 1,
   coef: [.1250, 0.216495, 0.21653, 0.216495]
 }, {
-  name: 'E35.26_A-45',
-  url: 'E35.26_A-45_D1.4.wav',
+  name: 'E35_A-45',
+  url: 'E35_A-45.wav',
   gainFactor: 1,
   coef: [.1250, -0.216495, 0.21653, 0.216495]
 }, {
-  name: 'E-35.26_A45',
-  url: 'E-35.26_A45_D1.4.wav',
+  name: 'E-35_A45',
+  url: 'E-35_A45.wav',
   gainFactor: 1,
   coef: [.1250, 0.216495, -0.21653, 0.216495]
 }, {
-  name: 'E-35.26_A-45',
-  url: 'E-35.26_A-45_D1.4.wav',
+  name: 'E-35_A-45',
+  url: 'E-35_A-45.wav',
   gainFactor: 1,
   coef: [.1250, -0.216495, -0.21653, 0.216495]
 }];

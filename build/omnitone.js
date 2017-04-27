@@ -195,14 +195,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 * Create a singleton FOARenderer instance.
 	 * @param {AudioContext} context      Associated AudioContext.
-	 * @param {DOMElement} videoElement   Video or Audio DOM element to be streamed.
 	 * @param {Object} options            Options.
 	 * @param {String} options.HRIRUrl    Optional HRIR URL.
 	 * @param {Number} options.postGainDB Optional post-decoding gain in dB.
 	 * @param {Array} options.channelMap  Optional custom channel map.
 	 */
-	Omnitone.createFOARenderer = function (context, videoElement, options) {
-	  return new FOARenderer(context, videoElement, options);
+	Omnitone.createFOARenderer = function (context, options) {
+	  return new FOARenderer(context, options);
 	};
 
 	module.exports = Omnitone;
@@ -325,14 +324,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	      numberOfFailedTask++;
 	  }
 
-	  if (typeof this._progress === 'function')
+	  if (typeof this._progress === 'function') {
 	    this._progress(filename, numberOfFinishedTasks, numberOfTasks);
+	    return;
+	  }
 
-	  if (numberOfFinishedTasks === numberOfTasks)
+	  if (numberOfFinishedTasks === numberOfTasks) {
 	    this._resolve(this._buffers);
+	    return;
+	  }
 
-	  if (numberOfFinishedTasks + numberOfFailedTask === numberOfTasks)
+	  if (numberOfFinishedTasks + numberOfFailedTask === numberOfTasks) {
 	    this._reject(this._buffers);
+	    return;
+	  }
 	};
 
 	module.exports = AudioBufferManager;
@@ -1047,7 +1052,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var SystemVersion = __webpack_require__(11);
 
 	// By default, Omnitone fetches IR from the spatial media repository.
-	var HRTFSET_URL = 'https://raw.githubusercontent.com/google/spatial-media/master/support/hrtfs/cube/';
+	var HRTFSET_URL = 'https://raw.githubusercontent.com/GoogleChrome/omnitone/updating-cube-hrtf/src/resources';
 
 	// Post gain compensation value.
 	var POST_GAIN_DB = 0;
@@ -1249,7 +1254,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	/**
 	 * See also:
-	 * https://github.com/google/spatial-media/tree/master/support/hrtfs/cube
+	 * https://github.com/google/spatial-media/tree/master/spatial-audio
 	 */
 
 	/**
@@ -1259,43 +1264,43 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @type {Array}
 	 */
 	var FOASpeakerData = [{
-	  name: 'E35.26_A135',
-	  url: 'E35.26_A135_D1.4.wav',
+	  name: 'E35_A135',
+	  url: 'E35_A135.wav',
 	  gainFactor: 1,
 	  coef: [.1250, 0.216495, 0.21653, -0.216495]
 	}, {
-	  name: 'E35.26_A-135',
-	  url: 'E35.26_A-135_D1.4.wav',
+	  name: 'E35_A-135',
+	  url: 'E35_A-135.wav',
 	  gainFactor: 1,
 	  coef: [.1250, -0.216495, 0.21653, -0.216495]
 	}, {
-	  name: 'E-35.26_A135',
-	  url: 'E-35.26_A135_D1.4.wav',
+	  name: 'E-35_A135',
+	  url: 'E-35_A135.wav',
 	  gainFactor: 1,
 	  coef: [.1250, 0.216495, -0.21653, -0.216495]
 	}, {
-	  name: 'E-35.26_A-135',
-	  url: 'E-35.26_A-135_D1.4.wav',
+	  name: 'E-35_A-135',
+	  url: 'E-35_A-135.wav',
 	  gainFactor: 1,
 	  coef: [.1250, -0.216495, -0.21653, -0.216495]
 	}, {
-	  name: 'E35.26_A45',
-	  url: 'E35.26_A45_D1.4.wav',
+	  name: 'E35_A45',
+	  url: 'E35_A45.wav',
 	  gainFactor: 1,
 	  coef: [.1250, 0.216495, 0.21653, 0.216495]
 	}, {
-	  name: 'E35.26_A-45',
-	  url: 'E35.26_A-45_D1.4.wav',
+	  name: 'E35_A-45',
+	  url: 'E35_A-45.wav',
 	  gainFactor: 1,
 	  coef: [.1250, -0.216495, 0.21653, 0.216495]
 	}, {
-	  name: 'E-35.26_A45',
-	  url: 'E-35.26_A45_D1.4.wav',
+	  name: 'E-35_A45',
+	  url: 'E-35_A45.wav',
 	  gainFactor: 1,
 	  coef: [.1250, 0.216495, -0.21653, 0.216495]
 	}, {
-	  name: 'E-35.26_A-45',
-	  url: 'E-35.26_A-45_D1.4.wav',
+	  name: 'E-35_A-45',
+	  url: 'E-35_A-45.wav',
 	  gainFactor: 1,
 	  coef: [.1250, -0.216495, -0.21653, 0.216495]
 	}];
@@ -1367,6 +1372,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var SystemVersion = __webpack_require__(11);
 
 	// HRIR for optimized FOA rendering.
+	// TODO(hongchan): change this with the absolute URL.
 	var SH_MAXRE_HRIR_URL = 'resources/sh_hrir_o_1.wav';
 
 
@@ -1409,7 +1415,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  this._tempMatrix4 = new Float32Array(16);
 
-	  return new Promise(this._initializeCallback);
+	  return new Promise(this._initializeCallback.bind(this));
 	};
 
 
@@ -1419,16 +1425,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @param {Function} reject Promise rejection.
 	 */
 	FOARenderer.prototype._initializeCallback = function (resolve, reject) {
+	  var key = 'FOA_HRIR_AUDIOBUFFER';
 	  new AudioBufferManager(
 	      this._context,
-	      [{ name: 'FOA_HRIR_AUDIOBUFFER', url: this._HRIRUrl }],
+	      [{ name: key, url: this._HRIRUrl }],
 	      function (buffers) {
 	        this.input = this._context.createGain();
 	        this._bypass = this._context.createGain();
 	        this._foaRouter = new FOARouter(this._context, this._channelMap);
 	        this._foaRotator = new FOARotator(this._context);
 	        this._foaConvolver = new FOAConvolver(this._context, {
-	            IR: buffers.get('FOA_HRIR_AUDIOBUFFER')
+	            IR: buffers.get(key)
 	          });
 	        this.output = this._context.createGain();
 
@@ -1439,15 +1446,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	        this._foaConvolver.output.connect(this.output);
 
 	        this.setChannelMap(this._channelMap);
-	        this.setMode(this._renderingMode);
+	        this.setRenderingMode(this._renderingMode);
 
 	        this._isRendererReady = true;
 	        Utils.log('HRIRs are loaded successfully. The renderer is ready.');
 	        resolve();
 	      }.bind(this),
-	      function (error) {
-	        Utils.log('Initialization failed: ' + error);
-	        reject();
+	      function (buffers) {
+	        var errorMessage = 'Initialization failed: ' + key + ' is ' 
+	            + buffers.get(0) + '.';
+	        Utils.log(errorMessage);
+	        reject(errorMessage);
 	      });
 	};
 
@@ -1487,7 +1496,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	FOARenderer.prototype.setRotationMatrixFromCamera = function (cameraMatrix) {
 	  if (!this._isRendererReady)
 	    return;
-	  
+
 	  // Extract the inner array elements and inverse. (The actual view rotation is
 	  // the opposite of the camera movement.)
 	  Utils.invertMatrix4(this._tempMatrix4, cameraMatrix.elements);
@@ -1505,7 +1514,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *                                    processing is completely turned off saving
 	 *                                    the CPU power.
 	 */
-	FOARenderer.prototype.setMode = function (mode) {
+	FOARenderer.prototype.setRenderingMode = function (mode) {
 	  if (mode === this._renderingMode)
 	    return;
 
