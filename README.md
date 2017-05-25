@@ -290,6 +290,29 @@ npm test
 
 Note that unit tests require the promisified version of `OfflineAudioContext`, so they might not run on outdate browsers. Omnitone's Travis CI is using the latest stable version of Chrome.
 
+##### Linux (Tested with Ubuntu 16.04)
+The Karma system calls two env variables "node" and "CHROME_BIN" that may not be defined on your system. The node variable can be properly called after installing the nodejs-legacy package through apt: (Note this package name may differ for your distro)
+
+```bash
+sudo apt install nodejs-legacy
+```
+
+You should also install the chromium-browser package through apt: 
+
+```bash
+sudo apt install chromium-browser
+```
+
+Then point the env variable CHROME_BIN to this package with:
+```bash
+export CHROME_BIN=chromium-browser
+```
+
+Now you should be able to run the npm test without issue. 
+
+##### Windows
+Currently untested and not known to work properly. 
+
 
 ## Audio Codec Compatibility
 
