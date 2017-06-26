@@ -85,7 +85,10 @@ function HOAConvolver (context, options) {
 
 HOAConvolver.prototype._setHRIRBuffers = function (hrirBuffers) {
   this._hrirs = new Array(hrirBuffers.numberOfChannels);
+  var length = hrirBuffers.length;
+  var sampleRate = hrirBuffers.sampleRate;
   for (var i = 0; i < hrirBuffers.numberOfChannels; i++) {
+    this._hrirs[i] = this._context.createBuffer(1, length, sampleRate);
     this._hrirs[i].getChannelData(0).set(hrirBuffers.getChannelData(i));
     this._convolvers[i].buffer = this._hrirs[i];
   }

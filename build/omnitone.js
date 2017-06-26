@@ -1645,7 +1645,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  this._splitter.connect(this._merger, 0, 0);
 
 	  // Default Identity matrix.
-	  this.setRotationMatrix(new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]));
+	  this.setRotationMatrix([1, 0, 0, 0, 1, 0, 0, 0, 1]);
 
 	  // Input/Output proxy.
 	  this.input = this._splitter;
@@ -1667,8 +1667,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  u = Math.sqrt((l + m) * (l - m) * recip_denom);
-	  v = 0.5 * (1 - 2 * d) *
-	      Math.sqrt((1 + d) * (l + Math.abs(m) - 1) * (l + Math.abs(m)) * recip_denom);
+	  v = 0.5 * (1 - 2 * d) * Math.sqrt((1 + d) * (l + Math.abs(m) - 1) *
+	      (l + Math.abs(m)) * recip_denom);
 	  w = -0.5 * (1 - d) *
 	      Math.sqrt((l - Math.abs(m) - 1) * (l - Math.abs(m)) * recip_denom);
 	  return [u, v, w];
@@ -1867,18 +1867,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	// HRIRs for optimized HOA rendering.
 	// TODO(hongchan): change this with the absolute URL.
 	var SH_MAXRE_HRIR_URLS = [
-	  'resources/sh_hrir_o_3_pt1.wav',
-	  'resources/sh_hrir_o_3_pt2.wav',
-	  'resources/sh_hrir_o_3_pt3.wav',
-	  'resources/sh_hrir_o_3_pt4.wav'];
+	  'resources/sh_hrir_o_3_ch0-ch3.wav',
+	  'resources/sh_hrir_o_3_ch4-ch7.wav',
+	  'resources/sh_hrir_o_3_ch8-ch11.wav',
+	  'resources/sh_hrir_o_3_ch12-ch15.wav'];
 
 	/**
 	 * @class Omnitone FOA renderer class. Uses the optimized convolution technique.
-	 * @param {AudioContext} context          Associated AudioContext.
+	 * @param {AudioContext} context            Associated AudioContext.
 	 * @param {Object} options
-	 * @param {String} options.HRIRUrls        Optional HRIR URL.
-	 * @param {String} options.renderingMode  Rendering mode.
-	 * @param {Number} options.ambisonicOrder Ambisonic order (2 or 3).
+	 * @param {String} options.HRIRUrls         Optional HRIR URL.
+	 * @param {String} options.renderingMode    Rendering mode.
+	 * @param {Number} options.ambisonicOrder   Ambisonic order (default is 3).
 	 */
 	function HOARenderer (context, options) {
 	  this._context = context;
@@ -1892,6 +1892,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	      this._HRIRUrls = options.HRIRUrl;
 	    if (options.renderingMode)
 	      this._renderingMode = options.renderingMode;
+	    if (options.ambisonicOrder)
+	      this._ambisonicOrder = options.ambisonicOrder;
 	  }
 
 	  this._isRendererReady = false;
@@ -1922,36 +1924,48 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	HOARenderer.prototype._initializeCallback = function (resolve, reject) {
 	  var key = 'HOA_HRIR_AUDIOBUFFER';
-	  var HOA_buffers;
-	  var total_channels = 0;
+	  var buffer;
+	  var totalChannels = 0;
 	  for (var i = 0; i < this._HRIRUrls.length; i++) {
 	    new AudioBufferManager(
 	        this._context,
 	        [{ name: i, url: this._HRIRUrls[i] }],
-	        function (buffers) {
-	          var val = buffers.keys().next().value;
+	        function (result) {
+	          var val = result.keys().next().value;
 
 	          // Allocate buffers when loading first file in list.
-	          // This assumes all files have the same length.
+	          // This assumes all files have the same length and sampleRate.
 	          if (this._buffersLoaded == 0) {
-	            var total_num_channels =
+	            var acn_channels =
 	              (this._ambisonicOrder + 1) * (this._ambisonicOrder + 1);
-	            HOA_buffers = this._context.createBuffer(total_num_channels,
-	              buffers.get(val).length, buffers.get(val).sampleRate);
+	            var length = result.get(val).length;
+	            var sampleRate = result.get(val).sampleRate;
+	            buffer =
+	              this._context.createBuffer(acn_channels, length, sampleRate);
 	          }
 
-	          var num_channels_in_file = buffers.get(val).numberOfChannels;
-	          total_channels += num_channels_in_file;
-	          var offset = val * num_channels_in_file;
-	          for (var j = 0; j < num_channels_in_file; j++) {
-	            HOA_buffers.getChannelData(j + offset).set(buffers.get(val).getChannelData(j));
+	          // Tally the number of channels in each file, confirm counts match.
+	          var numberOfChannels = result.get(val).numberOfChannels;
+	          totalChannels += numberOfChannels;
+
+	          // Assign file contents to appropriate buffer channel.
+	          var offset = val * numberOfChannels;
+	          for (var j = 0; j < numberOfChannels; j++) {
+	            buffer.getChannelData(j + offset)
+	              .set(result.get(val).getChannelData(j));
 	          }
+
 	          this._buffersLoaded++;
+	          // All files have been loaded into buffer object.
 	          if (this._buffersLoaded == this._HRIRUrls.length) {
+	            // Create AudioNodes.
 	            this.input = this._context.createGain();
 	            this._bypass = this._context.createGain();
-	            this._hoaRotator = new HOARotator(this._context, this._ambisonicOrder);
-	            this._hoaConvolver = new HOAConvolver(this._context, { IR: HOA_buffers, ambisonicOrder: this._ambisonicOrder });
+	            this._hoaRotator =
+	              new HOARotator(this._context, this._ambisonicOrder);
+	            var conv_options =
+	              { IR: buffer, ambisonicOrder: this._ambisonicOrder };
+	            this._hoaConvolver = new HOAConvolver(this._context, conv_options);
 	            this.output = this._context.createGain();
 
 	            this.input.connect(this._hoaRotator.input);
@@ -1962,10 +1976,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	            this.setRenderingMode(this._renderingMode);
 
 	            this._isRendererReady = true;
-	            if (total_channels != HOA_buffers.numberOfChannels) {
-	              Utils.log(['Warning: Only ' + total_channels + ' HRIRs were loaded (expected ' + HOA_buffers.numberOfChannels + '). The renderer will not function as expected.']);
+
+	            // Ensure the correct number of channels. Warn otherwise.
+	            if (totalChannels != buffer.numberOfChannels) {
+	              Utils.log(['Warning: Only ' + totalChannels +
+	                ' HRIRs were loaded (expected ' + buffer.numberOfChannels +
+	                '). The renderer will not function as expected.']);
 	            } else {
-	              Utils.log('HRIRs are loaded successfully. The renderer is ready.');
+	              Utils
+	                .log('HRIRs are loaded successfully. The renderer is ready.');
 	            }
 	            resolve();
 	          }
@@ -2083,22 +2102,25 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-
 	/**
 	 * @class HOAConvolver
 	 * @description A collection of convolvers for N-channel HOA stream.
 	 * @param {AudioContext} context          Associated AudioContext.
 	 * @param {Object} options                Options for speaker.
 	 * @param {Array} options.IR              Array of buffers for HRTF convolution.
-	 * @param {Number} options.gain           Post-gain for the speaker.
-	 * @param {Number} options.ambisonicOrder Ambisonic order (2 or 3).
-	*/
+	 * @param {Number} options.ambisonicOrder Ambisonic order (default is 3).
+	 * @param {Number} options.gain           Post-gain for the speaker (optional).
+	 */
 	function HOAConvolver (context, options) {
 	  this._active = false;
 
 	  this._context = context;
 
-	  var num_channels = (options.ambisonicOrder + 1) * (options.ambisonicOrder + 1);
+	  var ambisonicOrder = 3;
+	  if (options.ambisonicOrder) {
+	    ambisonicOrder = options.ambisonicOrder;
+	  }
+	  var num_channels = (ambisonicOrder + 1) * (ambisonicOrder + 1);
 	  this._input = this._context.createChannelSplitter(num_channels);
 
 	  this._symmetrics = this._context.createGain();
@@ -2109,6 +2131,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  this._binaural = this._context.createChannelMerger(2);
 	  this._outputGain = this._context.createGain();
+	  if (options.gain) {
+	    this._outputGain.gain.value = options.gain;
+	  }
 
 	  this._convolvers = new Array(num_channels);
 	  for (var l = 0; l <= options.ambisonicOrder; l++) {
@@ -2142,8 +2167,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	HOAConvolver.prototype._setHRIRBuffers = function (hrirBuffers) {
 	  this._hrirs = new Array(hrirBuffers.numberOfChannels);
+	  var length = hrirBuffers.length;
+	  var sampleRate = hrirBuffers.sampleRate;
 	  for (var i = 0; i < hrirBuffers.numberOfChannels; i++) {
-	    this._hrirs[i] = this._context.createBuffer(1, hrirBuffers.length, hrirBuffers.sampleRate);
+	    this._hrirs[i] = this._context.createBuffer(1, length, sampleRate);
 	    this._hrirs[i].getChannelData(0).set(hrirBuffers.getChannelData(i));
 	    this._convolvers[i].buffer = this._hrirs[i];
 	  }

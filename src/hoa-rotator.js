@@ -58,7 +58,7 @@ function HOARotator (context, order) {
   this._splitter.connect(this._merger, 0, 0);
 
   // Default Identity matrix.
-  this.setRotationMatrix(new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]));
+  this.setRotationMatrix([1, 0, 0, 0, 1, 0, 0, 0, 1]);
 
   // Input/Output proxy.
   this.input = this._splitter;
