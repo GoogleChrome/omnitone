@@ -29,10 +29,8 @@ var SystemVersion = require('./version.js');
 // HRIRs for optimized HOA rendering.
 // TODO(hongchan): change this with the absolute URL.
 var SH_MAXRE_HRIR_URLS = [
-  'resources/sh_hrir_o_3_ch0-ch3.wav',
-  'resources/sh_hrir_o_3_ch4-ch7.wav',
-  'resources/sh_hrir_o_3_ch8-ch11.wav',
-  'resources/sh_hrir_o_3_ch12-ch15.wav'];
+  'resources/sh_hrir_o_3_ch0-ch7.wav',
+  'resources/sh_hrir_o_3_ch8-ch15.wav'];
 
 /**
  * @class Omnitone FOA renderer class. Uses the optimized convolution technique.
