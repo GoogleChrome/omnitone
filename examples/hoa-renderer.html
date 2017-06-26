@@ -20,42 +20,43 @@
   <script src="audiocontext-shim.js"></script>
   <script src="../build/omnitone.js"></script>
   <link rel="stylesheet" href="example.css">
-  <style>
-    .slider-width500
-    {
-      width: 500px !important;
-    }
-  </style>
 </head>
 <body>
   <h1>Example: HOARenderer</h1>
-
+  <p><code>HOARenderer</code> is an optimized higher-order ambisonic renderer
+    based on the integrated convolution (SH-MaxRe HRIR). This renderer
+    supports arbitrary order ambisonic rendering, provided the user supplies
+    the appropriate SH-MaxRe HRIRs.</p>
   <div id="secSource">
     <p>NOTE: Use headphones for the full-sphere surround sound.</p>
-    <h2>Select the sound source to play.</h2>
-    Azimuth: <span id="aziLabel">0</span><br/>
-    <input class="slider-width500" oninput="rotateScene();" onchange="rotateScene();" id="azi" type=range min="-180" max="180" value="0" step="1" /><br />
-    Elevation: <span id="eleLabel">0</span><br/>
-    <input class="slider-width500" oninput="rotateScene();" onchange="rotateScene();" id="ele" type=range min="-90" max="90" value="0" step="1" /><br />
-    Gain (dB): <span id="gainLabel">0</span><br/>
-    <input class="slider-width500" oninput="adjustGain();" onchange="adjustGain();" id="gain" type="range" min="-60" max="20" value="0" step="1" /><br />
+    <h2>Orient the head by selecting the horizontal and vertical controls.</h2>
+    Azimuth: <span id="eLabelAzimuth">0</span><br/>
+    <input oninput="rotateScene();" onchange="rotateScene();"
+      id="eRangeAzimuth" type=range min="-180" max="180" value="0" step="1"/>
+    <br/>
+    Elevation: <span id="eLabelElevation">0</span><br/>
+    <input oninput="rotateScene();" onchange="rotateScene();"
+      id="eRangeElevation" type=range min="-90" max="90" value="0" step="1"/>
+    <br/>
+    Gain (dB): <span id="eLabelGain">0</span><br/>
+    <input oninput="adjustGain();" onchange="adjustGain();"
+      id="eRangeGain" type="range" min="-60" max="20" value="0" step="1"/>
+    <br/>
     <button id="eButtonPlayback" disabled>Play</button>
   </div>
 
   <script>
     var hoaRenderer;
     var audioSources = [
-      {name : 'pt1', url : 'resources/single_source_toa_pt1.wav'},
-      {name : 'pt2', url : 'resources/single_source_toa_pt2.wav'},
-      {name : 'pt3', url : 'resources/single_source_toa_pt3.wav'},
-      {name : 'pt4', url : 'resources/single_source_toa_pt4.wav'}];
-    var audioBufferPlayback = new Array(4);
-    var audioBufferPlaybackStartTime = 0;
-    var audioBufferPlaybackStopTime = 0;
-    var audioBufferPlaybackOffset = 0;
+      {name : 'ch0-ch3', url : 'resources/3oa_example_ch0-ch3.wav'},
+      {name : 'ch4-ch7', url : 'resources/3oa_example_ch4-ch7.wav'},
+      {name : 'ch8-ch11', url : 'resources/3oa_example_ch8-ch11.wav'},
+      {name : 'ch12-ch15', url : 'resources/3oa_example_ch12-ch15.wav'}];
+    var bufferSource;
+    var startTime = 0;
+    var offsetTime = 0;
     var buttonPlayback;
-    var audioBuffers;
-    var gainOut;
+    var bufferGain;
 
     function crossProduct(a, b) {
       c = [];
@@ -74,17 +75,17 @@
     }
 
     function adjustGain() {
-      var gainDB = document.getElementById("gain").value;
-      document.getElementById('gainLabel').innerHTML = gainDB;
+      var gainDB = document.getElementById("eRangeGain").value;
+      document.getElementById('eLabelGain').textContent = gainDB;
       var gainLin = Math.pow(10, gainDB / 20);
-      gainOut.gain.value = gainLin;
+      bufferGain.gain.value = gainLin;
     }
 
     function rotateScene() {
-      var azi = document.getElementById('azi').value;
-      var ele = document.getElementById('ele').value;
-      document.getElementById('aziLabel').innerHTML = azi;
-      document.getElementById('eleLabel').innerHTML = ele;
+      var azi = document.getElementById('eRangeAzimuth').value;
+      var ele = document.getElementById('eRangeElevation').value;
+      document.getElementById('eLabelAzimuth').textContent = azi;
+      document.getElementById('eLabelElevation').textContent = ele;
 
       // Standard View Matrix
       var matrix = new Array(9);
@@ -99,7 +100,7 @@
       matrix[4] = Math.cos(alpha);
       matrix[5] = 0;
 
-      matrix[6] = Math.cos(alpha) * Math.sin(beta);;
+      matrix[6] = Math.cos(alpha) * Math.sin(beta);
       matrix[7] = Math.sin(alpha) * Math.sin(beta);
       matrix[8] = Math.cos(beta);
 
@@ -108,58 +109,56 @@
 
     var onLoad = function () {
       var audioContext = new AudioContext();
-
-      var merger = audioContext.createChannelMerger(16);
-      var splitters = new Array(4);
-
-      audioBuffers = Omnitone.loadAudioBuffers(audioContext, audioSources);
-      audioBuffers.then(function (result) {
-        for (var i = 0; i < 4; i++) {
-          audioBuffers[audioSources[i].name] = result.get(audioSources[i].name);
-          splitters[i] = audioContext.createChannelSplitter(4);
-          for (var j = 0; j < 4; j++) {
-            splitters[i].connect(merger, j, i * 4 + j);
+      var buffer;
+      bufferGain = audioContext.createGain();
+      Omnitone.loadAudioBuffers(audioContext, audioSources)
+        .then(function (result) {
+          var bufferLength = result.get(audioSources[0].name).length;
+          var sampleRate = result.get(audioSources[0].name).sampleRate;
+          buffer = audioContext.createBuffer(16, bufferLength, sampleRate);
+          for (var i = 0; i < 4; i++) {
+            for (var j = 0; j < 4; j++) {
+              var source = result.get(audioSources[i].name).getChannelData(j);
+              buffer.copyToChannel(source, i * 4 + j);
+            }
           }
-        }
       });
 
       buttonPlayback = document.getElementById('eButtonPlayback');
       buttonPlayback.onclick = function (event) {
         if (event.target.textContent === 'Play') {
           event.target.textContent = 'Pause';
-          audioBufferPlaybackOffset = audioBufferPlaybackOffset + audioBufferPlaybackStopTime - audioBufferPlaybackStartTime;
-          audioBufferPlaybackOffset = audioBufferPlaybackOffset % audioBuffers[audioSources[0].name].duration;
-          for (var i = 0; i < 4; i++) {
-            audioBufferPlayback[i] = audioContext.createBufferSource();
-            audioBufferPlayback[i].loop = true;
-            audioBufferPlayback[i].buffer = audioBuffers[audioSources[i].name];
-            audioBufferPlayback[i].connect(splitters[i]);
-            audioBufferPlayback[i].start(0, audioBufferPlaybackOffset);
+          offsetTime -= startTime;
+          offsetTime %= buffer.duration;
+          if (bufferSource) {
+            bufferSource.disconnect(bufferGain);
+            delete bufferSource;
           }
-          audioBufferPlaybackStartTime = audioContext.currentTime;
+          bufferSource = audioContext.createBufferSource();
+          bufferSource.loop = true;
+          bufferSource.buffer = buffer;          
+          bufferSource.connect(bufferGain);
+          bufferSource.start(0, offsetTime);
+          startTime = audioContext.currentTime;
         } else {
           event.target.textContent = 'Play';
-          for (var i = 0; i < 4; i++) {
-            audioBufferPlayback[i].stop(0);
-          }
-          audioBufferPlaybackStopTime = audioContext.currentTime;
+          bufferSource.stop();
+          offsetTime += audioContext.currentTime;
         }
       };
 
       var options = {
         ambisonicOrder: 3,
         HRIRUrl: [
-          '../build/resources/sh_hrir_o_3_pt1.wav',
-          '../build/resources/sh_hrir_o_3_pt2.wav',
-          '../build/resources/sh_hrir_o_3_pt3.wav',
-          '../build/resources/sh_hrir_o_3_pt4.wav']
+          '../build/resources/sh_hrir_o_3_ch0-ch3.wav',
+          '../build/resources/sh_hrir_o_3_ch4-ch7.wav',
+          '../build/resources/sh_hrir_o_3_ch8-ch11.wav',
+          '../build/resources/sh_hrir_o_3_ch12-ch15.wav']
       };
       hoaRenderer = Omnitone.createHOARenderer(audioContext, options);
-      gainOut = audioContext.createGain();
       hoaRenderer.initialize().then(function () {
-        merger.connect(hoaRenderer.input);
-        hoaRenderer.output.connect(gainOut);
-        gainOut.connect(audioContext.destination);
+        bufferGain.connect(hoaRenderer.input);
+        hoaRenderer.output.connect(audioContext.destination);
         buttonPlayback.disabled = false;
       }, function (error) {
         console.error(error);
