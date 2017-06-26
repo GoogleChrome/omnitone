@@ -33,7 +33,7 @@ var SH_MAXRE_HRIR_URLS = [
   'resources/sh_hrir_o_3_ch8-ch15.wav'];
 
 /**
- * @class Omnitone FOA renderer class. Uses the optimized convolution technique.
+ * @class Omnitone HOA renderer class. Uses the optimized convolution technique.
  * @param {AudioContext} context            Associated AudioContext.
  * @param {Object} options
  * @param {String} options.HRIRUrls         Optional HRIR URL.

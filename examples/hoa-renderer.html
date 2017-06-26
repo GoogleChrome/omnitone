@@ -46,9 +46,13 @@
 
   <script>
     var hoaRenderer;
+    var ambisonicOrder = 3;
     var audioSources = [
       { name: 'ch0-ch7', url: 'resources/3oa_example_ch0-ch7.wav' },
       { name: 'ch8-ch15', url: 'resources/3oa_example_ch8-ch15.wav' }];
+    var HRIRBufferUrls = [
+      '../build/resources/sh_hrir_o_3_ch0-ch7.wav',
+      '../build/resources/sh_hrir_o_3_ch8-ch15.wav'];
     var bufferSource;
     var startTime = 0;
     var offsetTime = 0;
@@ -56,11 +60,11 @@
     var bufferGain;
 
     function crossProduct(a, b) {
-      c = [];
-      c[0] = a[1] * b[2] - a[2] * b[1];
-      c[1] = a[2] * b[0] - a[0] * b[2];
-      c[2] = a[0] * b[1] - a[1] * b[0];
-      return c;
+      return [
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0]
+      ];
     }
 
     function normalize(a) {
@@ -74,42 +78,47 @@
     function adjustGain() {
       var gainDB = document.getElementById("eRangeGain").value;
       document.getElementById('eLabelGain').textContent = gainDB;
-      var gainLin = Math.pow(10, gainDB / 20);
-      bufferGain.gain.value = gainLin;
+      var gainLinear = Math.pow(10, gainDB / 20);
+      bufferGain.gain.value = gainLinear;
     }
 
     function rotateScene() {
-      var azi = document.getElementById('eRangeAzimuth').value;
-      var ele = document.getElementById('eRangeElevation').value;
-      document.getElementById('eLabelAzimuth').textContent = azi;
-      document.getElementById('eLabelElevation').textContent = ele;
+      var azimuthValue = document.getElementById('eRangeAzimuth').value;
+      var elevationValue = document.getElementById('eRangeElevation').value;
+      document.getElementById('eLabelAzimuth').textContent = azimuthValue;
+      document.getElementById('eLabelElevation').textContent = elevationValue;
 
       // Standard View Matrix
-      var matrix = new Array(9);
-      var beta = -azi / 180 * Math.PI;
-      var alpha = -ele / 180 * Math.PI;
+      var matrix = new Float32Array(9);
+      var beta = -azimuthValue / 180 * Math.PI;
+      var alpha = elevationValue / 180 * Math.PI;
+      var cosAlpha = Math.cos(alpha);
+      var sinAlpha = Math.sin(alpha);
+      var cosBeta = Math.cos(beta);
+      var sinBeta = Math.sin(beta);
 
-      matrix[0] = Math.cos(alpha) * Math.cos(beta);
-      matrix[1] = Math.sin(alpha) * Math.cos(beta);
-      matrix[2] = -Math.sin(beta);
-
-      matrix[3] = -Math.cos(alpha);
-      matrix[4] = Math.cos(alpha);
-      matrix[5] = 0;
-
-      matrix[6] = Math.cos(alpha) * Math.sin(beta);
-      matrix[7] = Math.sin(alpha) * Math.sin(beta);
-      matrix[8] = Math.cos(beta);
-
+      matrix[0] = cosBeta;
+      matrix[1] = 0;
+      matrix[2] = sinBeta;
+      matrix[3] = sinAlpha * sinBeta;
+      matrix[4] = cosAlpha;
+      matrix[5] = -sinAlpha * cosBeta;
+      matrix[6] = -cosAlpha * sinBeta;
+      matrix[7] = sinAlpha;
+      matrix[8] = cosAlpha * cosBeta;
+      console.log(matrix);
       hoaRenderer.setRotationMatrix(matrix);
     }
 
-    var onLoad = function () {
+    function onLoad () {
       var audioContext = new AudioContext();
       var buffer;
       bufferGain = audioContext.createGain();
       Omnitone.loadAudioBuffers(audioContext, audioSources)
-        .then(function (result) {
+        .then((result) => {
+          // Because we cannot load audio files with >8 channels, we must
+          // load multiple files and copy their audio data into a single large
+          // buffer for accurate playback.
           var bufferLength = result.get(audioSources[0].name).length;
           var sampleRate = result.get(audioSources[0].name).sampleRate;
           buffer = audioContext.createBuffer(16, bufferLength, sampleRate);
@@ -145,10 +154,8 @@
       };
 
       var options = {
-        ambisonicOrder: 3,
-        HRIRUrl: [
-          '../build/resources/sh_hrir_o_3_ch0-ch7.wav',
-          '../build/resources/sh_hrir_o_3_ch8-ch15.wav']
+        ambisonicOrder: ambisonicOrder,
+        HRIRUrl: HRIRBufferUrls
       };
       hoaRenderer = Omnitone.createHOARenderer(audioContext, options);
       hoaRenderer.initialize().then(function () {
