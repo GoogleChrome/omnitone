@@ -15,7 +15,7 @@
 
 
 /**
- * Test HOAColvoler object.
+ * Test HOAConvolver object.
  *
  * Load HRIR (SH MaxRE, the new optimized IRs) and shoot an impulse to generate
  * a buffer of binaural rendering. Then compare it with the JS-calculated
