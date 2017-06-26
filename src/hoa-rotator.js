@@ -167,21 +167,6 @@ HOARotator.prototype._computeHOAMatrices = function () {
   for (var l = 2; l <= this._m.length; l++) {
     this._computeBandRotation(l);
   }
-
-  // TODO(drewbitllama): Fix the issue regarding this bug.
-  // We currently compute the correct matrix by flipping the pen-ultimate
-  // indices on the pos and neg sides of each recursively computed band.
-  for (var l = 2; l <= this._m.length; l++) {
-    var neg_index = 1;
-    var pos_index = 2 * l - 1;
-    var row_length = 2 * l + 1;
-    for (var i = 0; i < row_length; i++) {
-      var neg_matrix_index = i * row_length + pos_index;
-      var pos_matrix_index = i * row_length + neg_index;
-      this._m[l - 1][neg_matrix_index].gain.value *= -1;
-      this._m[l - 1][pos_matrix_index].gain.value *= -1;
-    }
-  }
 };
 
 /**
