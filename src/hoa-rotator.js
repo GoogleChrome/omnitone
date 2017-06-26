@@ -36,18 +36,14 @@
  *             http://pubs.acs.org/doi/pdf/10.1021/jp953350u
  *        [2b] Corrections to initial publication:
  *             http://pubs.acs.org/doi/pdf/10.1021/jp9833350
- *
  * @param {AudioContext} context    Associated AudioContext.
  * @param {Number} ambisonicOrder   Ambisonic order (2 or 3).
  */
-function HOARotator (context, ambisonicOrder) {
+function HOARotator(context, ambisonicOrder) {
   this._context = context;
 
-  /**
-   * We need to determine the number of channels K based on the ambisonic
-   * order N where
-   *   K = (N + 1)^2
-   */
+  // We need to determine the number of channels K based on the ambisonic
+  // order N where K = (N + 1)^2
   var numChannels = (ambisonicOrder + 1) * (ambisonicOrder + 1);
 
   this._splitter = this._context.createChannelSplitter(numChannels);
@@ -56,14 +52,12 @@ function HOARotator (context, ambisonicOrder) {
   // Create a set of per-order rotation matrices using gain nodes.
   this._matrix = [];
   for (var i = 1; i <= ambisonicOrder; i++) {
-    /**
-     * Each ambisonic order requires a separate (2l + 1) x (2l + 1) rotation
-     * matrix. We compute the offset value as the first channel index of the
-     * current order where
-     *   k_last = l^2 + l + m,
-     * and let m = -l
-     *   k_last = l^2
-     */
+    // Each ambisonic order requires a separate (2l + 1) x (2l + 1) rotation
+    // matrix. We compute the offset value as the first channel index of the
+    // current order where
+    //   k_last = l^2 + l + m,
+    // and let m = -l
+    //   k_last = l^2
     var orderOffset = i * i;
     var rows = (2 * i + 1);
 
@@ -102,16 +96,13 @@ function _kroneckerDelta(i, j) {
   return (i == j ? 1 : 0);
 };
 
-/**
- * [2] uses an odd convention of referring to the rows and columns using
- * centered indices, so the middle row and column are (0, 0) and the upper
- * left would have negative coordinates.
- *
- * This is a convenience function to allow us to access a matrix array
- * in the same manner, assuming it is a (2l+1)x(2l+1) matrix.
- */
+// [2] uses an odd convention of referring to the rows and columns using
+// centered indices, so the middle row and column are (0, 0) and the upper
+// left would have negative coordinates.
 
 /**
+ * This is a convenience function to allow us to access a matrix array
+ * in the same manner, assuming it is a (2l+1)x(2l+1) matrix.
  * @param {Number} l
  * @param {Number} i
  * @param {Number} j
@@ -123,6 +114,8 @@ HOARotator.prototype._setCenteredElement = function (l, i, j, val) {
 };
 
 /**
+ * This is a convenience function to allow us to access a matrix array
+ * in the same manner, assuming it is a (2l+1)x(2l+1) matrix.
  * @param {Number} l
  * @param {Number} i
  * @param {Number} j
@@ -136,7 +129,6 @@ HOARotator.prototype._getCenteredElement = function (l, i, j) {
  * Helper function defined in [2] that is used by the functions U, V, W.
  * This should not be called on its own, as U, V, and W (and their coefficients)
  * select the appropriate matrix elements to access arguments |a| and |b|.
- *
  * @param {Number} i
  * @param {Number} a
  * @param {Number} b
@@ -145,17 +137,17 @@ HOARotator.prototype._getCenteredElement = function (l, i, j) {
 HOARotator.prototype._P = function (i, a, b, l) {
   if (b == l) {
     return this._getCenteredElement(1, i, 1) *
-             this._getCenteredElement(l - 1, a, l - 1) -
-           this._getCenteredElement(1, i, -1) *
-             this._getCenteredElement(l - 1, a, -l + 1);
+      this._getCenteredElement(l - 1, a, l - 1) -
+      this._getCenteredElement(1, i, -1) *
+      this._getCenteredElement(l - 1, a, -l + 1);
   } else if (b == -l) {
     return this._getCenteredElement(1, i, 1) *
-             this._getCenteredElement(l - 1, a, -l + 1) +
-           this._getCenteredElement(1, i, -1) *
-             this._getCenteredElement(l - 1, a, l - 1);
+      this._getCenteredElement(l - 1, a, -l + 1) +
+      this._getCenteredElement(1, i, -1) *
+      this._getCenteredElement(l - 1, a, l - 1);
   } else {
     return this._getCenteredElement(1, i, 0) *
-             this._getCenteredElement(l - 1, a, b);
+      this._getCenteredElement(l - 1, a, b);
   }
 };
 
@@ -165,9 +157,6 @@ HOARotator.prototype._P = function (i, a, b, l) {
  * When the coefficient is 0, these would attempt to access matrix elements that
  * are out of bounds. The vector of rotations, |r|, must have the |l - 1|
  * previously completed band rotations. These functions are valid for |l >= 2|.
- */
-
-/**
  * @param {Number} m
  * @param {Number} n
  * @param {Number} l
@@ -181,6 +170,11 @@ HOARotator.prototype._U = function (m, n, l) {
 };
 
 /**
+ * The functions U, V, and W should only be called if the correspondingly
+ * named coefficient u, v, w from the function ComputeUVWCoeff() is non-zero.
+ * When the coefficient is 0, these would attempt to access matrix elements that
+ * are out of bounds. The vector of rotations, |r|, must have the |l - 1|
+ * previously completed band rotations. These functions are valid for |l >= 2|.
  * @param {Number} m
  * @param {Number} n
  * @param {Number} l
@@ -191,22 +185,25 @@ HOARotator.prototype._V = function (m, n, l) {
   } else if (m > 0) {
     var d = _kroneckerDelta(m, 1);
     return this._P(1, m - 1, n, l) * Math.sqrt(1 + d) -
-           this._P(-1, -m + 1, n, l) * (1 - d);
+      this._P(-1, -m + 1, n, l) * (1 - d);
   } else {
-    /**
-     * Note there is apparent errata in [1,2,2b] dealing with this particular
-     * case. [2b] writes it should be P*(1-d)+P*(1-d)^0.5
-     * [1] writes it as P*(1+d)+P*(1-d)^0.5, but going through the math by hand,
-     * you must have it as P*(1-d)+P*(1+d)^0.5 to form a 2^.5 term, which
-     * parallels the case where m > 0.
-     */
+    // Note there is apparent errata in [1,2,2b] dealing with this particular
+    // case. [2b] writes it should be P*(1-d)+P*(1-d)^0.5
+    // [1] writes it as P*(1+d)+P*(1-d)^0.5, but going through the math by hand,
+    // you must have it as P*(1-d)+P*(1+d)^0.5 to form a 2^.5 term, which
+    // parallels the case where m > 0.
     var d = _kroneckerDelta(m, -1);
     return this._P(1, m + 1, n, l) * (1 - d) +
-           this._P(-1, -m - 1, n, l) * Math.sqrt(1 + d);
+      this._P(-1, -m - 1, n, l) * Math.sqrt(1 + d);
   }
 };
 
 /**
+ * The functions U, V, and W should only be called if the correspondingly
+ * named coefficient u, v, w from the function ComputeUVWCoeff() is non-zero.
+ * When the coefficient is 0, these would attempt to access matrix elements that
+ * are out of bounds. The vector of rotations, |r|, must have the |l - 1|
+ * previously completed band rotations. These functions are valid for |l >= 2|.
  * @param {Number} m
  * @param {Number} n
  * @param {Number} l
@@ -225,10 +222,9 @@ HOARotator.prototype._W = function (m, n, l) {
 /**
  * Calculates the coefficients applied to the U, V, and W functions. Because
  * their equations share many common terms they are computed simultaneously.
- *
- * @param {*} m
- * @param {*} n
- * @param {*} l
+ * @param {Number} m
+ * @param {Number} n
+ * @param {Number} l
  */
 function _computeUVWCoeff(m, n, l) {
   var reciprocalDenominator, u, v, w;
@@ -242,9 +238,9 @@ function _computeUVWCoeff(m, n, l) {
 
   u = Math.sqrt((l + m) * (l - m) * reciprocalDenominator);
   v = 0.5 * (1 - 2 * d) * Math.sqrt((1 + d) * (l + Math.abs(m) - 1) *
-      (l + Math.abs(m)) * reciprocalDenominator);
+    (l + Math.abs(m)) * reciprocalDenominator);
   w = -0.5 * (1 - d) * Math.sqrt((l - Math.abs(m) - 1) * (l - Math.abs(m)) *
-      reciprocalDenominator);
+    reciprocalDenominator);
   return [u, v, w];
 };
 
@@ -256,20 +252,17 @@ function _computeUVWCoeff(m, n, l) {
  *
  * This implementation comes from p. 5 (6346), Table 1 and 2 in [2] taking
  * into account the corrections from [2b].
+ * @param {Number} l
  */
 HOARotator.prototype._computeBandRotation = function (l) {
-  /**
-   * The lth band rotation matrix has rows and columns equal to the number of
-   * coefficients within that band (-l <= m <= l implies 2l + 1 coefficients).
-   */
+  // The lth band rotation matrix has rows and columns equal to the number of
+  // coefficients within that band (-l <= m <= l implies 2l + 1 coefficients).
   for (var m = -l; m <= l; m++) {
     for (var n = -l; n <= l; n++) {
       var uvw = _computeUVWCoeff(m, n, l);
 
-      /**
-       * The functions U, V, W are only safe to call if the coefficients
-       * u, v, w are not zero.
-       */
+      // The functions U, V, W are only safe to call if the coefficients
+      // u, v, w are not zero.
       if (Math.abs(uvw[0]) > 0) {
         uvw[0] *= this._U(m, n, l);
       }

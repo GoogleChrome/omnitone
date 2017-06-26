@@ -40,7 +40,7 @@ var SH_MAXRE_HRIR_URLS = [
  * @param {String} options.renderingMode    Rendering mode.
  * @param {Number} options.ambisonicOrder   Ambisonic order (default is 3).
  */
-function HOARenderer (context, options) {
+function HOARenderer(context, options) {
   this._context = context;
 
   // Priming internal setting with |options|.
@@ -88,73 +88,73 @@ HOARenderer.prototype._initializeCallback = function (resolve, reject) {
   var totalChannels = 0;
   for (var i = 0; i < this._HRIRUrls.length; i++) {
     new AudioBufferManager(
-        this._context,
-        [{ name: i, url: this._HRIRUrls[i] }],
-        function (result) {
-          var val = result.keys().next().value;
+      this._context,
+      [{ name: i, url: this._HRIRUrls[i] }],
+      function (result) {
+        var val = result.keys().next().value;
 
-          // Allocate buffers when loading first file in list.
-          // This assumes all files have the same length and sampleRate.
-          if (this._buffersLoaded == 0) {
-            var acn_channels =
-              (this._ambisonicOrder + 1) * (this._ambisonicOrder + 1);
-            var length = result.get(val).length;
-            var sampleRate = result.get(val).sampleRate;
-            buffer =
-              this._context.createBuffer(acn_channels, length, sampleRate);
+        // Allocate buffers when loading first file in list.
+        // This assumes all files have the same length and sampleRate.
+        if (this._buffersLoaded == 0) {
+          var acn_channels =
+            (this._ambisonicOrder + 1) * (this._ambisonicOrder + 1);
+          var length = result.get(val).length;
+          var sampleRate = result.get(val).sampleRate;
+          buffer =
+            this._context.createBuffer(acn_channels, length, sampleRate);
+        }
+
+        // Tally the number of channels in each file, confirm counts match.
+        var numberOfChannels = result.get(val).numberOfChannels;
+        totalChannels += numberOfChannels;
+
+        // Assign file contents to appropriate buffer channel.
+        var offset = val * numberOfChannels;
+        for (var j = 0; j < numberOfChannels; j++) {
+          buffer.getChannelData(j + offset)
+            .set(result.get(val).getChannelData(j));
+        }
+
+        this._buffersLoaded++;
+        // All files have been loaded into buffer object.
+        if (this._buffersLoaded == this._HRIRUrls.length) {
+          // Create AudioNodes.
+          this.input = this._context.createGain();
+          this._bypass = this._context.createGain();
+          this._hoaRotator =
+            new HOARotator(this._context, this._ambisonicOrder);
+          var conv_options =
+            { IR: buffer, ambisonicOrder: this._ambisonicOrder };
+          this._hoaConvolver = new HOAConvolver(this._context, conv_options);
+          this.output = this._context.createGain();
+
+          this.input.connect(this._hoaRotator.input);
+          this.input.connect(this._bypass);
+          this._hoaRotator.output.connect(this._hoaConvolver.input);
+          this._hoaConvolver.output.connect(this.output);
+
+          this.setRenderingMode(this._renderingMode);
+
+          this._isRendererReady = true;
+
+          // Ensure the correct number of channels. Warn otherwise.
+          if (totalChannels != buffer.numberOfChannels) {
+            Utils.log(['Warning: Only ' + totalChannels +
+              ' HRIRs were loaded (expected ' + buffer.numberOfChannels +
+              '). The renderer will not function as expected.']);
+          } else {
+            Utils
+              .log('HRIRs are loaded successfully. The renderer is ready.');
           }
-
-          // Tally the number of channels in each file, confirm counts match.
-          var numberOfChannels = result.get(val).numberOfChannels;
-          totalChannels += numberOfChannels;
-
-          // Assign file contents to appropriate buffer channel.
-          var offset = val * numberOfChannels;
-          for (var j = 0; j < numberOfChannels; j++) {
-            buffer.getChannelData(j + offset)
-              .set(result.get(val).getChannelData(j));
-          }
-
-          this._buffersLoaded++;
-          // All files have been loaded into buffer object.
-          if (this._buffersLoaded == this._HRIRUrls.length) {
-            // Create AudioNodes.
-            this.input = this._context.createGain();
-            this._bypass = this._context.createGain();
-            this._hoaRotator =
-              new HOARotator(this._context, this._ambisonicOrder);
-            var conv_options =
-              { IR: buffer, ambisonicOrder: this._ambisonicOrder };
-            this._hoaConvolver = new HOAConvolver(this._context, conv_options);
-            this.output = this._context.createGain();
-
-            this.input.connect(this._hoaRotator.input);
-            this.input.connect(this._bypass);
-            this._hoaRotator.output.connect(this._hoaConvolver.input);
-            this._hoaConvolver.output.connect(this.output);
-
-            this.setRenderingMode(this._renderingMode);
-
-            this._isRendererReady = true;
-
-            // Ensure the correct number of channels. Warn otherwise.
-            if (totalChannels != buffer.numberOfChannels) {
-              Utils.log(['Warning: Only ' + totalChannels +
-                ' HRIRs were loaded (expected ' + buffer.numberOfChannels +
-                '). The renderer will not function as expected.']);
-            } else {
-              Utils
-                .log('HRIRs are loaded successfully. The renderer is ready.');
-            }
-            resolve();
-          }
-        }.bind(this),
-        function (buffers) {
-          var errorMessage = 'Initialization failed: ' + key + ' is '
-              + buffers.get(0) + '.';
-          Utils.log(errorMessage);
-          reject(errorMessage);
-    });
+          resolve();
+        }
+      }.bind(this),
+      function (buffers) {
+        var errorMessage = 'Initialization failed: ' + key + ' is '
+          + buffers.get(0) + '.';
+        Utils.log(errorMessage);
+        reject(errorMessage);
+      });
   }
 };
 

@@ -29,31 +29,25 @@
  * @param {Number} options.ambisonicOrder Ambisonic order (default is 3).
  * @param {Number} options.gain           Post-gain for the speaker (optional).
  */
-function HOAConvolver (context, options) {
+function HOAConvolver(context, options) {
   this._active = false;
 
   this._context = context;
 
-  /**
-   * We need to determine the number of channels K based on the ambisonic
-   * order N where
-   *   K = (N + 1)^2
-   */
-  var ambisonicOrder = 3;
-  if (options.ambisonicOrder) {
-    ambisonicOrder = options.ambisonicOrder;
-  }
-  var numChannels = (ambisonicOrder + 1) * (ambisonicOrder + 1);
+  // We need to determine the number of channels K based on the ambisonic
+  // order N where K = (N + 1)^2
+  var ambisonicOrder = options.ambisonicOrder ? options.ambisonicOrder : 3;
+  var numberOfChannels = (ambisonicOrder + 1) * (ambisonicOrder + 1);
 
   // Ensure that the ambisonic order matches the IR channel count.
-  if (options.IR.numberOfChannels !== numChannels) {
-    throw 'Ambisonic order and IR channel count do not match. cannot proceed.';
+  if (options.IR.numberOfChannels !== numberOfChannels) {
+    throw 'Ambisonic order and IR channel count do not match. Cannot proceed.';
   }
 
   // Compute the number of stereo convolvers needed.
-  var numStereoChannels = Math.round(numChannels / 2);
+  var numStereoChannels = Math.round(numberOfChannels / 2);
 
-  this._input = this._context.createChannelSplitter(numChannels);
+  this._input = this._context.createChannelSplitter(numberOfChannels);
   this._mergers = [];
   this._convolvers = [];
   this._splitters = [];
@@ -63,30 +57,23 @@ function HOAConvolver (context, options) {
     this._splitters[i] = this._context.createChannelSplitter(2);
   }
 
-  /**
-   * Positive index (m >= 0) spherical harmonics are symmetrical around the
-   * front axis, while negative index (m < 0) spherical harmonics are
-   * anti-symmetrical around the front axis. We will exploit this symmetry to
-   * reduce the number of convolutions required when rendering to a symmetrical
-   * binaural renderer.
-   */
+  // Positive index (m >= 0) spherical harmonics are symmetrical around the
+  // front axis, while negative index (m < 0) spherical harmonics are
+  // anti-symmetrical around the front axis. We will exploit this symmetry to
+  // reduce the number of convolutions required when rendering to a symmetrical
+  // binaural renderer.
   this._positiveIndexSphericalHarmonics = this._context.createGain();
   this._negativeIndexSphericalHarmonics = this._context.createGain();
   this._inverter = this._context.createGain();
   this._mergerBinaural = this._context.createChannelMerger(2);
   this._outputGain = this._context.createGain();
 
-  /**
-   * Split channels from input into array of stereo convolvers.
-   * Then create a network of mergers that produces the stereo output.
-   */
+  // Split channels from input into array of stereo convolvers.
+  // Then create a network of mergers that produces the stereo output.
   for (var l = 0; l <= ambisonicOrder; l++) {
     for (var m = -l; m <= l; m++) {
-      /**
-       * We compute the ACN index (k) of ambisonics channel using the degree (l)
-       * and index (m):
-       *   k = l^2 + l + m
-       */
+      // We compute the ACN index (k) of ambisonics channel using the degree (l)
+      // and index (m): k = l^2 + l + m
       var acnIndex = l * l + l + m;
       var stereoIndex = Math.floor(acnIndex / 2);
 

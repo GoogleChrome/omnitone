@@ -14,6 +14,7 @@
 -->
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="utf-8">
   <title>Example: HOARotator</title>
@@ -21,26 +22,24 @@
   <script src="../build/omnitone.js"></script>
   <link rel="stylesheet" href="example.css">
 </head>
+
 <body>
   <h1>Example: HOARenderer</h1>
-  <p><code>HOARenderer</code> is an optimized higher-order ambisonic renderer
-    based on the integrated convolution (SH-MaxRe HRIR). This renderer
-    supports arbitrary order ambisonic rendering, provided the user supplies
-    the appropriate SH-MaxRe HRIRs.</p>
+  <p><code>HOARenderer</code> is an optimized higher-order ambisonic renderer based on the integrated convolution (SH-MaxRe
+    HRIR). This renderer supports arbitrary order ambisonic rendering, provided the user supplies the appropriate SH-MaxRe
+    HRIRs.</p>
   <div id="secSource">
     <p>NOTE: Use headphones for the full-sphere surround sound.</p>
     <h2>Orient the head by selecting the horizontal and vertical controls.</h2>
     Azimuth: <span id="eLabelAzimuth">0</span><br/>
-    <input oninput="rotateScene();" onchange="rotateScene();"
-      id="eRangeAzimuth" type=range min="-180" max="180" value="0" step="1"/>
-    <br/>
-    Elevation: <span id="eLabelElevation">0</span><br/>
-    <input oninput="rotateScene();" onchange="rotateScene();"
-      id="eRangeElevation" type=range min="-90" max="90" value="0" step="1"/>
-    <br/>
-    Gain (dB): <span id="eLabelGain">0</span><br/>
-    <input oninput="adjustGain();" onchange="adjustGain();"
-      id="eRangeGain" type="range" min="-60" max="20" value="0" step="1"/>
+    <input oninput="rotateScene();" onchange="rotateScene();" id="eRangeAzimuth" type=range min="-180" max="180" value="0" step="1"
+    />
+    <br/> Elevation: <span id="eLabelElevation">0</span><br/>
+    <input oninput="rotateScene();" onchange="rotateScene();" id="eRangeElevation" type=range min="-90" max="90" value="0" step="1"
+    />
+    <br/> Gain (dB): <span id="eLabelGain">0</span><br/>
+    <input oninput="adjustGain();" onchange="adjustGain();" id="eRangeGain" type="range" min="-60" max="20" value="0" step="1"
+    />
     <br/>
     <button id="eButtonPlayback" disabled>Play</button>
   </div>
@@ -48,8 +47,8 @@
   <script>
     var hoaRenderer;
     var audioSources = [
-      {name : 'ch0-ch7', url : 'resources/3oa_example_ch0-ch7.wav'},
-      {name : 'ch8-ch15', url : 'resources/3oa_example_ch8-ch15.wav'}];
+      { name: 'ch0-ch7', url: 'resources/3oa_example_ch0-ch7.wav' },
+      { name: 'ch8-ch15', url: 'resources/3oa_example_ch8-ch15.wav' }];
     var bufferSource;
     var startTime = 0;
     var offsetTime = 0;
@@ -120,7 +119,7 @@
               buffer.copyToChannel(source, i * 8 + j);
             }
           }
-      });
+        });
 
       buttonPlayback = document.getElementById('eButtonPlayback');
       buttonPlayback.onclick = function (event) {
