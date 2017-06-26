@@ -80,8 +80,8 @@ HOARotator.prototype._computeUVWCoeff = function(m, n, l) {
   }
 
   u = Math.sqrt((l + m) * (l - m) * recip_denom);
-  v = 0.5 * (1 - 2 * d) *
-      Math.sqrt((1 + d) * (l + Math.abs(m) - 1) * (l + Math.abs(m)) * recip_denom);
+  v = 0.5 * (1 - 2 * d) * Math.sqrt((1 + d) * (l + Math.abs(m) - 1) *
+      (l + Math.abs(m)) * recip_denom);
   w = -0.5 * (1 - d) *
       Math.sqrt((l - Math.abs(m) - 1) * (l - Math.abs(m)) * recip_denom);
   return [u, v, w];

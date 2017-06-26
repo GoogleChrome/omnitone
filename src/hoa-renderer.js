@@ -29,18 +29,18 @@ var SystemVersion = require('./version.js');
 // HRIRs for optimized HOA rendering.
 // TODO(hongchan): change this with the absolute URL.
 var SH_MAXRE_HRIR_URLS = [
-  'resources/sh_hrir_o_3_pt1.wav',
-  'resources/sh_hrir_o_3_pt2.wav',
-  'resources/sh_hrir_o_3_pt3.wav',
-  'resources/sh_hrir_o_3_pt4.wav'];
+  'resources/sh_hrir_o_3_ch0-ch3.wav',
+  'resources/sh_hrir_o_3_ch4-ch7.wav',
+  'resources/sh_hrir_o_3_ch8-ch11.wav',
+  'resources/sh_hrir_o_3_ch12-ch15.wav'];
 
 /**
  * @class Omnitone FOA renderer class. Uses the optimized convolution technique.
- * @param {AudioContext} context          Associated AudioContext.
+ * @param {AudioContext} context            Associated AudioContext.
  * @param {Object} options
- * @param {String} options.HRIRUrls        Optional HRIR URL.
- * @param {String} options.renderingMode  Rendering mode.
- * @param {Number} options.ambisonicOrder Ambisonic order (2 or 3).
+ * @param {String} options.HRIRUrls         Optional HRIR URL.
+ * @param {String} options.renderingMode    Rendering mode.
+ * @param {Number} options.ambisonicOrder   Ambisonic order (default is 3).
  */
 function HOARenderer (context, options) {
   this._context = context;
@@ -54,6 +54,8 @@ function HOARenderer (context, options) {
       this._HRIRUrls = options.HRIRUrl;
     if (options.renderingMode)
       this._renderingMode = options.renderingMode;
+    if (options.ambisonicOrder)
+      this._ambisonicOrder = options.ambisonicOrder;
   }
 
   this._isRendererReady = false;
@@ -84,36 +86,48 @@ HOARenderer.prototype.initialize = function () {
  */
 HOARenderer.prototype._initializeCallback = function (resolve, reject) {
   var key = 'HOA_HRIR_AUDIOBUFFER';
-  var HOA_buffers;
-  var total_channels = 0;
+  var buffer;
+  var totalChannels = 0;
   for (var i = 0; i < this._HRIRUrls.length; i++) {
     new AudioBufferManager(
         this._context,
         [{ name: i, url: this._HRIRUrls[i] }],
-        function (buffers) {
-          var val = buffers.keys().next().value;
+        function (result) {
+          var val = result.keys().next().value;
 
           // Allocate buffers when loading first file in list.
-          // This assumes all files have the same length.
+          // This assumes all files have the same length and sampleRate.
           if (this._buffersLoaded == 0) {
-            var total_num_channels =
+            var acn_channels =
               (this._ambisonicOrder + 1) * (this._ambisonicOrder + 1);
-            HOA_buffers = this._context.createBuffer(total_num_channels,
-              buffers.get(val).length, buffers.get(val).sampleRate);
+            var length = result.get(val).length;
+            var sampleRate = result.get(val).sampleRate;
+            buffer =
+              this._context.createBuffer(acn_channels, length, sampleRate);
           }
 
-          var num_channels_in_file = buffers.get(val).numberOfChannels;
-          total_channels += num_channels_in_file;
-          var offset = val * num_channels_in_file;
-          for (var j = 0; j < num_channels_in_file; j++) {
-            HOA_buffers.getChannelData(j + offset).set(buffers.get(val).getChannelData(j));
+          // Tally the number of channels in each file, confirm counts match.
+          var numberOfChannels = result.get(val).numberOfChannels;
+          totalChannels += numberOfChannels;
+
+          // Assign file contents to appropriate buffer channel.
+          var offset = val * numberOfChannels;
+          for (var j = 0; j < numberOfChannels; j++) {
+            buffer.getChannelData(j + offset)
+              .set(result.get(val).getChannelData(j));
           }
+
           this._buffersLoaded++;
+          // All files have been loaded into buffer object.
           if (this._buffersLoaded == this._HRIRUrls.length) {
+            // Create AudioNodes.
             this.input = this._context.createGain();
             this._bypass = this._context.createGain();
-            this._hoaRotator = new HOARotator(this._context, this._ambisonicOrder);
-            this._hoaConvolver = new HOAConvolver(this._context, { IR: HOA_buffers, ambisonicOrder: this._ambisonicOrder });
+            this._hoaRotator =
+              new HOARotator(this._context, this._ambisonicOrder);
+            var conv_options =
+              { IR: buffer, ambisonicOrder: this._ambisonicOrder };
+            this._hoaConvolver = new HOAConvolver(this._context, conv_options);
             this.output = this._context.createGain();
 
             this.input.connect(this._hoaRotator.input);
@@ -124,10 +138,15 @@ HOARenderer.prototype._initializeCallback = function (resolve, reject) {
             this.setRenderingMode(this._renderingMode);
 
             this._isRendererReady = true;
-            if (total_channels != HOA_buffers.numberOfChannels) {
-              Utils.log(['Warning: Only ' + total_channels + ' HRIRs were loaded (expected ' + HOA_buffers.numberOfChannels + '). The renderer will not function as expected.']);
+
+            // Ensure the correct number of channels. Warn otherwise.
+            if (totalChannels != buffer.numberOfChannels) {
+              Utils.log(['Warning: Only ' + totalChannels +
+                ' HRIRs were loaded (expected ' + buffer.numberOfChannels +
+                '). The renderer will not function as expected.']);
             } else {
-              Utils.log('HRIRs are loaded successfully. The renderer is ready.');
+              Utils
+                .log('HRIRs are loaded successfully. The renderer is ready.');
             }
             resolve();
           }

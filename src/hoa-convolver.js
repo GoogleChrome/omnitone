@@ -20,22 +20,25 @@
 
 'use strict';
 
-
 /**
  * @class HOAConvolver
  * @description A collection of convolvers for N-channel HOA stream.
  * @param {AudioContext} context          Associated AudioContext.
  * @param {Object} options                Options for speaker.
  * @param {Array} options.IR              Array of buffers for HRTF convolution.
- * @param {Number} options.gain           Post-gain for the speaker.
- * @param {Number} options.ambisonicOrder Ambisonic order (2 or 3).
-*/
+ * @param {Number} options.ambisonicOrder Ambisonic order (default is 3).
+ * @param {Number} options.gain           Post-gain for the speaker (optional).
+ */
 function HOAConvolver (context, options) {
   this._active = false;
 
   this._context = context;
 
-  var num_channels = (options.ambisonicOrder + 1) * (options.ambisonicOrder + 1);
+  var ambisonicOrder = 3;
+  if (options.ambisonicOrder) {
+    ambisonicOrder = options.ambisonicOrder;
+  }
+  var num_channels = (ambisonicOrder + 1) * (ambisonicOrder + 1);
   this._input = this._context.createChannelSplitter(num_channels);
 
   this._symmetrics = this._context.createGain();
@@ -46,6 +49,9 @@ function HOAConvolver (context, options) {
 
   this._binaural = this._context.createChannelMerger(2);
   this._outputGain = this._context.createGain();
+  if (options.gain) {
+    this._outputGain.gain.value = options.gain;
+  }
 
   this._convolvers = new Array(num_channels);
   for (var l = 0; l <= options.ambisonicOrder; l++) {
@@ -80,7 +86,6 @@ function HOAConvolver (context, options) {
 HOAConvolver.prototype._setHRIRBuffers = function (hrirBuffers) {
   this._hrirs = new Array(hrirBuffers.numberOfChannels);
   for (var i = 0; i < hrirBuffers.numberOfChannels; i++) {
-    this._hrirs[i] = this._context.createBuffer(1, hrirBuffers.length, hrirBuffers.sampleRate);
     this._hrirs[i].getChannelData(0).set(hrirBuffers.getChannelData(i));
     this._convolvers[i].buffer = this._hrirs[i];
   }
