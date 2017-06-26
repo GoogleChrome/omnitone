@@ -52,7 +52,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /************************************************************************/
 /******/ ([
 /* 0 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	/**
 	 * @license
@@ -76,9 +76,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.Omnitone = __webpack_require__(1);
 
 
-/***/ },
+/***/ }),
 /* 1 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	/**
 	 * Copyright 2016 Google Inc. All Rights Reserved.
@@ -115,6 +115,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	var FOAVirtualSpeaker = __webpack_require__(8);
 	var FOADecoder = __webpack_require__(9);
 	var FOARenderer = __webpack_require__(12);
+	var HOARotator = __webpack_require__(13);
+	var HOARenderer = __webpack_require__(14);
 
 	/**
 	 * Load audio buffers based on the speaker configuration map data.
@@ -134,7 +136,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 * Create an instance of FOA Convolver. For parameters, refer the definition of
 	 * Router class.
-	 * @return {Object}
+	 * @return {FOAConvolver}
 	 */
 	Omnitone.createFOAConvolver = function (context, options) {
 	  return new FOAConvolver(context, options);
@@ -143,7 +145,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 * Create an instance of FOA Router. For parameters, refer the definition of
 	 * Router class.
-	 * @return {Object}
+	 * @return {FOARouter}
 	 */
 	Omnitone.createFOARouter = function (context, channelMap) {
 	  return new FOARouter(context, channelMap);
@@ -152,7 +154,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 * Create an instance of FOA Rotator. For parameters, refer the definition of
 	 * Rotator class.
-	 * @return {Object}
+	 * @return {FOARotator}
 	 */
 	Omnitone.createFOARotator = function (context) {
 	  return new FOARotator(context);
@@ -199,17 +201,42 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @param {String} options.HRIRUrl    Optional HRIR URL.
 	 * @param {Number} options.postGainDB Optional post-decoding gain in dB.
 	 * @param {Array} options.channelMap  Optional custom channel map.
+	 * @return {FOARenderer}
 	 */
 	Omnitone.createFOARenderer = function (context, options) {
 	  return new FOARenderer(context, options);
 	};
 
+	/**
+	 * Create an instance of HOA Rotator. For parameters, refer the definition of
+	 * HOARotator class.
+	 * @param {AudioContext} context      Associated AudioContext.
+	 * @param {Number} order              Ambisonic order.
+	 * @return {HOARotator}
+	 */
+	Omnitone.createHOARotator = function (context, order) {
+	  return new HOARotator(context, order);
+	};
+
+	/**
+	 * Create a singleton HOARenderer instance.
+	 * @param {AudioContext} context          Associated AudioContext.
+	 * @param {Object} options                Options for HOARenderer.
+	 * @param {String} options.HRIRUrls         HRIR URLs.
+	 * @param {Number} options.renderingMode    Rendering mode.
+	 * @param {Number} options.ambisonicOrder   Ambisonic order.
+	 * @return {HOARenderer}
+	*/
+	Omnitone.createHOARenderer = function (context, options) {
+	  return new HOARenderer(context, options);
+	};
+
 	module.exports = Omnitone;
 
 
-/***/ },
+/***/ }),
 /* 2 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	/**
 	 * Copyright 2016 Google Inc. All Rights Reserved.
@@ -343,9 +370,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = AudioBufferManager;
 
 
-/***/ },
+/***/ }),
 /* 3 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	/**
 	 * Copyright 2016 Google Inc. All Rights Reserved.
@@ -437,9 +464,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 
-/***/ },
+/***/ }),
 /* 4 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	/**
 	 * Copyright 2017 Google Inc. All Rights Reserved.
@@ -560,9 +587,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = FOAConvolver;
 
 
-/***/ },
+/***/ }),
 /* 5 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	/**
 	 * Copyright 2016 Google Inc. All Rights Reserved.
@@ -658,9 +685,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = FOARouter;
 
 
-/***/ },
+/***/ }),
 /* 6 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	/**
 	 * Copyright 2016 Google Inc. All Rights Reserved.
@@ -806,9 +833,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = FOARotator;
 
 
-/***/ },
+/***/ }),
 /* 7 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	/**
 	 * Copyright 2016 Google Inc. All Rights Reserved.
@@ -922,9 +949,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = FOAPhaseMatchedFilter;
 
 
-/***/ },
+/***/ }),
 /* 8 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	/**
 	 * Copyright 2016 Google Inc. All Rights Reserved.
@@ -1016,9 +1043,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = FOAVirtualSpeaker;
 
 
-/***/ },
+/***/ }),
 /* 9 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	/**
 	 * Copyright 2016 Google Inc. All Rights Reserved.
@@ -1233,9 +1260,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = FOADecoder;
 
 
-/***/ },
+/***/ }),
 /* 10 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	/**
 	 * Copyright 2016 Google Inc. All Rights Reserved.
@@ -1308,9 +1335,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = FOASpeakerData;
 
 
-/***/ },
+/***/ }),
 /* 11 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	/**
 	 * Copyright 2016 Google Inc. All Rights Reserved.
@@ -1340,9 +1367,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = '0.2.2';
 
 
-/***/ },
+/***/ }),
 /* 12 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	/**
 	 * Copyright 2017 Google Inc. All Rights Reserved.
@@ -1554,7 +1581,588 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = FOARenderer;
 
 
-/***/ }
+/***/ }),
+/* 13 */
+/***/ (function(module, exports) {
+
+	/**
+	 * Copyright 2016 Google Inc. All Rights Reserved.
+	 * Licensed under the Apache License, Version 2.0 (the "License");
+	 * you may not use this file except in compliance with the License.
+	 * You may obtain a copy of the License at
+	 *
+	 *     http://www.apache.org/licenses/LICENSE-2.0
+	 *
+	 * Unless required by applicable law or agreed to in writing, software
+	 * distributed under the License is distributed on an "AS IS" BASIS,
+	 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	 * See the License for the specific language governing permissions and
+	 * limitations under the License.
+	 */
+
+	'use strict';
+
+
+	/**
+	 * @fileOverview Sound field rotator for higher-order-ambisonics decoding.
+	 */
+
+
+	/**
+	 * @class Higher-order-ambisonic decoder based on gain node network.
+	 *        We expect the order of the channels to conform to ACN ordering.
+	 * @param {AudioContext} context    Associated AudioContext.
+	 * @param {Number} order            Ambisonic order (2 or 3).
+	 */
+	function HOARotator (context, order) {
+	  this._context = context;
+
+	  var num_channels = (order + 1) * (order + 1);
+	  this._splitter = this._context.createChannelSplitter(num_channels);
+	  this._merger = this._context.createChannelMerger(num_channels);
+
+	  // Create a set of per-order rotation matrices using gain nodes.
+	  this._m = Array(order);
+	  for (var l = 1; l <= order; l++) {
+	    var order_offset = l * l;
+	    var rows = (2 * l + 1);
+	    this._m[l - 1] = Array(rows * rows);
+
+	    for (var j = 0; j < rows; j++) {
+	      var input_index = order_offset + j;
+	      for (var k = 0; k < rows; k++) {
+	        var output_index = order_offset + k;
+	        var matrix_index = j * rows + k; // Row-wise indexing.
+
+	        this._m[l - 1][matrix_index] = this._context.createGain();
+	        this._splitter.connect(this._m[l - 1][matrix_index], input_index);
+	        this._m[l - 1][matrix_index].connect(this._merger, 0, output_index);
+	      }
+	    }
+	  }
+
+	  // W-channel requires not transform.
+	  this._splitter.connect(this._merger, 0, 0);
+
+	  // Default Identity matrix.
+	  this.setRotationMatrix(new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]));
+
+	  // Input/Output proxy.
+	  this.input = this._splitter;
+	  this.output = this._merger;
+	};
+
+	HOARotator.prototype._kroneckerDelta = function(i, j) {
+	  return (i == j ? 1 : 0);
+	};
+
+	HOARotator.prototype._computeUVWCoeff = function(m, n, l) {
+	  var recip_denom, u, v, w;
+
+	  var d = this._kroneckerDelta(m, 0);
+	  if (Math.abs(n) == l) {
+	    recip_denom = 1 / (2 * l * (2 * l - 1));
+	  } else {
+	    recip_denom = 1 / ((l + n) * (l - n));
+	  }
+
+	  u = Math.sqrt((l + m) * (l - m) * recip_denom);
+	  v = 0.5 * (1 - 2 * d) *
+	      Math.sqrt((1 + d) * (l + Math.abs(m) - 1) * (l + Math.abs(m)) * recip_denom);
+	  w = -0.5 * (1 - d) *
+	      Math.sqrt((l - Math.abs(m) - 1) * (l - Math.abs(m)) * recip_denom);
+	  return [u, v, w];
+	};
+
+	HOARotator.prototype._setCenteredElement = function (l, i, j, val) {
+	  var index = (j + l) * (2 * l + 1) + (i + l); // Row-wise indexing.
+	  this._m[l - 1][index].gain.value = val;
+	};
+
+	HOARotator.prototype._getCenteredElement = function (l, i, j) {
+	  var index = (j + l) * (2 * l + 1) + (i + l); // Row-wise indexing.
+	  return this._m[l - 1][index].gain.value;
+	};
+
+	HOARotator.prototype._P = function (i, a, b, l) {
+	  if (b == l) {
+	    return this._getCenteredElement(1, i, 1) *
+	             this._getCenteredElement(l - 1, a, l - 1) -
+	           this._getCenteredElement(1, i, -1) *
+	             this._getCenteredElement(l - 1, a, -l + 1);
+	  } else if (b == -l) {
+	    return this._getCenteredElement(1, i, 1) *
+	             this._getCenteredElement(l - 1, a, -l + 1) +
+	           this._getCenteredElement(1, i, -1) *
+	             this._getCenteredElement(l - 1, a, l - 1);
+	  } else {
+	    return this._getCenteredElement(1, i, 0) *
+	             this._getCenteredElement(l - 1, a, b);
+	  }
+	};
+
+	HOARotator.prototype._U = function (m, n, l) {
+	  return this._P(0, m, n, l);
+	};
+
+	HOARotator.prototype._V = function (m, n, l) {
+	  if (m == 0) {
+	    return this._P(1, 1, n, l) + this._P(-1, -1, n, l);
+	  } else if (m > 0) {
+	    var d = this._kroneckerDelta(m, 1);
+	    return this._P(1, m - 1, n, l) * Math.sqrt(1 + d) -
+	           this._P(-1, -m + 1, n, l) * (1 - d);
+	  } else {
+	    var d = this._kroneckerDelta(m, -1);
+	    return this._P(1, m + 1, n, l) * (1 - d) +
+	           this._P(-1, -m - 1, n, l) * Math.sqrt(1 + d);
+	  }
+	};
+
+	HOARotator.prototype._W = function (m, n, l) {
+	  if (m == 0) {
+	    return 0;
+	  } else if (m > 0) {
+	    return this._P(1, m + 1, n, l) + this._P(-1, -m - 1, n, l);
+	  } else {
+	    return this._P(1, m - 1, n, l) - this._P(-1, -m + 1, n, l);
+	  }
+	};
+
+	HOARotator.prototype._computeBandRotation = function (l) {
+	  for (var m = -l; m <= l; m++) {
+	    for (var n = -l; n <= l; n++) {
+	      var uvw = this._computeUVWCoeff(m, n, l);
+
+	      if (Math.abs(uvw[0]) > 0) {
+	        uvw[0] *= this._U(m, n, l);
+	      }
+	      if (Math.abs(uvw[1]) > 0) {
+	        uvw[1] *= this._V(m, n, l);
+	      }
+	      if (Math.abs(uvw[2]) > 0) {
+	        uvw[2] *= this._W(m, n, l);
+	      }
+
+	      this._setCenteredElement(l, m, n, uvw[0] + uvw[1] + uvw[2]);
+	    }
+	  }
+	};
+
+	HOARotator.prototype._computeHOAMatrices = function () {
+	  // We start by computing the 2nd-order matrix from the 1st-order matrix.
+	  for (var l = 2; l <= this._m.length; l++) {
+	    this._computeBandRotation(l);
+	  }
+
+	  // TODO(drewbitllama): Fix the issue regarding this bug.
+	  // We currently compute the correct matrix by flipping the pen-ultimate
+	  // indices on the pos and neg sides of each recursively computed band.
+	  for (var l = 2; l <= this._m.length; l++) {
+	    var neg_index = 1;
+	    var pos_index = 2 * l - 1;
+	    var row_length = 2 * l + 1;
+	    for (var i = 0; i < row_length; i++) {
+	      var neg_matrix_index = i * row_length + pos_index;
+	      var pos_matrix_index = i * row_length + neg_index;
+	      this._m[l - 1][neg_matrix_index].gain.value *= -1;
+	      this._m[l - 1][pos_matrix_index].gain.value *= -1;
+	    }
+	  }
+	};
+
+	/**
+	 * Set 3x3 matrix for soundfield rotation. (gl-matrix.js style)
+	 * @param {Array} rotationMatrix    A 3x3 matrix of soundfield rotation. The
+	 *                                  matrix is in the row-major representation.
+	 */
+	HOARotator.prototype.setRotationMatrix = function (rotationMatrix) {
+	  for (var i = 0; i < 9; i++) {
+	    this._m[0][i].gain.value = rotationMatrix[i];
+	  }
+	  this._computeHOAMatrices();
+	};
+
+	/**
+	 * Set 4x4 matrix for soundfield rotation. (Three.js style)
+	 * @param {Array} rotationMatrix4   A 4x4 matrix of soundfield rotation.
+	 */
+	HOARotator.prototype.setRotationMatrix4 = function (rotationMatrix4) {
+	  for (var i = 0; i < 12; i = i + 4) {
+	    this._m[0][i].gain.value = rotationMatrix4[i];
+	    this._m[0][i + 1].gain.value = rotationMatrix4[i + 1];
+	    this._m[0][i + 2].gain.value = rotationMatrix4[i + 2];
+	  }
+	  this._computeHOAMatrices();
+	};
+
+	/**
+	 * Returns the current rotation matrix.
+	 * @return {Array}                  A 3x3 matrix of soundfield rotation. The
+	 *                                  matrix is in the row-major representation.
+	 */
+	HOARotator.prototype.getRotationMatrix = function () {
+	  var rotationMatrix = Float32Array(9);
+	  for (var i = 0; i < 9; i++) {
+	    rotationMatrix[i] = this._m[0][i].gain.value;
+	  }
+	  return rotationMatrix;
+	};
+
+	HOARotator.prototype.testMultiply = function (input) {
+	  var output = new Float32Array(input.length);
+	  var order = Math.round(Math.sqrt(input.length)) - 1;
+	  output[0] = 1;
+	  for (var l = 1; l <= order; l++) {
+	    var order_offset = l * l;
+	    for (var m = -l; m <= l; m++) {
+	      var acn_index = l * l + l + m;
+	      var row_length = 2 * l + 1;
+	      for (var i = 0; i < row_length; i++) {
+	        var col = m + l;
+	        var matrix_index = col * row_length + i;
+	        output[order_offset + i] +=
+	          this._m[l - 1][matrix_index].gain.value * input[acn_index];
+	      }
+	    }
+	  }
+	  console.log(output);
+	}
+
+	module.exports = HOARotator;
+
+
+/***/ }),
+/* 14 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	/**
+	 * Copyright 2017 Google Inc. All Rights Reserved.
+	 * Licensed under the Apache License, Version 2.0 (the "License");
+	 * you may not use this file except in compliance with the License.
+	 * You may obtain a copy of the License at
+	 *
+	 *     http://www.apache.org/licenses/LICENSE-2.0
+	 *
+	 * Unless required by applicable law or agreed to in writing, software
+	 * distributed under the License is distributed on an "AS IS" BASIS,
+	 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	 * See the License for the specific language governing permissions and
+	 * limitations under the License.
+	 */
+
+	'use strict';
+
+	/**
+	 * @fileOverview Omnitone HOA decoder.
+	 */
+
+	// Internal dependencies.
+	var AudioBufferManager = __webpack_require__(2);
+	var HOARotator = __webpack_require__(13);
+	var HOAConvolver = __webpack_require__(15);
+	var Utils = __webpack_require__(3);
+	var SystemVersion = __webpack_require__(11);
+
+	// HRIRs for optimized HOA rendering.
+	// TODO(hongchan): change this with the absolute URL.
+	var SH_MAXRE_HRIR_URLS = [
+	  'resources/sh_hrir_o_3_pt1.wav',
+	  'resources/sh_hrir_o_3_pt2.wav',
+	  'resources/sh_hrir_o_3_pt3.wav',
+	  'resources/sh_hrir_o_3_pt4.wav'];
+
+	/**
+	 * @class Omnitone FOA renderer class. Uses the optimized convolution technique.
+	 * @param {AudioContext} context          Associated AudioContext.
+	 * @param {Object} options
+	 * @param {String} options.HRIRUrls        Optional HRIR URL.
+	 * @param {String} options.renderingMode  Rendering mode.
+	 * @param {Number} options.ambisonicOrder Ambisonic order (2 or 3).
+	 */
+	function HOARenderer (context, options) {
+	  this._context = context;
+
+	  // Priming internal setting with |options|.
+	  this._HRIRUrls = SH_MAXRE_HRIR_URLS;
+	  this._renderingMode = 'ambisonic';
+	  this._ambisonicOrder = 3;
+	  if (options) {
+	    if (options.HRIRUrl)
+	      this._HRIRUrls = options.HRIRUrl;
+	    if (options.renderingMode)
+	      this._renderingMode = options.renderingMode;
+	  }
+
+	  this._isRendererReady = false;
+	}
+
+
+	/**
+	 * Initialize and load the resources for the decode.
+	 * @return {Promise}
+	 */
+	HOARenderer.prototype.initialize = function () {
+	  Utils.log('Version: ' + SystemVersion);
+	  Utils.log('Initializing... (mode: ' + this._renderingMode + ')');
+	  Utils.log('Rendering via SH-MaxRE convolution.');
+
+	  this._tempMatrix4 = new Float32Array(16);
+	  this._buffersLoaded = 0;
+	  this._buffers = [];
+
+	  return new Promise(this._initializeCallback.bind(this));
+	};
+
+
+	/**
+	 * Internal callback handler for |initialize| method.
+	 * @param {Function} resolve Promise resolution.
+	 * @param {Function} reject Promise rejection.
+	 */
+	HOARenderer.prototype._initializeCallback = function (resolve, reject) {
+	  var key = 'HOA_HRIR_AUDIOBUFFER';
+	  var HOA_buffers;
+	  var total_channels = 0;
+	  for (var i = 0; i < this._HRIRUrls.length; i++) {
+	    new AudioBufferManager(
+	        this._context,
+	        [{ name: i, url: this._HRIRUrls[i] }],
+	        function (buffers) {
+	          var val = buffers.keys().next().value;
+
+	          // Allocate buffers when loading first file in list.
+	          // This assumes all files have the same length.
+	          if (this._buffersLoaded == 0) {
+	            var total_num_channels =
+	              (this._ambisonicOrder + 1) * (this._ambisonicOrder + 1);
+	            HOA_buffers = this._context.createBuffer(total_num_channels,
+	              buffers.get(val).length, buffers.get(val).sampleRate);
+	          }
+
+	          var num_channels_in_file = buffers.get(val).numberOfChannels;
+	          total_channels += num_channels_in_file;
+	          var offset = val * num_channels_in_file;
+	          for (var j = 0; j < num_channels_in_file; j++) {
+	            HOA_buffers.getChannelData(j + offset).set(buffers.get(val).getChannelData(j));
+	          }
+	          this._buffersLoaded++;
+	          if (this._buffersLoaded == this._HRIRUrls.length) {
+	            this.input = this._context.createGain();
+	            this._bypass = this._context.createGain();
+	            this._hoaRotator = new HOARotator(this._context, this._ambisonicOrder);
+	            this._hoaConvolver = new HOAConvolver(this._context, { IR: HOA_buffers, ambisonicOrder: this._ambisonicOrder });
+	            this.output = this._context.createGain();
+
+	            this.input.connect(this._hoaRotator.input);
+	            this.input.connect(this._bypass);
+	            this._hoaRotator.output.connect(this._hoaConvolver.input);
+	            this._hoaConvolver.output.connect(this.output);
+
+	            this.setRenderingMode(this._renderingMode);
+
+	            this._isRendererReady = true;
+	            if (total_channels != HOA_buffers.numberOfChannels) {
+	              Utils.log(['Warning: Only ' + total_channels + ' HRIRs were loaded (expected ' + HOA_buffers.numberOfChannels + '). The renderer will not function as expected.']);
+	            } else {
+	              Utils.log('HRIRs are loaded successfully. The renderer is ready.');
+	            }
+	            resolve();
+	          }
+	        }.bind(this),
+	        function (buffers) {
+	          var errorMessage = 'Initialization failed: ' + key + ' is '
+	              + buffers.get(0) + '.';
+	          Utils.log(errorMessage);
+	          reject(errorMessage);
+	    });
+	  }
+	};
+
+
+	/**
+	 * Set the rotation matrix for the sound field rotation.
+	 * @param {Array} rotationMatrix      3x3 rotation matrix (row-major
+	 *                                    representation)
+	 */
+	HOARenderer.prototype.setRotationMatrix = function (rotationMatrix) {
+	  if (!this._isRendererReady)
+	    return;
+
+	  this._hoaRotator.setRotationMatrix(rotationMatrix);
+	};
+
+
+	/**
+	 * Update the rotation matrix from a Three.js camera object.
+	 * @param  {Object} cameraMatrix      The Matrix4 obejct of Three.js the camera.
+	 */
+	HOARenderer.prototype.setRotationMatrixFromCamera = function (cameraMatrix) {
+	  if (!this._isRendererReady)
+	    return;
+
+	  // Extract the inner array elements and inverse. (The actual view rotation is
+	  // the opposite of the camera movement.)
+	  Utils.invertMatrix4(this._tempMatrix4, cameraMatrix.elements);
+	  this._hoaRotator.setRotationMatrix4(this._tempMatrix4);
+	};
+
+
+	/**
+	 * Set the decoding mode.
+	 * @param {String} mode               Decoding mode. When the mode is 'bypass'
+	 *                                    the decoder is disabled and bypass the
+	 *                                    input stream to the output. Setting the
+	 *                                    mode to 'ambisonic' activates the decoder.
+	 *                                    When the mode is 'off', all the
+	 *                                    processing is completely turned off saving
+	 *                                    the CPU power.
+	 */
+	HOARenderer.prototype.setRenderingMode = function (mode) {
+	  if (mode === this._renderingMode)
+	    return;
+
+	  switch (mode) {
+	    // Bypass mode: The convolution path is disabled, disconnected (thus consume
+	    // no CPU). Use bypass gain node to pass-through the input stream.
+	    case 'bypass':
+	      this._renderingMode = 'bypass';
+	      this._hoaConvolver.disable();
+	      this._bypass.connect(this.output);
+	      break;
+
+	    // Ambisonic mode: Use the convolution and shut down the bypass path.
+	    case 'ambisonic':
+	      this._renderingMode = 'ambisonic';
+	      this._hoaConvolver.enable();
+	      this._bypass.disconnect();
+	      break;
+
+	    // Off mode: Shut down all sound from the renderer.
+	    case 'off':
+	      this._renderingMode = 'off';
+	      this._hoaConvolver.disable();
+	      this._bypass.disconnect();
+	      break;
+
+	    default:
+	      // Unsupported mode. Ignore it.
+	      Utils.log('Rendering mode "' + mode + '" is not supported.');
+	      return;
+	  }
+
+	  Utils.log('Rendering mode changed. (' + mode + ')');
+	};
+
+
+	module.exports = HOARenderer;
+
+/***/ }),
+/* 15 */
+/***/ (function(module, exports) {
+
+	/**
+	 * Copyright 2017 Google Inc. All Rights Reserved.
+	 * Licensed under the Apache License, Version 2.0 (the "License");
+	 * you may not use this file except in compliance with the License.
+	 * You may obtain a copy of the License at
+	 *
+	 *     http://www.apache.org/licenses/LICENSE-2.0
+	 *
+	 * Unless required by applicable law or agreed to in writing, software
+	 * distributed under the License is distributed on an "AS IS" BASIS,
+	 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	 * See the License for the specific language governing permissions and
+	 * limitations under the License.
+	 */
+
+	/**
+	 * @fileOverview A collection of convolvers. Can be used for the optimized HOA
+	 *               binaural rendering. (e.g. SH-MaxRe HRTFs)
+	 */
+
+	'use strict';
+
+
+	/**
+	 * @class HOAConvolver
+	 * @description A collection of convolvers for N-channel HOA stream.
+	 * @param {AudioContext} context          Associated AudioContext.
+	 * @param {Object} options                Options for speaker.
+	 * @param {Array} options.IR              Array of buffers for HRTF convolution.
+	 * @param {Number} options.gain           Post-gain for the speaker.
+	 * @param {Number} options.ambisonicOrder Ambisonic order (2 or 3).
+	*/
+	function HOAConvolver (context, options) {
+	  this._active = false;
+
+	  this._context = context;
+
+	  var num_channels = (options.ambisonicOrder + 1) * (options.ambisonicOrder + 1);
+	  this._input = this._context.createChannelSplitter(num_channels);
+
+	  this._symmetrics = this._context.createGain();
+	  this._antisymmetrics = this._context.createGain();
+
+	  this._inverter = this._context.createGain();
+	  this._inverter.gain.value = -1;
+
+	  this._binaural = this._context.createChannelMerger(2);
+	  this._outputGain = this._context.createGain();
+
+	  this._convolvers = new Array(num_channels);
+	  for (var l = 0; l <= options.ambisonicOrder; l++) {
+	    for (var m = -l; m <= l; m++) {
+	      var acn = l * l + l + m;
+	      this._convolvers[acn] = this._context.createConvolver();
+	      this._convolvers[acn].normalize = false;
+	      this._input.connect(this._convolvers[acn], acn, 0);
+	      if (m >= 0) {
+	        this._convolvers[acn].connect(this._symmetrics);
+	      } else {
+	        this._convolvers[acn].connect(this._antisymmetrics);
+	      }
+	    }
+	  }
+
+	  this._symmetrics.connect(this._binaural, 0, 0);
+	  this._symmetrics.connect(this._binaural, 0, 1);
+	  this._antisymmetrics.connect(this._binaural, 0, 0);
+	  this._antisymmetrics.connect(this._inverter);
+	  this._inverter.connect(this._binaural, 0, 1);
+
+	  // Generate 2 stereo buffers from a 4-channel IR.
+	  this._setHRIRBuffers(options.IR);
+	  this.enable();
+
+	  // Input/Output proxy.
+	  this.input = this._input;
+	  this.output = this._outputGain;
+	}
+
+	HOAConvolver.prototype._setHRIRBuffers = function (hrirBuffers) {
+	  this._hrirs = new Array(hrirBuffers.numberOfChannels);
+	  for (var i = 0; i < hrirBuffers.numberOfChannels; i++) {
+	    this._hrirs[i] = this._context.createBuffer(1, hrirBuffers.length, hrirBuffers.sampleRate);
+	    this._hrirs[i].getChannelData(0).set(hrirBuffers.getChannelData(i));
+	    this._convolvers[i].buffer = this._hrirs[i];
+	  }
+	};
+
+	HOAConvolver.prototype.enable = function () {
+	  this._binaural.connect(this._outputGain);
+	  this._active = true;
+	};
+
+	HOAConvolver.prototype.disable = function () {
+	  this._binaural.disconnect();
+	  this._active = false;
+	};
+
+	module.exports = HOAConvolver;
+
+
+/***/ })
 /******/ ])
 });
 ;
