@@ -44,7 +44,8 @@ describe('HOARotator', function () {
    0.433012701892219, 0.612372435695794, 0.25, 0.612372435695795, 0,
    0.197642353760524, 0.684653196881458, 0.459279326771846, -0.176776695296637,
    0.459279326771846, 0, -0.197642353760524];
-
+  var transformMatrix = [0.707106781186548, 0, -0.707106781186547, -0.5,
+    0.707106781186548, -0.5, 0.5, 0.707106781186547, 0.5];
   var context;
   var hoaConstantBuffer;
 
@@ -86,6 +87,7 @@ describe('HOARotator', function () {
         var hoaRotator = Omnitone.createHOARotator(context, ambisonicOrder);
 
         constantSource.buffer = hoaConstantBuffer;
+        hoaRotator.setRotationMatrix(transformMatrix);
 
         constantSource.connect(hoaRotator.input);
         hoaRotator.output.connect(context.destination);
