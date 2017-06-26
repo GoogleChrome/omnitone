@@ -2,6 +2,7 @@
 npm-debug.log
 node_modules/
 pvt/
+package-lock.json
 
 .firebaserc
 404.html

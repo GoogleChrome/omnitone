@@ -48,10 +48,8 @@
   <script>
     var hoaRenderer;
     var audioSources = [
-      {name : 'ch0-ch3', url : 'resources/3oa_example_ch0-ch3.wav'},
-      {name : 'ch4-ch7', url : 'resources/3oa_example_ch4-ch7.wav'},
-      {name : 'ch8-ch11', url : 'resources/3oa_example_ch8-ch11.wav'},
-      {name : 'ch12-ch15', url : 'resources/3oa_example_ch12-ch15.wav'}];
+      {name : 'ch0-ch7', url : 'resources/3oa_example_ch0-ch7.wav'},
+      {name : 'ch8-ch15', url : 'resources/3oa_example_ch8-ch15.wav'}];
     var bufferSource;
     var startTime = 0;
     var offsetTime = 0;
@@ -116,10 +114,10 @@
           var bufferLength = result.get(audioSources[0].name).length;
           var sampleRate = result.get(audioSources[0].name).sampleRate;
           buffer = audioContext.createBuffer(16, bufferLength, sampleRate);
-          for (var i = 0; i < 4; i++) {
-            for (var j = 0; j < 4; j++) {
+          for (var i = 0; i < 2; i++) {
+            for (var j = 0; j < 8; j++) {
               var source = result.get(audioSources[i].name).getChannelData(j);
-              buffer.copyToChannel(source, i * 4 + j);
+              buffer.copyToChannel(source, i * 8 + j);
             }
           }
       });
@@ -136,7 +134,7 @@
           }
           bufferSource = audioContext.createBufferSource();
           bufferSource.loop = true;
-          bufferSource.buffer = buffer;          
+          bufferSource.buffer = buffer;
           bufferSource.connect(bufferGain);
           bufferSource.start(0, offsetTime);
           startTime = audioContext.currentTime;
@@ -150,10 +148,8 @@
       var options = {
         ambisonicOrder: 3,
         HRIRUrl: [
-          '../build/resources/sh_hrir_o_3_ch0-ch3.wav',
-          '../build/resources/sh_hrir_o_3_ch4-ch7.wav',
-          '../build/resources/sh_hrir_o_3_ch8-ch11.wav',
-          '../build/resources/sh_hrir_o_3_ch12-ch15.wav']
+          '../build/resources/sh_hrir_o_3_ch0-ch7.wav',
+          '../build/resources/sh_hrir_o_3_ch8-ch15.wav']
       };
       hoaRenderer = Omnitone.createHOARenderer(audioContext, options);
       hoaRenderer.initialize().then(function () {

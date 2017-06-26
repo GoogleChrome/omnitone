@@ -65,14 +65,14 @@ function HOARotator (context, order) {
   this.output = this._merger;
 };
 
-HOARotator.prototype._kroneckerDelta = function(i, j) {
+function _kroneckerDelta(i, j) {
   return (i == j ? 1 : 0);
 };
 
-HOARotator.prototype._computeUVWCoeff = function(m, n, l) {
+function _computeUVWCoeff(m, n, l) {
   var recip_denom, u, v, w;
 
-  var d = this._kroneckerDelta(m, 0);
+  var d = _kroneckerDelta(m, 0);
   if (Math.abs(n) == l) {
     recip_denom = 1 / (2 * l * (2 * l - 1));
   } else {
@@ -122,11 +122,11 @@ HOARotator.prototype._V = function (m, n, l) {
   if (m == 0) {
     return this._P(1, 1, n, l) + this._P(-1, -1, n, l);
   } else if (m > 0) {
-    var d = this._kroneckerDelta(m, 1);
+    var d = _kroneckerDelta(m, 1);
     return this._P(1, m - 1, n, l) * Math.sqrt(1 + d) -
            this._P(-1, -m + 1, n, l) * (1 - d);
   } else {
-    var d = this._kroneckerDelta(m, -1);
+    var d = _kroneckerDelta(m, -1);
     return this._P(1, m + 1, n, l) * (1 - d) +
            this._P(-1, -m - 1, n, l) * Math.sqrt(1 + d);
   }
@@ -145,7 +145,7 @@ HOARotator.prototype._W = function (m, n, l) {
 HOARotator.prototype._computeBandRotation = function (l) {
   for (var m = -l; m <= l; m++) {
     for (var n = -l; n <= l; n++) {
-      var uvw = this._computeUVWCoeff(m, n, l);
+      var uvw = _computeUVWCoeff(m, n, l);
 
       if (Math.abs(uvw[0]) > 0) {
         uvw[0] *= this._U(m, n, l);
