@@ -70,7 +70,9 @@ describe('HOARotator', function () {
   }
 
   beforeEach(function () {
-    context = new OfflineAudioContext(16, renderLength, sampleRate);
+    var numberOfChannels = (ambisonicOrder + 1) * (ambisonicOrder + 1);
+    context =
+      new OfflineAudioContext(numberOfChannels, renderLength, sampleRate);
     hoaConstantBuffer = createConstantBuffer(context,
       sphericalHarmonics_A0_E0_3oa, renderLength);
   });
