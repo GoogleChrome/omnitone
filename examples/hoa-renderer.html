@@ -1,0 +1,172 @@
+<!--
+  Copyright 2017 Google Inc. All Rights Reserved.
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Example: HOARotator</title>
+  <script src="audiocontext-shim.js"></script>
+  <script src="../build/omnitone.js"></script>
+  <link rel="stylesheet" href="example.css">
+</head>
+
+<body>
+  <h1>Example: HOARenderer</h1>
+  <p><code>HOARenderer</code> is an optimized higher-order ambisonic renderer based on the integrated convolution (SH-MaxRe
+    HRIR). This renderer supports arbitrary order ambisonic rendering, provided the user supplies the appropriate SH-MaxRe
+    HRIRs.</p>
+  <div id="secSource">
+    <p>NOTE: Use headphones for the full-sphere surround sound.</p>
+    <h2>Orient the head by selecting the horizontal and vertical controls.</h2>
+    Azimuth: <span id="eLabelAzimuth">0</span><br/>
+    <input oninput="rotateScene();" onchange="rotateScene();" id="eRangeAzimuth" type=range min="-180" max="180" value="0" step="1"
+    />
+    <br/> Elevation: <span id="eLabelElevation">0</span><br/>
+    <input oninput="rotateScene();" onchange="rotateScene();" id="eRangeElevation" type=range min="-90" max="90" value="0" step="1"
+    />
+    <br/> Gain (dB): <span id="eLabelGain">0</span><br/>
+    <input oninput="adjustGain();" onchange="adjustGain();" id="eRangeGain" type="range" min="-60" max="20" value="0" step="1"
+    />
+    <br/>
+    <button id="eButtonPlayback" disabled>Play</button>
+  </div>
+
+  <script>
+    var hoaRenderer;
+    var ambisonicOrder = 3;
+    var audioSources = [
+      { name: 'ch0-ch7', url: 'resources/3oa_example_ch0-ch7.wav' },
+      { name: 'ch8-ch15', url: 'resources/3oa_example_ch8-ch15.wav' }];
+    var HRIRBufferUrls = [
+      '../build/resources/sh_hrir_o_3_ch0-ch7.wav',
+      '../build/resources/sh_hrir_o_3_ch8-ch15.wav'];
+    var bufferSource;
+    var startTime = 0;
+    var offsetTime = 0;
+    var buttonPlayback;
+    var bufferGain;
+
+    function crossProduct(a, b) {
+      return [
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0]
+      ];
+    }
+
+    function normalize(a) {
+      var n = Math.sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
+      a[0] /= n;
+      a[1] /= n;
+      a[2] /= n;
+      return a;
+    }
+
+    function adjustGain() {
+      var gainDB = document.getElementById("eRangeGain").value;
+      document.getElementById('eLabelGain').textContent = gainDB;
+      var gainLinear = Math.pow(10, gainDB / 20);
+      bufferGain.gain.value = gainLinear;
+    }
+
+    function rotateScene() {
+      var azimuthValue = document.getElementById('eRangeAzimuth').value;
+      var elevationValue = document.getElementById('eRangeElevation').value;
+      document.getElementById('eLabelAzimuth').textContent = azimuthValue;
+      document.getElementById('eLabelElevation').textContent = elevationValue;
+
+      // Standard View Matrix
+      var matrix = new Float32Array(9);
+      var beta = -azimuthValue / 180 * Math.PI;
+      var alpha = elevationValue / 180 * Math.PI;
+      var cosAlpha = Math.cos(alpha);
+      var sinAlpha = Math.sin(alpha);
+      var cosBeta = Math.cos(beta);
+      var sinBeta = Math.sin(beta);
+
+      matrix[0] = cosBeta;
+      matrix[1] = 0;
+      matrix[2] = sinBeta;
+      matrix[3] = sinAlpha * sinBeta;
+      matrix[4] = cosAlpha;
+      matrix[5] = -sinAlpha * cosBeta;
+      matrix[6] = -cosAlpha * sinBeta;
+      matrix[7] = sinAlpha;
+      matrix[8] = cosAlpha * cosBeta;
+      console.log(matrix);
+      hoaRenderer.setRotationMatrix(matrix);
+    }
+
+    function onLoad () {
+      var audioContext = new AudioContext();
+      var buffer;
+      bufferGain = audioContext.createGain();
+      Omnitone.loadAudioBuffers(audioContext, audioSources)
+        .then((result) => {
+          // Because we cannot load audio files with >8 channels, we must
+          // load multiple files and copy their audio data into a single large
+          // buffer for accurate playback.
+          var bufferLength = result.get(audioSources[0].name).length;
+          var sampleRate = result.get(audioSources[0].name).sampleRate;
+          buffer = audioContext.createBuffer(16, bufferLength, sampleRate);
+          for (var i = 0; i < 2; i++) {
+            for (var j = 0; j < 8; j++) {
+              var source = result.get(audioSources[i].name).getChannelData(j);
+              buffer.copyToChannel(source, i * 8 + j);
+            }
+          }
+        });
+
+      buttonPlayback = document.getElementById('eButtonPlayback');
+      buttonPlayback.onclick = function (event) {
+        if (event.target.textContent === 'Play') {
+          event.target.textContent = 'Pause';
+          offsetTime -= startTime;
+          offsetTime %= buffer.duration;
+          if (bufferSource) {
+            bufferSource.disconnect(bufferGain);
+            delete bufferSource;
+          }
+          bufferSource = audioContext.createBufferSource();
+          bufferSource.loop = true;
+          bufferSource.buffer = buffer;
+          bufferSource.connect(bufferGain);
+          bufferSource.start(0, offsetTime);
+          startTime = audioContext.currentTime;
+        } else {
+          event.target.textContent = 'Play';
+          bufferSource.stop();
+          offsetTime += audioContext.currentTime;
+        }
+      };
+
+      var options = {
+        ambisonicOrder: ambisonicOrder,
+        HRIRUrl: HRIRBufferUrls
+      };
+      hoaRenderer = Omnitone.createHOARenderer(audioContext, options);
+      hoaRenderer.initialize().then(function () {
+        bufferGain.connect(hoaRenderer.input);
+        hoaRenderer.output.connect(audioContext.destination);
+        buttonPlayback.disabled = false;
+      }, function (error) {
+        console.error(error);
+      });
+    };
+
+    window.addEventListener('load', onLoad);
+  </script>
+</body>

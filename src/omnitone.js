@@ -33,6 +33,8 @@ var FOAPhaseMatchedFilter = require('./foa-phase-matched-filter.js');
 var FOAVirtualSpeaker = require('./foa-virtual-speaker.js');
 var FOADecoder = require('./foa-decoder.js');
 var FOARenderer = require('./foa-renderer.js');
+var HOARotator = require('./hoa-rotator.js');
+var HOARenderer = require('./hoa-renderer.js');
 
 /**
  * Load audio buffers based on the speaker configuration map data.
@@ -52,7 +54,7 @@ Omnitone.loadAudioBuffers = function (context, speakerData) {
 /**
  * Create an instance of FOA Convolver. For parameters, refer the definition of
  * Router class.
- * @return {Object}
+ * @return {FOAConvolver}
  */
 Omnitone.createFOAConvolver = function (context, options) {
   return new FOAConvolver(context, options);
@@ -61,7 +63,7 @@ Omnitone.createFOAConvolver = function (context, options) {
 /**
  * Create an instance of FOA Router. For parameters, refer the definition of
  * Router class.
- * @return {Object}
+ * @return {FOARouter}
  */
 Omnitone.createFOARouter = function (context, channelMap) {
   return new FOARouter(context, channelMap);
@@ -70,7 +72,7 @@ Omnitone.createFOARouter = function (context, channelMap) {
 /**
  * Create an instance of FOA Rotator. For parameters, refer the definition of
  * Rotator class.
- * @return {Object}
+ * @return {FOARotator}
  */
 Omnitone.createFOARotator = function (context) {
   return new FOARotator(context);
@@ -117,9 +119,34 @@ Omnitone.createFOADecoder = function (context, videoElement, options) {
  * @param {String} options.HRIRUrl    Optional HRIR URL.
  * @param {Number} options.postGainDB Optional post-decoding gain in dB.
  * @param {Array} options.channelMap  Optional custom channel map.
+ * @return {FOARenderer}
  */
 Omnitone.createFOARenderer = function (context, options) {
   return new FOARenderer(context, options);
+};
+
+/**
+ * Create an instance of HOA Rotator. For parameters, refer the definition of
+ * HOARotator class.
+ * @param {AudioContext} context      Associated AudioContext.
+ * @param {Number} order              Ambisonic order.
+ * @return {HOARotator}
+ */
+Omnitone.createHOARotator = function (context, order) {
+  return new HOARotator(context, order);
+};
+
+/**
+ * Create a singleton HOARenderer instance.
+ * @param {AudioContext} context          Associated AudioContext.
+ * @param {Object} options                Options for HOARenderer.
+ * @param {String} options.HRIRUrls         HRIR URLs.
+ * @param {Number} options.renderingMode    Rendering mode.
+ * @param {Number} options.ambisonicOrder   Ambisonic order.
+ * @return {HOARenderer}
+*/
+Omnitone.createHOARenderer = function (context, options) {
+  return new HOARenderer(context, options);
 };
 
 module.exports = Omnitone;
