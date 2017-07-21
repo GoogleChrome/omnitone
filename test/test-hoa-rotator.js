@@ -13,48 +13,45 @@
  * limitations under the License.
  */
 
+// TODO(bitllama): Rewrite this test. Make this similar to test-foa-rotator.js.
+// This file should test setRotatioMatrix() and setRotationMatrix4() interfaces.
+// Until this test gets fixed, it will be excluded from CI testing.
 
-/**
- * Test HOARotator object.
- *
- * Shoot an encoded impulse into the rotator to generate a multichannel buffer.
- * Then compare it with the JS-calculated result. Thresholding the comparison is
- * necessary because of truncation error.
- */
-describe('HOARotator', function () {
-  // This test is async, override timeout threshold to 5 sec.
-  this.timeout(5000);
-
-  // Threshold for sample comparison.
-  var THRESHOLD = 2.9802322387695312e-8;
-
-  var sampleRate = 48000;
-  var renderLength = 256;
-  var ambisonicOrder = 3;
+// Test HOARotator object.
+describe('HOARotator (3rd order ambisonic)', function () {
 
   // Values are computed using ambix SN3D-normalization spherical harmonics.
   // [1] C. Nachbar, F. Zotter, E. Deleflie and A. Sontacchi. "Ambix - A
   //     Suggested Ambisonics Format," Ambisonics Symposium 2011. Lexington, US.
-  var sphericalHarmonics_A0_E0_3oa = [1, 0, 0, 1, 0, 0, -0.5, 0,
-    0.866025403784439, 0, 0, 0, 0, -0.612372435695794, 0, 0.790569415042095];
-  var sphericalHarmonics_A45_E45_3oa = [1, 0.5, 0.707106781186547, 0.5,
+  
+  var sphericalHarmonics_A0_E0_3oa = [
+    1, 0, 0, 1,
+    0, 0, -0.5, 0,
+    0.866025403784439, 0, 0, 0,
+    0, -0.612372435695794, 0, 0.790569415042095
+  ];
+
+  // TODO(bitllama): this matrix is missing one number.
+  var sphericalHarmonics_A45_E45_3oa = [
+    1, 0.5, 0.707106781186547, 0.5,
     0.433012701892219, 0.612372435695794, 0.25, 0.612372435695795, 0,
     0.197642353760524, 0.684653196881458, 0.459279326771846, -0.176776695296637,
-    0.459279326771846, 0, -0.197642353760524];
-  var transformMatrix = [0.707106781186548, 0, -0.707106781186547, -0.5,
-    0.707106781186548, -0.5, 0.5, 0.707106781186547, 0.5];
-  var context;
-  var hoaConstantBuffer;
+    0.459279326771846, 0, -0.197642353760524
+  ];
+
+  // What is this matrix for?
+  var transformMatrix = [
+    0.707106781186548, 0, -0.707106781186547, -0.5,
+    0.707106781186548, -0.5, 0.5, 0.707106781186547, 0.5
+  ];
+
 
   /**
-   * Calculate the expected binaural rendering (based on SH-maxRE algorithm)
-   * result from the impulse input and generate an AudioBus instance.
-   * @param  {AudioBuffer} buffer     FOA SH-maxRE HRIR buffer.
-   * @return {AudioBus}
+   * TODO(bitllama): Add comment.
    */
   function generateExpectedBusFromSphericalHarmonicsVector() {
     // We need to determine the number of channels K based on the ambisonic
-    // order N where K = (N + 1)^2
+    // order N where K = (N + 1)^2.
     var numberOfChannels = (ambisonicOrder + 1) * (ambisonicOrder + 1);
     var generatedBus = new AudioBus(numberOfChannels, renderLength, sampleRate);
 

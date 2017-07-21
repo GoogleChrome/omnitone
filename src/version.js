@@ -23,4 +23,4 @@
  * Omnitone library version
  * @type {String}
  */
-module.exports = '0.2.2';
+module.exports = '0.9.0';

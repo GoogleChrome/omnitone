@@ -14,99 +14,101 @@
  */
 
 
-/**
- * Test HOAConvolver object.
- *
- * Load HRIR (SH MaxRE, the new optimized IRs) and shoot an impulse to generate
- * a buffer of binaural rendering. Then compare it with the JS-calculated
- * result. Thresholding the comparison is necessary because of truncation error.
- */
-describe('HOAConvolver', function () {
+// Test HOAConvolver object as TOA(third-order ambisonic).
+//
+// Load HRIR (SH MaxRE, the new optimized IRs) and shoot an impulse to generate
+// a buffer of binaural rendering. Then compare it with the JS-calculated
+// result.
+describe('HOAConvolver (3rd order ambisonic)', function () {
   // This test is async, override timeout threshold to 5 sec.
   this.timeout(5000);
 
-  // Threshold for sample comparison.
+  // Threshold for sample comparison. It is necessary because of truncation
+  // error.
   var THRESHOLD = 2.9802322387695312e-8;
 
   // SH MaxRe HRIRs are 48Khz and 256 samples.
   var sampleRate = 48000;
   var renderLength = 256;
-  var ambisonicOrder = 3;
 
   var context;
-  var hoaImpulseBuffer;
-  var hoaSHMaxREBuffer;
+  var toaImpulseBuffer;
+  var toaSHMaxREBuffer;
 
   /**
-   * Calculate the expected binaural rendering (based on SH-maxRE algorithm)
-   * result from the impulse input and generate an AudioBus instance.
-   * @param  {AudioBuffer} buffer     FOA SH-maxRE HRIR buffer.
+   * Generate the expected binaural rendering (based on SH-maxRE algorithm)
+   * result from the impulse response and generate an AudioBus instance.
+   * @param  {AudioBuffer} buffer     TOA SH-maxRE HRIR buffer.
    * @return {AudioBus}
    */
-  function generateExpectedBusFromHOAIRBuffer(buffer) {
-    var generatedBus = new AudioBus(2, buffer.length, buffer.sampleRate);
+  function generateExpectedBusFromTOAIRBuffer(buffer) {
+    // TOA IR set is 16 channels.
+    expect(buffer.numberOfChannels).to.equal(16);
+    
+    // Derive ambisonic order from number of channels.
+    var ambisonicOrder = Math.floor(Math.sqrt(buffer.numberOfChannels)) - 1;
 
     // Get pointers to each buffer.
     var acnChannelData = [];
-    for (var i = 0; i < buffer.numberOfChannels; i++) {
+    for (var i = 0; i < buffer.numberOfChannels; i++)
       acnChannelData[i] = buffer.getChannelData(i);
-    }
-    var leftChannelData = generatedBus.getChannelData(0);
-    var rightChannelData = generatedBus.getChannelData(1);
-
-    // Derive ambisonic order from number of channels.
-    var ambisonicOrder = Math.floor(Math.sqrt(buffer.numberOfChannels)) - 1;
+    
+    var generatedBus = new AudioBus(2, buffer.length, buffer.sampleRate);
+    var L = generatedBus.getChannelData(0);
+    var R = generatedBus.getChannelData(1);
 
     // We wish to exploit front-axis symmetry, hence the left output will be
     // the sum of all spherical harmonics while the right output is the
     // difference between the positive-m spherical harmonics and the negative-m
     // spherical harmonics.
     for (var i = 0; i < buffer.length; ++i) {
-      leftChannelData[i] = 0;
-      rightChannelData[i] = 0;
+      L[i] = 0;
+      R[i] = 0;
       for (var l = 0; l <= ambisonicOrder; l++) {
         for (var m = -l; m <= l; m++) {
-          var acnIndex = l * l + l + m;
-          leftChannelData[i] += acnChannelData[acnIndex];
-          if (m >= 0) {
-            rightChannelData[i] += acnChannelData[acnIndex];
-          } else {
-            rightChannelData[i] -= acnChannelData[acnIndex];
-          }
+          var channelValue = acnChannelData[l * l + l + m];
+          L[i] += channelValue;
+          R[i] += m >= 0 ? channelValue : -channelValue;
         }
       }
     }
+
     return generatedBus;
   }
 
   beforeEach(function (done) {
+    var ambisonicOrder = 3;
     var numberOfChannels = (ambisonicOrder + 1) * (ambisonicOrder + 1);
+
     context = 
       new OfflineAudioContext(numberOfChannels, renderLength, sampleRate);
-    hoaImpulseBuffer = 
+    toaImpulseBuffer = 
       createImpulseBuffer(context, numberOfChannels, renderLength);
+    toaSHMaxREBuffer =
+      context.createBuffer(numberOfChannels, renderLength, sampleRate);
 
-    Omnitone.loadAudioBuffers(context, [{
-      name: 'SH-MaxRe',
-      url: 'base/build/resources/sh_hrir_o_3_ch0-ch7.wav'
-    }]).then(function (buffers_ch0_ch7) {
-      hoaSHMaxREBuffer = context.createBufferSource(16,
-        buffers_ch0_ch7.get('SH-MaxRe').length,
-        buffers_ch0_ch7.get('SH-MaxRe').sampleRate);
+    // Load 3rd order IR files (16 channels) to |toaSHMaxREBuffer|.
+    Omnitone.loadAudioBuffers(
+        context, 
+        [{
+          name: 'SH-MaxRe-part1',
+          url: 'base/build/resources/sh_hrir_o_3_ch0-ch7.wav'
+        },{
+          name: 'SH-MaxRe-part2',
+          url: 'base/build/resources/sh_hrir_o_3_ch8-ch15.wav'
+        }]).then(function (buffers) {
+      // TODO(hoch): remove this loop when Chrome support the media with
+      // channel > 8.
       for (var i = 0; i < 8; i++) {
-        hoaSHMaxREBuffer.getChannelData(i)
-          .set(buffers_ch0_ch7.get('SH-MaxRe').getChannelData(i));
+        // TODO(hoch): use copyChannelDataFrom() instead. getChannelData()
+        // yields a neutered reference to ArrayBuffer.
+        toaSHMaxREBuffer.getChannelData(i).set(
+            buffers.get('SH-MaxRe-part1').getChannelData(i));
+        toaSHMaxREBuffer.getChannelData(i + 8).set(
+            buffers.get('SH-MaxRe-part2').getChannelData(i));
       }
-      Omnitone.loadAudioBuffers(context, [{
-        name: 'SH-MaxRe',
-        url: 'base/build/resources/sh_hrir_o_3_ch8-ch15.wav'
-      }]).then(function (buffers_ch8_ch15) {
-        for (var i = 0; i < 8; i++) {
-          hoaSHMaxREBuffer.getChannelData(i + 8)
-            .set(buffers_ch8_ch15.get('SH-MaxRe').getChannelData(i));
-        }
-        done();
-      });
+
+      done();
     });
   });
 
@@ -114,10 +116,10 @@ describe('HOAConvolver', function () {
     function (done) {
       var impulseSource = context.createBufferSource();
       var hoaConvolver = Omnitone.createHOAConvolver(context, {
-        IR: hoaSHMaxREBuffer
+        IR: toaSHMaxREBuffer
       });
 
-      impulseSource.buffer = hoaImpulseBuffer;
+      impulseSource.buffer = toaImpulseBuffer;
 
       impulseSource.connect(hoaConvolver.input);
       hoaConvolver.output.connect(context.destination);
@@ -127,7 +129,7 @@ describe('HOAConvolver', function () {
         var actualBus = new AudioBus(2, renderLength, sampleRate);
         actualBus.copyFromAudioBuffer(renderedBuffer);
         var expectedBus =
-          generateExpectedBusFromHOAIRBuffer(hoaSHMaxREBuffer);
+          generateExpectedBusFromTOAIRBuffer(toaSHMaxREBuffer);
         expect(actualBus.compareWith(expectedBus, THRESHOLD)).to.equal(true);
         done();
       });
