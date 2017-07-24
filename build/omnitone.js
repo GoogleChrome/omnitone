@@ -2243,7 +2243,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  for (var i = 0; i < numStereoChannels; i++) {
 	    this._mergers[i] = this._context.createChannelMerger(2);
 	    this._convolvers[i] = this._context.createConvolver();
-	    this._convolvers[i].normalize = false;
 	    this._splitters[i] = this._context.createChannelSplitter(2);
 
 	    // Disable normalization.
