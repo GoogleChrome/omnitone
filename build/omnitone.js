@@ -2245,6 +2245,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this._convolvers[i] = this._context.createConvolver();
 	    this._convolvers[i].normalize = false;
 	    this._splitters[i] = this._context.createChannelSplitter(2);
+
+	    // Disable normalization.
+	    this._convolvers[i].normalize = false;
 	  }
 
 	  // Positive index (m >= 0) spherical harmonics are symmetrical around the
