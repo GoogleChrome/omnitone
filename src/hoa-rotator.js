@@ -13,13 +13,11 @@
  * limitations under the License.
  */
 
-'use strict';
-
-
 /**
  * @fileOverview Sound field rotator for higher-order-ambisonics decoding.
  */
 
+'use strict';
 
 // Utility functions for rotation matrix computation.
 

@@ -475,6 +475,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return out;
 	}
 
+	exports.getNumberOfChannelsFromAmbisonicOrder = function (order) {
+	  return (order + 1) * (order + 1);
+	}
+
 
 /***/ },
 /* 4 */
@@ -1624,33 +1628,37 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @description A collection of convolvers for N-channel HOA stream.
 	 * @param {AudioContext} context          Associated AudioContext.
 	 * @param {Object} options                Options for speaker.
-	 * @param {Array} options.IR              Multichannel HRTF convolution buffer.
+	 * @param {AudioBuffer} options.IR        Multichannel HRTF convolution buffer.
 	 * @param {Number} options.ambisonicOrder Ambisonic order (default is 3).
-	 * @param {Number} options.gain           Post-gain for the speaker (optional).
 	 */
 	function HOAConvolver(context, options) {
-	  this._active = false;
-
-	  this._context = context;
+	  // If unspecified, the default ambisonic mode is third order.
+	  var ambisonicOrder = options.ambisonicOrder ? options.ambisonicOrder : 3;
 
 	  // We need to determine the number of channels K based on the ambisonic
 	  // order N where K = (N + 1)^2
-	  var ambisonicOrder = options.ambisonicOrder ? options.ambisonicOrder : 3;
 	  var numberOfChannels = (ambisonicOrder + 1) * (ambisonicOrder + 1);
 
 	  // Ensure that the ambisonic order matches the IR channel count.
 	  if (options.IR.numberOfChannels !== numberOfChannels) {
-	    throw 'Ambisonic order and IR channel count do not match. Cannot proceed.';
+	    throw 'The order of ambisonic (' + ambisonicOrder + ') requires ' + 
+	        numberOfChannels + '-channel IR buffer. The given IR buffer has ' +
+	        options.IR.numberOfChannels + ' channels.';
 	  }
 
+	  this._active = false;
+	  this._context = context;
+
+	  this._ambisonicOrder = ambisonicOrder;
+
 	  // Compute the number of stereo convolvers needed.
-	  var numStereoChannels = Math.round(numberOfChannels / 2);
+	  var numberOfStereoChannels = Math.round(numberOfChannels / 2);
 
 	  this._input = this._context.createChannelSplitter(numberOfChannels);
 	  this._mergers = [];
 	  this._convolvers = [];
 	  this._splitters = [];
-	  for (var i = 0; i < numStereoChannels; i++) {
+	  for (var i = 0; i < numberOfStereoChannels; i++) {
 	    this._mergers[i] = this._context.createChannelMerger(2);
 	    this._convolvers[i] = this._context.createConvolver();
 	    this._splitters[i] = this._context.createChannelSplitter(2);
@@ -1697,11 +1705,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  // For asymmetric index.
 	  this._inverter.gain.value = -1;
 
-	  // Set desired output gain.
-	  if (options.gain) {
-	    this._outputGain.gain.value = options.gain;
-	  }
-
 	  // Generate Math.round(K/2) stereo buffers from a K-channel IR.
 	  this._setHRIRBuffers(options.IR);
 
@@ -1714,17 +1717,16 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	HOAConvolver.prototype._setHRIRBuffers = function (hrirBuffers) {
 	  // Compute the number of stereo buffers to create from the hrirBuffers.
-	  var numStereoChannels = Math.round(hrirBuffers.numberOfChannels / 2);
+	  var numberOfStereoChannels = Math.round(hrirBuffers.numberOfChannels / 2);
 
 	  this._stereoHrirs = [];
-	  for (var i = 0; i < numStereoChannels; i++) {
+	  for (var i = 0; i < numberOfStereoChannels; i++) {
 	    this._stereoHrirs[i] =
 	      this._context.createBuffer(2, hrirBuffers.length, hrirBuffers.sampleRate);
-
-	    this._stereoHrirs[i]
-	      .getChannelData(0).set(hrirBuffers.getChannelData(i * 2));
-	    this._stereoHrirs[i]
-	      .getChannelData(1).set(hrirBuffers.getChannelData(i * 2 + 1));
+	    this._stereoHrirs[i].getChannelData(0).set(
+	        hrirBuffers.getChannelData(i * 2));
+	    this._stereoHrirs[i].getChannelData(1).set(
+	        hrirBuffers.getChannelData(i * 2 + 1));
 	    this._convolvers[i].buffer = this._stereoHrirs[i];
 	  }
 	};
@@ -1738,6 +1740,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  this._mergerBinaural.disconnect();
 	  this._active = false;
 	};
+
 
 	module.exports = HOAConvolver;
 
@@ -1761,13 +1764,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * limitations under the License.
 	 */
 
-	'use strict';
-
-
 	/**
 	 * @fileOverview Sound field rotator for higher-order-ambisonics decoding.
 	 */
 
+	'use strict';
 
 	// Utility functions for rotation matrix computation.
 

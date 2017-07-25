@@ -86,3 +86,7 @@ exports.invertMatrix4 = function (out, a) {
 
   return out;
 }
+
+exports.getNumberOfChannelsFromAmbisonicOrder = function (order) {
+  return (order + 1) * (order + 1);
+}
