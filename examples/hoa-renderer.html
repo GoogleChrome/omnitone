@@ -199,93 +199,13 @@
             inputGain.connect(hoaRenderer.input);
             hoaRenderer.output.connect(audioContext.destination);
             eButtonPlayback.disabled = false;
+            
             exampleInitialized = true;
           });
       }
 
       window.addEventListener('load', onLoad);
     })();
-
-
-
-
-
-
-
-
-
-
-
-
-    // function onLoad () {
-      
-
-      // var buffer16Channel;
-      // bufferGain = audioContext.createGain();
-
-      // Omnitone.loadAudioBuffers(audioContext, audioSources)
-      //     .then((buffers) => {
-      //       // Because we cannot load audio files with >8 channels, we must
-      //       // load multiple files and copy their audio data into a single large
-      //       // buffer for sample accurate playback.
-            
-      //       buffer = audioContext.createBuffer(16, bufferLength, sampleRate);
-
-      //       buffers.forEach((audioBuffer, name) => {
-              
-      //       });
-
-      //       var bufferLength = buffers.get(audioSources[0].name).length;
-      //       var sampleRate = buffers.get(audioSources[0].name).sampleRate;
-      //       buffer = audioContext.createBuffer(16, bufferLength, sampleRate);
-      //       for (var i = 0; i < 2; i++) {
-      //         for (var j = 0; j < 8; j++) {
-      //           var source = buffers.get(audioSources[i].name).getChannelData(j);
-      //           buffer.copyToChannel(source, i * 8 + j);
-      //         }
-      //       }
-      //     });
-
-      // buttonPlayback = document.getElementById('eButtonPlayback');
-      // buttonPlayback.onclick = function (event) {
-      //   if (event.target.textContent === 'Play') {
-      //     event.target.textContent = 'Pause';
-      //     offsetTime -= startTime;
-      //     offsetTime %= buffer.duration;
-      //     if (bufferSource) {
-      //       bufferSource.disconnect(bufferGain);
-      //       delete bufferSource;
-      //     }
-      //     bufferSource = audioContext.createBufferSource();
-      //     bufferSource.loop = true;
-      //     bufferSource.buffer = buffer;
-      //     bufferSource.connect(bufferGain);
-      //     bufferSource.start(0, offsetTime);
-      //     startTime = audioContext.currentTime;
-      //   } else {
-      //     event.target.textContent = 'Play';
-      //     bufferSource.stop();
-      //     offsetTime += audioContext.currentTime;
-      //   }
-      // };
-
-      // var options = {
-      //   ambisonicOrder: ambisonicOrder,
-      //   HRIRUrl: HRIRBufferUrls
-      // };
-      // hoaRenderer = Omnitone.createHOARenderer(audioContext, options);
-      // hoaRenderer.initialize().then(function () {
-      //   bufferGain.connect(hoaRenderer.input);
-      //   hoaRenderer.output.connect(audioContext.destination);
-      //   buttonPlayback.disabled = false;
-      // }, function (error) {
-      //   console.error(error);
-      // });
-      
-    //   exampleInitialized = true;
-    // };
-
-    // window.addEventListener('load', onLoad);
     </script>
   </body>
 </html>
