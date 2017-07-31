@@ -88,25 +88,29 @@
       document.getElementById('eLabelAzimuth').textContent = azimuthValue;
       document.getElementById('eLabelElevation').textContent = elevationValue;
 
-      // Standard View Matrix
-      var matrix = new Float32Array(9);
-      var beta = -azimuthValue / 180 * Math.PI;
-      var alpha = elevationValue / 180 * Math.PI;
-      var cosAlpha = Math.cos(alpha);
-      var sinAlpha = Math.sin(alpha);
-      var cosBeta = Math.cos(beta);
-      var sinBeta = Math.sin(beta);
+      // Standard OpenGL-style "View" Matrix calculation.
+      var theta = azimuthValue / 180 * Math.PI;
+      var phi = elevationValue / 180 * Math.PI;
 
-      matrix[0] = cosBeta;
-      matrix[1] = 0;
-      matrix[2] = sinBeta;
-      matrix[3] = sinAlpha * sinBeta;
-      matrix[4] = cosAlpha;
-      matrix[5] = -sinAlpha * cosBeta;
-      matrix[6] = -cosAlpha * sinBeta;
-      matrix[7] = sinAlpha;
-      matrix[8] = cosAlpha * cosBeta;
-      console.log(matrix);
+      var forward = [
+        -Math.sin(theta) * Math.cos(phi),
+        Math.sin(phi),
+        -Math.cos(theta) * Math.cos(phi)
+      ];
+      var upInitial = [0, 1, 0];
+      var right = normalize(crossProduct(forward, upInitial));
+      var up = normalize(crossProduct(right, forward));
+
+      var matrix = new Float32Array(9);
+      matrix[0] = right[0];
+      matrix[1] = right[1];
+      matrix[2] = right[2];
+      matrix[3] = up[0];
+      matrix[4] = up[1];
+      matrix[5] = up[2];
+      matrix[6] = -forward[0];
+      matrix[7] = -forward[1];
+      matrix[8] = -forward[2];
       hoaRenderer.setRotationMatrix(matrix);
     }
 
