@@ -17,10 +17,11 @@
   <head>
     <meta charset="utf-8">
     <title>
-      Example: HOARotator
+      Example: HOARenderer
     </title>
     <script src="audiocontext-shim.js"></script>
-    <script src="../build/omnitone.min.js"></script>
+    <!-- <script src="../build/omnitone.min.js"></script> -->
+    <script src="../build/omnitone.js"></script>
     <link rel="stylesheet" href="example.css">
   </head>
   <body>
@@ -99,6 +100,22 @@
           url: 'resources/3oa_example_ch8-ch15.wav' 
         }];
 
+      function crossProduct(a, b) {
+        return [
+          a[1] * b[2] - a[2] * b[1],
+          a[2] * b[0] - a[0] * b[2],
+          a[0] * b[1] - a[1] * b[0]
+        ];
+      }
+ 
+       function normalize(a) {
+         var n = Math.sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
+         a[0] /= n;
+         a[1] /= n;
+         a[2] /= n;
+         return a;
+       }
+
       function onDirectionChange() {
         if (!exampleInitialized)
           return;
@@ -110,22 +127,27 @@
         document.getElementById('eLabelAzimuth').textContent = azimuthValue;
         document.getElementById('eLabelElevation').textContent = elevationValue;
         
-        var beta = -azimuthValue / 180 * Math.PI;
-        var alpha = elevationValue / 180 * Math.PI;
-        var cosAlpha = Math.cos(alpha);
-        var sinAlpha = Math.sin(alpha);
-        var cosBeta = Math.cos(beta);
-        var sinBeta = Math.sin(beta);
+        // Standard OpenGL-style "View" Matrix calculation.
+        var theta = azimuthValue / 180 * Math.PI;
+        var phi = elevationValue / 180 * Math.PI;
+        var forward = [
+          -Math.sin(theta) * Math.cos(phi),
+          Math.sin(phi),
+          -Math.cos(theta) * Math.cos(phi)
+        ];
+        var upInitial = [0, 1, 0];
+        var right = normalize(crossProduct(forward, upInitial));
+        var up = normalize(crossProduct(right, forward));
 
-        rotationMatrix[0] = cosBeta;
-        rotationMatrix[1] = 0;
-        rotationMatrix[2] = sinBeta;
-        rotationMatrix[3] = sinAlpha * sinBeta;
-        rotationMatrix[4] = cosAlpha;
-        rotationMatrix[5] = -sinAlpha * cosBeta;
-        rotationMatrix[6] = -cosAlpha * sinBeta;
-        rotationMatrix[7] = sinAlpha;
-        rotationMatrix[8] = cosAlpha * cosBeta;
+        rotationMatrix[0] = right[0];
+        rotationMatrix[1] = right[1];
+        rotationMatrix[2] = right[2];
+        rotationMatrix[3] = up[0];
+        rotationMatrix[4] = up[1];
+        rotationMatrix[5] = up[2];
+        rotationMatrix[6] = -forward[0];
+        rotationMatrix[7] = -forward[1];
+        rotationMatrix[8] = -forward[2];
 
         hoaRenderer.setRotationMatrix(rotationMatrix);
       }

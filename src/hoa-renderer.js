@@ -30,7 +30,9 @@ var SystemVersion = require('./version.js');
 // TODO(hongchan): change this with the absolute URL.
 var SH_MAXRE_HRIR_URLS = [
   'resources/sh_hrir_o_3_ch0-ch7.wav',
-  'resources/sh_hrir_o_3_ch8-ch15.wav'];
+  'resources/sh_hrir_o_3_ch8-ch15.wav'
+];
+
 
 /**
  * @class Omnitone HOA renderer class. Uses the optimized convolution technique.
@@ -43,10 +45,10 @@ var SH_MAXRE_HRIR_URLS = [
 function HOARenderer(context, options) {
   this._context = context;
 
-  // Priming internal setting with |options|.
   this._HRIRUrls = SH_MAXRE_HRIR_URLS;
   this._renderingMode = 'ambisonic';
   this._ambisonicOrder = 3;
+
   if (options) {
     if (options.HRIRUrl)
       this._HRIRUrls = options.HRIRUrl;
@@ -55,6 +57,10 @@ function HOARenderer(context, options) {
     if (options.ambisonicOrder)
       this._ambisonicOrder = options.ambisonicOrder;
   }
+
+  this._numberOfChannels =
+      (this._ambisonicOrder + 1) * (this._ambisonicOrder + 1);
+  this._tempMatrix4 = new Float32Array(16);
 
   this._isRendererReady = false;
 }
@@ -66,12 +72,8 @@ function HOARenderer(context, options) {
  */
 HOARenderer.prototype.initialize = function () {
   Utils.log('Version: ' + SystemVersion);
-  Utils.log('Initializing... (mode: ' + this._renderingMode + ')');
-  Utils.log('Rendering via SH-MaxRE convolution.');
-
-  this._tempMatrix4 = new Float32Array(16);
-  this._buffersLoaded = 0;
-  this._buffers = [];
+  Utils.log('Initializing... (mode: ' + this._renderingMode + 
+      ', order: ' + this._ambisonicOrder + ')');
 
   return new Promise(this._initializeCallback.bind(this));
 };
@@ -83,79 +85,79 @@ HOARenderer.prototype.initialize = function () {
  * @param {Function} reject Promise rejection.
  */
 HOARenderer.prototype._initializeCallback = function (resolve, reject) {
-  var key = 'HOA_HRIR_AUDIOBUFFER';
-  var buffer;
-  var totalChannels = 0;
-  for (var i = 0; i < this._HRIRUrls.length; i++) {
-    new AudioBufferManager(
-      this._context,
-      [{ name: i, url: this._HRIRUrls[i] }],
-      function (result) {
-        var val = result.keys().next().value;
+  var hoaHRIRBuffer;
 
-        // Allocate buffers when loading first file in list.
-        // This assumes all files have the same length and sampleRate.
-        if (this._buffersLoaded == 0) {
-          var acn_channels =
-            (this._ambisonicOrder + 1) * (this._ambisonicOrder + 1);
-          var length = result.get(val).length;
-          var sampleRate = result.get(val).sampleRate;
-          buffer =
-            this._context.createBuffer(acn_channels, length, sampleRate);
-        }
+  // Constrcut a consolidated HOA HRIR (e.g. 16 channels for TOA).
+  // Handle multiple chunks of HRIR buffer data splitted by 8 channels each.
+  // This is because Chrome cannot decode the audio file >8  channels.
+  var audioBufferData = [];
+  this._HRIRUrls.forEach(function (key, index, urls) {
+    audioBufferData.push({ name: key, url: urls[index] });
+  });
 
-        // Tally the number of channels in each file, confirm counts match.
-        var numberOfChannels = result.get(val).numberOfChannels;
-        totalChannels += numberOfChannels;
-
-        // Assign file contents to appropriate buffer channel.
-        var offset = val * numberOfChannels;
-        for (var j = 0; j < numberOfChannels; j++) {
-          buffer.getChannelData(j + offset)
-            .set(result.get(val).getChannelData(j));
-        }
-
-        this._buffersLoaded++;
-        // All files have been loaded into buffer object.
-        if (this._buffersLoaded == this._HRIRUrls.length) {
-          // Create AudioNodes.
-          this.input = this._context.createGain();
-          this._bypass = this._context.createGain();
-          this._hoaRotator =
-            new HOARotator(this._context, this._ambisonicOrder);
-          var conv_options =
-            { IR: buffer, ambisonicOrder: this._ambisonicOrder };
-          this._hoaConvolver = new HOAConvolver(this._context, conv_options);
-          this.output = this._context.createGain();
-
-          this.input.connect(this._hoaRotator.input);
-          this.input.connect(this._bypass);
-          this._hoaRotator.output.connect(this._hoaConvolver.input);
-          this._hoaConvolver.output.connect(this.output);
-
-          this.setRenderingMode(this._renderingMode);
-
-          this._isRendererReady = true;
-
-          // Ensure the correct number of channels. Warn otherwise.
-          if (totalChannels != buffer.numberOfChannels) {
-            Utils.log(['Warning: Only ' + totalChannels +
-              ' HRIRs were loaded (expected ' + buffer.numberOfChannels +
-              '). The renderer will not function as expected.']);
-          } else {
-            Utils
-              .log('HRIRs are loaded successfully. The renderer is ready.');
+  new AudioBufferManager(
+      this._context, 
+      audioBufferData,
+      function (buffers) {
+        var accumulatedChannelCount = 0;
+        buffers.forEach(function (buffer) {
+          // Create a K channel buffer to integrate individual IR buffers.
+          if (!hoaHRIRBuffer) {
+            hoaHRIRBuffer = this._context.createBuffer(
+                  this._numberOfChannels, buffer.length, buffer.sampleRate);
           }
+
+          for (var channel = 0; channel < buffer.numberOfChannels; ++channel) {
+            hoaHRIRBuffer.copyToChannel(
+                buffer.getChannelData(channel),
+                accumulatedChannelCount + channel);
+          }
+
+          accumulatedChannelCount += buffer.numberOfChannels;
+        }.bind(this));
+        
+        if (accumulatedChannelCount === this._numberOfChannels) {
+          this._buildAudioGraph(hoaHRIRBuffer);
+          this._isRendererReady = true;
+          Utils.log('Rendering via SH-MaxRE convolution.');
           resolve();
+        } else {
+          var errorMessage = 'Only ' + accumulatedChannelCount +
+              ' HRIR channels were loaded (expected ' + this._numberOfChannels +
+              '). The renderer will not function correctly.';
+          Utils.log(errorMessage);
+          reject(errorMessage);
         }
       }.bind(this),
       function (buffers) {
-        var errorMessage = 'Initialization failed: ' + key + ' is '
-          + buffers.get(0) + '.';
+        // TODO: why is it failing?
+        var errorMessage = 'Initialization failed.';
         Utils.log(errorMessage);
         reject(errorMessage);
-      });
-  }
+      }.bind(this));
+};
+
+
+/**
+ * Internal method that builds the audio graph.
+ */
+HOARenderer.prototype._buildAudioGraph = function (hoaHRIRBuffer) {
+  this.input = this._context.createGain();
+  this.output = this._context.createGain();
+  this._bypass = this._context.createGain();
+  
+  this._hoaRotator = new HOARotator(this._context, this._ambisonicOrder);
+  this._hoaConvolver = new HOAConvolver(this._context, { 
+      IRBuffer: hoaHRIRBuffer, 
+      ambisonicOrder: this._ambisonicOrder
+    });
+  
+  this.input.connect(this._hoaRotator.input);
+  this.input.connect(this._bypass);
+  this._hoaRotator.output.connect(this._hoaConvolver.input);
+  this._hoaConvolver.output.connect(this.output);
+
+  this.setRenderingMode(this._renderingMode);
 };
 
 
@@ -165,9 +167,7 @@ HOARenderer.prototype._initializeCallback = function (resolve, reject) {
  *                                    representation)
  */
 HOARenderer.prototype.setRotationMatrix = function (rotationMatrix) {
-  if (!this._isRendererReady)
-    return;
-
+  if (!this._isRendererReady) return;
   this._hoaRotator.setRotationMatrix(rotationMatrix);
 };
 
@@ -177,8 +177,7 @@ HOARenderer.prototype.setRotationMatrix = function (rotationMatrix) {
  * @param  {Object} cameraMatrix      The Matrix4 obejct of Three.js the camera.
  */
 HOARenderer.prototype.setRotationMatrixFromCamera = function (cameraMatrix) {
-  if (!this._isRendererReady)
-    return;
+  if (!this._isRendererReady) return;
 
   // Extract the inner array elements and inverse. (The actual view rotation is
   // the opposite of the camera movement.)
@@ -198,9 +197,7 @@ HOARenderer.prototype.setRotationMatrixFromCamera = function (cameraMatrix) {
  *                                    the CPU power.
  */
 HOARenderer.prototype.setRenderingMode = function (mode) {
-  if (mode === this._renderingMode)
-    return;
-
+  if (mode === this._renderingMode) return;
   switch (mode) {
     // Bypass mode: The convolution path is disabled, disconnected (thus consume
     // no CPU). Use bypass gain node to pass-through the input stream.

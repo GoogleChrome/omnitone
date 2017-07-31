@@ -33,8 +33,6 @@ var FOAPhaseMatchedFilter = require('./foa-phase-matched-filter.js');
 var FOAVirtualSpeaker = require('./foa-virtual-speaker.js');
 var FOADecoder = require('./foa-decoder.js');
 var FOARenderer = require('./foa-renderer.js');
-var HOAConvolver = require('./hoa-convolver.js');
-var HOARotator = require('./hoa-rotator.js');
 var HOARenderer = require('./hoa-renderer.js');
 
 /**
@@ -124,28 +122,6 @@ Omnitone.createFOADecoder = function (context, videoElement, options) {
  */
 Omnitone.createFOARenderer = function (context, options) {
   return new FOARenderer(context, options);
-};
-
-/**
- * Create an instance of HOA Convolver. For parameters, refer the definition of
- * HOAConvolver class.
- * @param {AudioContext} context      Associated AudioContext.
- * @param {Object} options            Options.
- * @return {HOAConvolver}
- */
-Omnitone.createHOAConvolver = function (context, options) {
-  return new HOAConvolver(context, options);
-};
-
-/**
- * Create an instance of HOA Rotator. For parameters, refer the definition of
- * HOARotator class.
- * @param {AudioContext} context      Associated AudioContext.
- * @param {Number} order              Ambisonic order.
- * @return {HOARotator}
- */
-Omnitone.createHOARotator = function (context, order) {
-  return new HOARotator(context, order);
 };
 
 /**
