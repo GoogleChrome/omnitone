@@ -97,15 +97,11 @@ describe('HOAConvolver (3rd order ambisonic)', function () {
           name: 'SH-MaxRe-part2',
           url: 'base/build/resources/sh_hrir_o_3_ch8-ch15.wav'
         }]).then(function (buffers) {
-      // TODO(hoch): remove this loop when Chrome support the media with
-      // channel > 8.
-      for (var i = 0; i < 8; i++) {
-        // TODO(hoch): use copyChannelDataFrom() instead. getChannelData()
-        // yields a neutered reference to ArrayBuffer.
-        toaSHMaxREBuffer.getChannelData(i).set(
-            buffers.get('SH-MaxRe-part1').getChannelData(i));
-        toaSHMaxREBuffer.getChannelData(i + 8).set(
-            buffers.get('SH-MaxRe-part2').getChannelData(i));
+      for (var i = 0; i < 8; ++i) {
+        toaSHMaxREBuffer.copyToChannel(
+            buffers.get('SH-MaxRe-part1').getChannelData(i), i);
+        toaSHMaxREBuffer.copyToChannel(
+            buffers.get('SH-MaxRe-part2').getChannelData(i), i + 8);
       }
 
       done();
@@ -116,7 +112,7 @@ describe('HOAConvolver (3rd order ambisonic)', function () {
     function (done) {
       var impulseSource = context.createBufferSource();
       var hoaConvolver = Omnitone.createHOAConvolver(context, {
-        IR: toaSHMaxREBuffer
+        IRBuffer: toaSHMaxREBuffer
       });
 
       impulseSource.buffer = toaImpulseBuffer;
