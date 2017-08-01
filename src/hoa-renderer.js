@@ -38,7 +38,7 @@ var SH_MAXRE_HRIR_URLS = [
  * @class Omnitone HOA renderer class. Uses the optimized convolution technique.
  * @param {AudioContext} context            Associated AudioContext.
  * @param {Object} options
- * @param {String} options.HRIRUrls         Optional HRIR URL.
+ * @param {Array} options.HRIRUrl           Optional HRIR URLs in an array.
  * @param {String} options.renderingMode    Rendering mode.
  * @param {Number} options.ambisonicOrder   Ambisonic order (default is 3).
  */

@@ -116,7 +116,7 @@ describe('HOAConvolver (3rd order ambisonic)', function () {
     function (done) {
       var impulseSource = context.createBufferSource();
       var hoaConvolver = Omnitone.createHOAConvolver(context, {
-        IR: toaSHMaxREBuffer
+        IRBuffer: toaSHMaxREBuffer
       });
 
       impulseSource.buffer = toaImpulseBuffer;
