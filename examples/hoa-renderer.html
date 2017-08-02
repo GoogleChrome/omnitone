@@ -20,8 +20,7 @@
       Example: HOARenderer
     </title>
     <script src="audiocontext-shim.js"></script>
-    <!-- <script src="../build/omnitone.min.js"></script> -->
-    <script src="../build/omnitone.js"></script>
+    <script src="../build/omnitone.min.js"></script>
     <link rel="stylesheet" href="example.css">
   </head>
   <body>
@@ -71,7 +70,7 @@
       'use strict';
 
       var exampleInitialized = false;
-      
+
       var audioContext;
       var hoaRenderer;
       var currentBufferSource;
@@ -94,10 +93,10 @@
 
       var exampleSoundData = [{
           name: 'part-a',
-          url: 'resources/3oa_example_ch0-ch7.wav' 
-        }, { 
+          url: 'resources/3oa_example_ch0-ch7.wav'
+        }, {
           name: 'part-b',
-          url: 'resources/3oa_example_ch8-ch15.wav' 
+          url: 'resources/3oa_example_ch8-ch15.wav'
         }];
 
       function crossProduct(a, b) {
@@ -107,7 +106,7 @@
           a[0] * b[1] - a[1] * b[0]
         ];
       }
- 
+
        function normalize(a) {
          var n = Math.sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
          a[0] /= n;
@@ -126,7 +125,7 @@
             parseFloat(document.getElementById('eRangeElevation').value);
         document.getElementById('eLabelAzimuth').textContent = azimuthValue;
         document.getElementById('eLabelElevation').textContent = elevationValue;
-        
+
         // Standard OpenGL-style "View" Matrix calculation.
         var theta = azimuthValue / 180 * Math.PI;
         var phi = elevationValue / 180 * Math.PI;
@@ -155,7 +154,7 @@
       function onToggleButton(event) {
         if (!exampleInitialized)
           return;
-        
+
         switch (event.target.textContent) {
           case 'Play':
             currentBufferSource = audioContext.createBufferSource();
@@ -202,7 +201,7 @@
         eRangeAzimuth = document.getElementById('eRangeAzimuth');
         eRangeElevation = document.getElementById('eRangeElevation');
         eRangeGain = document.getElementById('eRangeGain');
-        
+
         eButtonPlayback.onclick = onToggleButton;
         eButtonPlayback.disabled = true;
         eRangeGain.oninput = onGainSliderChange;
@@ -221,7 +220,7 @@
             inputGain.connect(hoaRenderer.input);
             hoaRenderer.output.connect(audioContext.destination);
             eButtonPlayback.disabled = false;
-            
+
             exampleInitialized = true;
           });
       }

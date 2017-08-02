@@ -44,9 +44,9 @@ var HOARenderer = require('./hoa-renderer.js');
  *                                    { name, url, coef }
  * @return {Promise}
  */
-Omnitone.loadAudioBuffers = function (context, speakerData) {
-  return new Promise(function (resolve, reject) {
-    new AudioBufferManager(context, speakerData, function (buffers) {
+Omnitone.loadAudioBuffers = function(context, speakerData) {
+  return new Promise(function(resolve, reject) {
+    new AudioBufferManager(context, speakerData, function(buffers) {
       resolve(buffers);
     }, reject);
   });
@@ -57,7 +57,7 @@ Omnitone.loadAudioBuffers = function (context, speakerData) {
  * Router class.
  * @return {FOAConvolver}
  */
-Omnitone.createFOAConvolver = function (context, options) {
+Omnitone.createFOAConvolver = function(context, options) {
   return new FOAConvolver(context, options);
 };
 
@@ -66,7 +66,7 @@ Omnitone.createFOAConvolver = function (context, options) {
  * Router class.
  * @return {FOARouter}
  */
-Omnitone.createFOARouter = function (context, channelMap) {
+Omnitone.createFOARouter = function(context, channelMap) {
   return new FOARouter(context, channelMap);
 };
 
@@ -75,7 +75,7 @@ Omnitone.createFOARouter = function (context, channelMap) {
  * Rotator class.
  * @return {FOARotator}
  */
-Omnitone.createFOARotator = function (context) {
+Omnitone.createFOARotator = function(context) {
   return new FOARotator(context);
 };
 
@@ -84,7 +84,7 @@ Omnitone.createFOARotator = function (context) {
  * definition of PhaseMatchedFilter class.
  * @return {FOAPhaseMatchedFilter}
  */
-Omnitone.createFOAPhaseMatchedFilter = function (context) {
+Omnitone.createFOAPhaseMatchedFilter = function(context) {
   return new FOAPhaseMatchedFilter(context);
 };
 
@@ -93,7 +93,7 @@ Omnitone.createFOAPhaseMatchedFilter = function (context) {
  * definition of VirtualSpeaker class.
  * @return {FOAVirtualSpeaker}
  */
-Omnitone.createFOAVirtualSpeaker = function (context, options) {
+Omnitone.createFOAVirtualSpeaker = function(context, options) {
   return new FOAVirtualSpeaker(context, options);
 };
 
@@ -109,7 +109,7 @@ Omnitone.createFOAVirtualSpeaker = function (context, options) {
  * @param {Array} options.routingDestination  Custom channel layout.
  * @return {FOADecoder}
  */
-Omnitone.createFOADecoder = function (context, videoElement, options) {
+Omnitone.createFOADecoder = function(context, videoElement, options) {
   return new FOADecoder(context, videoElement, options);
 };
 
@@ -122,7 +122,7 @@ Omnitone.createFOADecoder = function (context, videoElement, options) {
  * @param {Array} options.channelMap  Optional custom channel map.
  * @return {FOARenderer}
  */
-Omnitone.createFOARenderer = function (context, options) {
+Omnitone.createFOARenderer = function(context, options) {
   return new FOARenderer(context, options);
 };
 
@@ -131,7 +131,7 @@ Omnitone.createFOARenderer = function (context, options) {
  * @param {AudioContext} context    Associated AudioContext.
  * @param {Number} ambisonicOrder   Ambisonic order.
  */
-Omnitone.createHOARotator = function (context, ambisonicOrder) {
+Omnitone.createHOARotator = function(context, ambisonicOrder) {
   return new HOARotator(context, ambisonicOrder);
 };
 
@@ -145,20 +145,20 @@ Omnitone.createHOARotator = function (context, ambisonicOrder) {
  *                                        number of channels must be (N+1)^2
  *                                        where N is the ambisonic order.
  */
-Omnitone.createHOAConvolver = function (context, options) {
+Omnitone.createHOAConvolver = function(context, options) {
   return new HOAConvolver(context, options);
 };
 
 /**
  * Creates HOARenderer for higher-order ambisonic decoding and binaural
- * binaural rendering. 
+ * binaural rendering.
  * @param {AudioContext} context            Associated AudioContext.
  * @param {Object} options
  * @param {Array} options.HRIRUrl           Optional HRIR URLs in an array.
  * @param {String} options.renderingMode    Rendering mode.
  * @param {Number} options.ambisonicOrder   Ambisonic order (default is 3).
  */
-Omnitone.createHOARenderer = function (context, options) {
+Omnitone.createHOARenderer = function(context, options) {
   return new HOARenderer(context, options);
 };
 

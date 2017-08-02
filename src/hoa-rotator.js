@@ -46,7 +46,7 @@ function getKroneckerDelta(i, j) {
  * @param {Number} gainValue
  */
 function setCenteredElement(matrix, l, i, j, gainValue) {
-  var index = (j + l) * (2 * l + 1) + (i + l); // Row-wise indexing.
+  var index = (j + l) * (2 * l + 1) + (i + l);  // Row-wise indexing.
   matrix[l - 1][index].gain.value = gainValue;
 };
 
@@ -62,7 +62,7 @@ function setCenteredElement(matrix, l, i, j, gainValue) {
  * @return {Number} Gain node's gain parameter value.
  */
 function getCenteredElement(matrix, l, i, j) {
-  var index = (j + l) * (2 * l + 1) + (i + l); // Row-wise indexing.
+  var index = (j + l) * (2 * l + 1) + (i + l);  // Row-wise indexing.
   return matrix[l - 1][index].gain.value;
 };
 
@@ -77,22 +77,22 @@ function getCenteredElement(matrix, l, i, j) {
  * @param {Number} a
  * @param {Number} b
  * @param {Number} l
- * @return {Number} 
+ * @return {Number}
  */
 function P(matrix, i, a, b, l) {
   if (b === l) {
     return getCenteredElement(matrix, 1, i, 1) *
-      getCenteredElement(matrix, l - 1, a, l - 1) -
-      getCenteredElement(matrix, 1, i, -1) *
-      getCenteredElement(matrix, l - 1, a, -l + 1);
+        getCenteredElement(matrix, l - 1, a, l - 1) -
+        getCenteredElement(matrix, 1, i, -1) *
+        getCenteredElement(matrix, l - 1, a, -l + 1);
   } else if (b === -l) {
     return getCenteredElement(matrix, 1, i, 1) *
-      getCenteredElement(matrix, l - 1, a, -l + 1) +
-      getCenteredElement(matrix, 1, i, -1) *
-      getCenteredElement(matrix, l - 1, a, l - 1);
+        getCenteredElement(matrix, l - 1, a, -l + 1) +
+        getCenteredElement(matrix, 1, i, -1) *
+        getCenteredElement(matrix, l - 1, a, l - 1);
   } else {
     return getCenteredElement(matrix, 1, i, 0) *
-      getCenteredElement(matrix, l - 1, a, b);
+        getCenteredElement(matrix, l - 1, a, b);
   }
 };
 
@@ -111,10 +111,8 @@ function P(matrix, i, a, b, l) {
  * @return {Number}
  */
 function U(matrix, m, n, l) {
-  /**
-   * Although [1, 2] split U into three cases for m == 0, m < 0, m > 0
-   * the actual values are the same for all three cases.
-   */
+  // Although [1, 2] split U into three cases for m == 0, m < 0, m > 0
+  // the actual values are the same for all three cases.
   return P(matrix, 0, m, n, l);
 };
 
@@ -164,14 +162,13 @@ function V(matrix, m, n, l) {
  * @param {Number} n
  * @param {Number} l
  */
-function W (matrix, m, n, l) {
+function W(matrix, m, n, l) {
   // Whenever this happens, w is also 0 so W can be anything.
   if (m === 0)
     return 0;
 
-  return m > 0
-    ? P(matrix, 1, m + 1, n, l) + P(matrix, -1, -m - 1, n, l)
-    : P(matrix, 1, m - 1, n, l) - P(matrix, -1, -m + 1, n, l);
+  return m > 0 ? P(matrix, 1, m + 1, n, l) + P(matrix, -1, -m - 1, n, l) :
+                 P(matrix, 1, m - 1, n, l) - P(matrix, -1, -m + 1, n, l);
 };
 
 /**
@@ -184,13 +181,15 @@ function W (matrix, m, n, l) {
  */
 function computeUVWCoeff(m, n, l) {
   var d = getKroneckerDelta(m, 0);
-  var reciprocalDenominator = Math.abs(n) === l 
-      ? 1 / (2 * l * (2 * l - 1)) : 1 / ((l + n) * (l - n));
+  var reciprocalDenominator =
+      Math.abs(n) === l ? 1 / (2 * l * (2 * l - 1)) : 1 / ((l + n) * (l - n));
 
   return [
     Math.sqrt((l + m) * (l - m) * reciprocalDenominator),
-    0.5 * (1 - 2 * d) * Math.sqrt((1 + d) * (l + Math.abs(m) - 1) *
-        (l + Math.abs(m)) * reciprocalDenominator),
+    0.5 * (1 - 2 * d) *
+        Math.sqrt(
+            (1 + d) * (l + Math.abs(m) - 1) * (l + Math.abs(m)) *
+            reciprocalDenominator),
     -0.5 * (1 - d) * Math.sqrt((l - Math.abs(m) - 1) * (l - Math.abs(m))) *
         reciprocalDenominator
   ];
@@ -209,7 +208,7 @@ function computeUVWCoeff(m, n, l) {
  *                                     where n=1,2,...,N.
  * @param {Number} l
  */
-function computeBandRotation (matrix, l) {
+function computeBandRotation(matrix, l) {
   // The lth band rotation matrix has rows and columns equal to the number of
   // coefficients within that band (-l <= m <= l implies 2l + 1 coefficients).
   for (var m = -l; m <= l; m++) {
@@ -225,7 +224,8 @@ function computeBandRotation (matrix, l) {
       if (Math.abs(uvwCoefficients[2]) > 0)
         uvwCoefficients[2] *= W(matrix, m, n, l);
 
-      setCenteredElement(matrix, l, m, n,
+      setCenteredElement(
+          matrix, l, m, n,
           uvwCoefficients[0] + uvwCoefficients[1] + uvwCoefficients[2]);
     }
   }
@@ -237,7 +237,7 @@ function computeBandRotation (matrix, l) {
  *                                     (2n+1)x(2n+1) elements, where n=1,2,...,
  *                                     N.
  */
-function computeHOAMatrices (matrix) {
+function computeHOAMatrices(matrix) {
   // We start by computing the 2nd-order matrix from the 1st-order matrix.
   for (var i = 2; i <= matrix.length; i++)
     computeBandRotation(matrix, i);
@@ -283,7 +283,7 @@ function HOARotator(context, ambisonicOrder) {
     // matrix. We compute the offset value as the first channel index of the
     // current order where
     //   k_last = l^2 + l + m,
-    // and let m = -l
+    // and var m = -l
     //   k_last = l^2
     orderOffset = i * i;
 
@@ -321,7 +321,7 @@ function HOARotator(context, ambisonicOrder) {
  * @param {Array} rotationMatrix    A 3x3 matrix of soundfield rotation. The
  *                                  matrix is in the col-major representation.
  */
-HOARotator.prototype.setRotationMatrix = function (rotationMatrix) {
+HOARotator.prototype.setRotationMatrix = function(rotationMatrix) {
   // Ambisonic spherical coordinates flip the signs for left/right and
   // front/back compared to OpenGL.
   this._gainNodeMatrix[0][0].gain.value = -rotationMatrix[0];
@@ -341,7 +341,7 @@ HOARotator.prototype.setRotationMatrix = function (rotationMatrix) {
  * (Three.js style)
  * @param {Array} rotationMatrix4   A 4x4 matrix of soundfield rotation.
  */
-HOARotator.prototype.setRotationMatrix4 = function (rotationMatrix4) {
+HOARotator.prototype.setRotationMatrix4 = function(rotationMatrix4) {
   this._gainNodeMatrix[0][0].gain.value = -rotationMatrix4[0];
   this._gainNodeMatrix[0][1].gain.value = -rotationMatrix4[1];
   this._gainNodeMatrix[0][2].gain.value = -rotationMatrix4[2];
@@ -359,7 +359,7 @@ HOARotator.prototype.setRotationMatrix4 = function (rotationMatrix4) {
  * @return {Array}                  A 3x3 matrix of soundfield rotation. The
  *                                  matrix is in the col-major representation.
  */
-HOARotator.prototype.getRotationMatrix = function () {
+HOARotator.prototype.getRotationMatrix = function() {
   var rotationMatrix = Float32Array(9);
   rotationMatrix[0] = -this._gainNodeMatrix[0][0].gain.value;
   rotationMatrix[1] = -this._gainNodeMatrix[0][1].gain.value;

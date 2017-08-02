@@ -19,7 +19,7 @@
 // Load HRIR (SH MaxRE, the new optimized IRs) and shoot an impulse to generate
 // a buffer of binaural rendering. Then compare it with the JS-calculated
 // result.
-describe('HOAConvolver (3rd order ambisonic)', function () {
+describe('HOAConvolver (3rd order ambisonic)', function() {
   // This test is async, override timeout threshold to 5 sec.
   this.timeout(5000);
 
@@ -44,7 +44,7 @@ describe('HOAConvolver (3rd order ambisonic)', function () {
   function generateExpectedBusFromTOAIRBuffer(buffer) {
     // TOA IR set is 16 channels.
     expect(buffer.numberOfChannels).to.equal(16);
-    
+
     // Derive ambisonic order from number of channels.
     var ambisonicOrder = Math.floor(Math.sqrt(buffer.numberOfChannels)) - 1;
 
@@ -52,7 +52,7 @@ describe('HOAConvolver (3rd order ambisonic)', function () {
     var acnChannelData = [];
     for (var i = 0; i < buffer.numberOfChannels; i++)
       acnChannelData[i] = buffer.getChannelData(i);
-    
+
     var generatedBus = new AudioBus(2, buffer.length, buffer.sampleRate);
     var L = generatedBus.getChannelData(0);
     var R = generatedBus.getChannelData(1);
@@ -76,59 +76,60 @@ describe('HOAConvolver (3rd order ambisonic)', function () {
     return generatedBus;
   }
 
-  beforeEach(function (done) {
+  beforeEach(function(done) {
     var ambisonicOrder = 3;
     var numberOfChannels = (ambisonicOrder + 1) * (ambisonicOrder + 1);
 
-    context = 
-      new OfflineAudioContext(numberOfChannels, renderLength, sampleRate);
-    toaImpulseBuffer = 
-      createImpulseBuffer(context, numberOfChannels, renderLength);
+    context =
+        new OfflineAudioContext(numberOfChannels, renderLength, sampleRate);
+    toaImpulseBuffer =
+        createImpulseBuffer(context, numberOfChannels, renderLength);
     toaSHMaxREBuffer =
-      context.createBuffer(numberOfChannels, renderLength, sampleRate);
+        context.createBuffer(numberOfChannels, renderLength, sampleRate);
 
     // Load 3rd order IR files (16 channels) to |toaSHMaxREBuffer|.
-    Omnitone.loadAudioBuffers(
-        context, 
-        [{
-          name: 'SH-MaxRe-part1',
-          url: 'base/build/resources/sh_hrir_o_3_ch0-ch7.wav'
-        },{
-          name: 'SH-MaxRe-part2',
-          url: 'base/build/resources/sh_hrir_o_3_ch8-ch15.wav'
-        }]).then(function (buffers) {
-      for (var i = 0; i < 8; ++i) {
-        toaSHMaxREBuffer.copyToChannel(
-            buffers.get('SH-MaxRe-part1').getChannelData(i), i);
-        toaSHMaxREBuffer.copyToChannel(
-            buffers.get('SH-MaxRe-part2').getChannelData(i), i + 8);
-      }
+    Omnitone
+        .loadAudioBuffers(
+            context,
+            [
+              {
+                name: 'SH-MaxRe-part1',
+                url: 'base/build/resources/sh_hrir_o_3_ch0-ch7.wav'
+              },
+              {
+                name: 'SH-MaxRe-part2',
+                url: 'base/build/resources/sh_hrir_o_3_ch8-ch15.wav'
+              }
+            ])
+        .then(function(buffers) {
+          for (var i = 0; i < 8; ++i) {
+            toaSHMaxREBuffer.copyToChannel(
+                buffers.get('SH-MaxRe-part1').getChannelData(i), i);
+            toaSHMaxREBuffer.copyToChannel(
+                buffers.get('SH-MaxRe-part2').getChannelData(i), i + 8);
+          }
 
+          done();
+        });
+  });
+
+  it('inject impulse buffer and verify convolution result.', function(done) {
+    var impulseSource = context.createBufferSource();
+    var hoaConvolver =
+        Omnitone.createHOAConvolver(context, {IRBuffer: toaSHMaxREBuffer});
+
+    impulseSource.buffer = toaImpulseBuffer;
+
+    impulseSource.connect(hoaConvolver.input);
+    hoaConvolver.output.connect(context.destination);
+    impulseSource.start();
+
+    context.startRendering().then(function(renderedBuffer) {
+      var actualBus = new AudioBus(2, renderLength, sampleRate);
+      actualBus.copyFromAudioBuffer(renderedBuffer);
+      var expectedBus = generateExpectedBusFromTOAIRBuffer(toaSHMaxREBuffer);
+      expect(actualBus.compareWith(expectedBus, THRESHOLD)).to.equal(true);
       done();
     });
   });
-
-  it('inject impulse buffer and verify convolution result.',
-    function (done) {
-      var impulseSource = context.createBufferSource();
-      var hoaConvolver = Omnitone.createHOAConvolver(context, {
-        IRBuffer: toaSHMaxREBuffer
-      });
-
-      impulseSource.buffer = toaImpulseBuffer;
-
-      impulseSource.connect(hoaConvolver.input);
-      hoaConvolver.output.connect(context.destination);
-      impulseSource.start();
-
-      context.startRendering().then(function (renderedBuffer) {
-        var actualBus = new AudioBus(2, renderLength, sampleRate);
-        actualBus.copyFromAudioBuffer(renderedBuffer);
-        var expectedBus =
-          generateExpectedBusFromTOAIRBuffer(toaSHMaxREBuffer);
-        expect(actualBus.compareWith(expectedBus, THRESHOLD)).to.equal(true);
-        done();
-      });
-    }
-  );
 });
