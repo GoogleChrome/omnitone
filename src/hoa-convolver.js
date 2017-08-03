@@ -135,8 +135,8 @@ HOAConvolver.prototype._setHRIRBuffers = function (hrirBuffers) {
   // TODO(hoch): This duplciates IR buffers. Consider optimizing the memory
   // usage.
 
-  // Compute the number of stereo buffers to create from the hrirBuffers.
-  var numStereoChannels = Math.round(hrirBuffers.numberOfChannels / 2);
+  // Compute the number of stereo buffers to create from a given buffer.
+  var numberOfStereoBuffers = Math.ceil(buffer.numberOfChannels / 2);
 
   // Generate Math.ceil(K/2) stereo buffers from a K-channel IR buffer.
   for (var i = 0; i < numberOfStereoBuffers; ++i) {
@@ -144,7 +144,7 @@ HOAConvolver.prototype._setHRIRBuffers = function (hrirBuffers) {
         this._context.createBuffer(2, buffer.length, buffer.sampleRate);
     stereoHRIRBuffer.copyToChannel(buffer.getChannelData(i * 2), 0);
 
-    // Skip right-channel if it exceeds hrirBuffers' channel count.
+    // Skip right-channel if it exceeds buffer channel count.
     var rightChannelIndex = i * 2 + 1;
     if (rightChannelIndex < hrirBuffers.numberOfChannels) {
       stereoHRIRBuffer.copyToChannel(
