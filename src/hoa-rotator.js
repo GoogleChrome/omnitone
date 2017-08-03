@@ -321,15 +321,15 @@ function HOARotator(context, ambisonicOrder) {
 HOARotator.prototype.setRotationMatrix = function (rotationMatrix) {
   // Ambisonic spherical coordinates flip the signs
   // for left/right and front/back compared to OpenGL.
-  this._matrix[0][0].gain.value = -rotationMatrix[0];
-  this._matrix[0][1].gain.value = -rotationMatrix[1];
-  this._matrix[0][2].gain.value = -rotationMatrix[2];
+  this._matrix[0][0].gain.value = rotationMatrix[0];
+  this._matrix[0][1].gain.value = rotationMatrix[1];
+  this._matrix[0][2].gain.value = rotationMatrix[2];
   this._matrix[0][3].gain.value = rotationMatrix[3];
   this._matrix[0][4].gain.value = rotationMatrix[4];
   this._matrix[0][5].gain.value = rotationMatrix[5];
-  this._matrix[0][6].gain.value = -rotationMatrix[6];
-  this._matrix[0][7].gain.value = -rotationMatrix[7];
-  this._matrix[0][8].gain.value = -rotationMatrix[8];
+  this._matrix[0][6].gain.value = rotationMatrix[6];
+  this._matrix[0][7].gain.value = rotationMatrix[7];
+  this._matrix[0][8].gain.value = rotationMatrix[8];
   computeHOAMatrices(this._matrix);
 };
 
@@ -341,15 +341,15 @@ HOARotator.prototype.setRotationMatrix = function (rotationMatrix) {
 HOARotator.prototype.setRotationMatrix4 = function (rotationMatrix4) {
   // Ambisonic spherical coordinates flip the signs
   // for left/right and front/back compared to OpenGL.
-  this._matrix[0][0].gain.value = -rotationMatrix4[0];
-  this._matrix[0][1].gain.value = -rotationMatrix4[1];
-  this._matrix[0][2].gain.value = -rotationMatrix4[2];
+  this._matrix[0][0].gain.value = rotationMatrix4[0];
+  this._matrix[0][1].gain.value = rotationMatrix4[1];
+  this._matrix[0][2].gain.value = rotationMatrix4[2];
   this._matrix[0][3].gain.value = rotationMatrix4[4];
   this._matrix[0][4].gain.value = rotationMatrix4[5];
   this._matrix[0][5].gain.value = rotationMatrix4[6];
-  this._matrix[0][6].gain.value = -rotationMatrix4[8];
-  this._matrix[0][7].gain.value = -rotationMatrix4[9];
-  this._matrix[0][8].gain.value = -rotationMatrix4[10];
+  this._matrix[0][6].gain.value = rotationMatrix4[8];
+  this._matrix[0][7].gain.value = rotationMatrix4[9];
+  this._matrix[0][8].gain.value = rotationMatrix4[10];
   computeHOAMatrices(this._matrix);
 };
 
@@ -362,15 +362,15 @@ HOARotator.prototype.getRotationMatrix = function () {
   // Ambisonic spherical coordinates flip the signs
   // for left/right and front/back compared to OpenGL.
   var rotationMatrix = Float32Array(9);
-  rotationMatrix[0] = -this._matrix[0][0].gain.value;
-  rotationMatrix[1] = -this._matrix[0][1].gain.value;
-  rotationMatrix[2] = -this._matrix[0][2].gain.value;
+  rotationMatrix[0] = this._matrix[0][0].gain.value;
+  rotationMatrix[1] = this._matrix[0][1].gain.value;
+  rotationMatrix[2] = this._matrix[0][2].gain.value;
   rotationMatrix[3] = this._matrix[0][3].gain.value;
   rotationMatrix[4] = this._matrix[0][4].gain.value;
   rotationMatrix[5] = this._matrix[0][5].gain.value;
-  rotationMatrix[6] = -this._matrix[0][6].gain.value;
-  rotationMatrix[7] = -this._matrix[0][7].gain.value;
-  rotationMatrix[8] = -this._matrix[0][8].gain.value;
+  rotationMatrix[6] = this._matrix[0][6].gain.value;
+  rotationMatrix[7] = this._matrix[0][7].gain.value;
+  rotationMatrix[8] = this._matrix[0][8].gain.value;
   return rotationMatrix;
 };
 
