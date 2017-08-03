@@ -126,7 +126,7 @@ HOAConvolver.prototype._buildAudioGraph = function (options) {
   this.output = this._outputGain;
 };
 
-HOAConvolver.prototype._setHRIRBuffers = function (hrirBuffers) {
+HOAConvolver.prototype._setHRIRBuffer = function (buffer) {
   // For the optimum performance/resource usage, we use stereo convolvers
   // instead of mono convolvers. In Web Audio API, the convolution on
   // >3 channels activates the "true stereo" mode in theconvolver, which is not
