@@ -29,13 +29,13 @@
  *                                        where N is the ambisonic order.
  */
 function HOAConvolver(context, options) {
-  
+
   this._active = false;
   this._context = context;
 
   // If unspecified, the default ambisonic mode is third order.
   this._ambisonicOrder = options.ambisonicOrder ? options.ambisonicOrder : 3;
-  
+
   // We need to determine the number of channels K based on the ambisonic
   // order N where K = (N+1)^2.
   this._numberOfChannels =
@@ -44,11 +44,11 @@ function HOAConvolver(context, options) {
   // Ensure that the ambisonic order matches the IR channel count.
   // TODO(hoch): Error reporting should be unified. Don't use |throw|.
   if (options.IRBuffer.numberOfChannels !== this._numberOfChannels) {
-    throw 'The order of ambisonic (' + ambisonicOrder + ') requires ' + 
+    throw 'The order of ambisonic (' + ambisonicOrder + ') requires ' +
         numberOfChannels + '-channel IR buffer. The given IR buffer has ' +
         options.IRBuffer.numberOfChannels + ' channels.';
   }
-  
+
   this._buildAudioGraph();
   this._setHRIRBuffer(options.IRBuffer);
 
@@ -56,7 +56,7 @@ function HOAConvolver(context, options) {
 }
 
 // Build the audio graph for HOA processing.
-// 
+//
 // For TOA convolution:
 // input -> splitter(16) -[0,1]-> merger(2) -> convolver(2) -> splitter(2)
 //                       -[2,3]-> merger(2) -> convolver(2) -> splitter(2)
@@ -75,7 +75,7 @@ HOAConvolver.prototype._buildAudioGraph = function (options) {
   this._inverter = this._context.createGain();
   this._binauralMerger = this._context.createChannelMerger(2);
   this._outputGain = this._context.createGain();
-  
+
   for (var i = 0; i < numberOfStereoChannels; ++i) {
     this._stereoMergers[i] = this._context.createChannelMerger(2);
     this._convolvers[i] = this._context.createConvolver();
@@ -97,7 +97,7 @@ HOAConvolver.prototype._buildAudioGraph = function (options) {
           this._stereoMergers[stereoIndex], acnIndex, acnIndex % 2);
       this._stereoMergers[stereoIndex].connect(this._convolvers[stereoIndex]);
       this._convolvers[stereoIndex].connect(this._stereoSplitters[stereoIndex]);
-      
+
       // Positive index (m >= 0) spherical harmonics are symmetrical around the
       // front axis, while negative index (m < 0) spherical harmonics are
       // anti-symmetrical around the front axis. We will exploit this symmetry
@@ -131,21 +131,28 @@ HOAConvolver.prototype._setHRIRBuffer = function (buffer) {
   // instead of mono convolvers. In Web Audio API, the convolution on
   // >3 channels activates the "true stereo" mode in theconvolver, which is not
   // compatible to HOA convolution.
-  // 
+  //
   // TODO(hoch): This duplciates IR buffers. Consider optimizing the memory
   // usage.
-  
+
   // Compute the number of stereo buffers to create from a given buffer.
   var numberOfStereoBuffers = Math.ceil(buffer.numberOfChannels / 2);
 
   // Generate Math.ceil(K/2) stereo buffers from a K-channel IR buffer.
   for (var i = 0; i < numberOfStereoBuffers; ++i) {
-    var stereoHRIRBuffer = 
+    var stereoHRIRBuffer =
         this._context.createBuffer(2, buffer.length, buffer.sampleRate);
     stereoHRIRBuffer.copyToChannel(buffer.getChannelData(i * 2), 0);
-    stereoHRIRBuffer.copyToChannel(buffer.getChannelData(i * 2 + 1), 1);
+
+    // Skip right-channel if it exceeds buffer channel count.
+    var rightChannelIndex = i * 2 + 1;
+    if (rightChannelIndex < hrirBuffers.numberOfChannels) {
+      stereoHRIRBuffer.copyToChannel(
+        buffer.getChannelData(rightChannelIndex), 1);
+    }
     this._convolvers[i].buffer = stereoHRIRBuffer;
   }
+  this.enable();
 };
 
 HOAConvolver.prototype.enable = function () {
