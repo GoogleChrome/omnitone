@@ -7,7 +7,6 @@ module.exports = function(config) {
       'build/omnitone.min.js',
       'test/test-setup.js',
       'test/*.js'
-      // 'test/!(test-hoa-rotator).js'
     ],
     reporters: ['mocha'],
     port: 9876,
@@ -21,7 +20,7 @@ module.exports = function(config) {
         flags: ['--no-sandbox']
       }
     },
-    singleRun: false,
+    singleRun: true,
     concurrency: Infinity
   };
 
