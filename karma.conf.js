@@ -6,7 +6,8 @@ module.exports = function(config) {
       { pattern: 'build/resources/*.wav', included: false, served: true },
       'build/omnitone.min.js',
       'test/test-setup.js',
-      'test/!(test-hoa-rotator).js'
+      'test/*.js'
+      // 'test/!(test-hoa-rotator).js'
     ],
     reporters: ['mocha'],
     port: 9876,
@@ -20,7 +21,7 @@ module.exports = function(config) {
         flags: ['--no-sandbox']
       }
     },
-    singleRun: true,
+    singleRun: false,
     concurrency: Infinity
   };
 

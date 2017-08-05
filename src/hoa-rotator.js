@@ -324,15 +324,9 @@ function HOARotator(context, ambisonicOrder) {
 HOARotator.prototype.setRotationMatrix = function(rotationMatrix) {
   // Ambisonic spherical coordinates flip the signs for left/right and
   // front/back compared to OpenGL.
-  this._gainNodeMatrix[0][0].gain.value = -rotationMatrix[0];
-  this._gainNodeMatrix[0][1].gain.value = -rotationMatrix[1];
-  this._gainNodeMatrix[0][2].gain.value = -rotationMatrix[2];
-  this._gainNodeMatrix[0][3].gain.value = rotationMatrix[3];
-  this._gainNodeMatrix[0][4].gain.value = rotationMatrix[4];
-  this._gainNodeMatrix[0][5].gain.value = rotationMatrix[5];
-  this._gainNodeMatrix[0][6].gain.value = -rotationMatrix[6];
-  this._gainNodeMatrix[0][7].gain.value = -rotationMatrix[7];
-  this._gainNodeMatrix[0][8].gain.value = -rotationMatrix[8];
+  for (var i = 0; i < 9; ++i)
+    this._gainNodeMatrix[0][i].gain.value = -rotationMatrix[i];
+
   computeHOAMatrices(this._gainNodeMatrix);
 };
 
@@ -342,15 +336,15 @@ HOARotator.prototype.setRotationMatrix = function(rotationMatrix) {
  * @param {Array} rotationMatrix4   A 4x4 matrix of soundfield rotation.
  */
 HOARotator.prototype.setRotationMatrix4 = function(rotationMatrix4) {
-  this._gainNodeMatrix[0][0].gain.value = -rotationMatrix4[0];
-  this._gainNodeMatrix[0][1].gain.value = -rotationMatrix4[1];
-  this._gainNodeMatrix[0][2].gain.value = -rotationMatrix4[2];
+  this._gainNodeMatrix[0][0].gain.value = rotationMatrix4[0];
+  this._gainNodeMatrix[0][1].gain.value = rotationMatrix4[1];
+  this._gainNodeMatrix[0][2].gain.value = rotationMatrix4[2];
   this._gainNodeMatrix[0][3].gain.value = rotationMatrix4[4];
   this._gainNodeMatrix[0][4].gain.value = rotationMatrix4[5];
   this._gainNodeMatrix[0][5].gain.value = rotationMatrix4[6];
-  this._gainNodeMatrix[0][6].gain.value = -rotationMatrix4[8];
-  this._gainNodeMatrix[0][7].gain.value = -rotationMatrix4[9];
-  this._gainNodeMatrix[0][8].gain.value = -rotationMatrix4[10];
+  this._gainNodeMatrix[0][6].gain.value = rotationMatrix4[8];
+  this._gainNodeMatrix[0][7].gain.value = rotationMatrix4[9];
+  this._gainNodeMatrix[0][8].gain.value = rotationMatrix4[10];
   computeHOAMatrices(this._gainNodeMatrix);
 };
 
@@ -361,15 +355,8 @@ HOARotator.prototype.setRotationMatrix4 = function(rotationMatrix4) {
  */
 HOARotator.prototype.getRotationMatrix = function() {
   var rotationMatrix = Float32Array(9);
-  rotationMatrix[0] = -this._gainNodeMatrix[0][0].gain.value;
-  rotationMatrix[1] = -this._gainNodeMatrix[0][1].gain.value;
-  rotationMatrix[2] = -this._gainNodeMatrix[0][2].gain.value;
-  rotationMatrix[3] = this._gainNodeMatrix[0][3].gain.value;
-  rotationMatrix[4] = this._gainNodeMatrix[0][4].gain.value;
-  rotationMatrix[5] = this._gainNodeMatrix[0][5].gain.value;
-  rotationMatrix[6] = -this._gainNodeMatrix[0][6].gain.value;
-  rotationMatrix[7] = -this._gainNodeMatrix[0][7].gain.value;
-  rotationMatrix[8] = -this._gainNodeMatrix[0][8].gain.value;
+  for (var i = 0; i < 9; ++i)
+    rotationMatrix[i] = this._gainNodeMatrix[0][i].gain.value;
   return rotationMatrix;
 };
 

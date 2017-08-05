@@ -130,9 +130,9 @@
         var theta = azimuthValue / 180 * Math.PI;
         var phi = elevationValue / 180 * Math.PI;
         var forward = [
-          -Math.sin(theta) * Math.cos(phi),
+          Math.sin(theta) * Math.cos(phi),
           Math.sin(phi),
-          -Math.cos(theta) * Math.cos(phi)
+          Math.cos(theta) * Math.cos(phi)
         ];
         var upInitial = [0, 1, 0];
         var right = normalize(crossProduct(forward, upInitial));
@@ -144,9 +144,9 @@
         rotationMatrix[3] = up[0];
         rotationMatrix[4] = up[1];
         rotationMatrix[5] = up[2];
-        rotationMatrix[6] = -forward[0];
-        rotationMatrix[7] = -forward[1];
-        rotationMatrix[8] = -forward[2];
+        rotationMatrix[6] = forward[0];
+        rotationMatrix[7] = forward[1];
+        rotationMatrix[8] = forward[2];
 
         hoaRenderer.setRotationMatrix(rotationMatrix);
       }
