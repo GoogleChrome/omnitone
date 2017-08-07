@@ -1952,7 +1952,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  // Ambisonic spherical coordinates flip the signs for left/right and
 	  // front/back compared to OpenGL.
 	  for (var i = 0; i < 9; ++i)
-	    this._gainNodeMatrix[0][i].gain.value = -rotationMatrix[i];
+	    this._gainNodeMatrix[0][i].gain.value = rotationMatrix[i];
 
 	  computeHOAMatrices(this._gainNodeMatrix);
 	};

@@ -24,17 +24,16 @@ describe('HOARotator', function() {
   // This test is async, override timeout threshold to 5 sec.
   this.timeout(5000);
 
-  var context;
-  var testBuffer;
-  var hoaRotator;
-  var source;
-  var vectorMagnitude;
-  var expectedValues;
-
   // Threshold (percentage of vector normal) for sample comparison.
   var THRESHOLD = 1e-2;
   var sampleRate = 48000;
   var renderLength = 1;
+
+  var context;
+  var hoaRotator;
+  var source;
+  var vectorMagnitude;
+  var expectedValues;
 
   // List of 32 equally-distributed points on the sphere.
   var numberOfSphericalDirections = 32;
@@ -386,8 +385,8 @@ describe('HOARotator', function() {
          expectedValues = sphericalHarmonicsPerDirection[index];
          context.startRendering().then(function(renderedBuffer) {
            var vectorNomal = 0;
-           for (var channel = 0; channel < renderedBuffer.numberOfChannels;
-                ++channel) {
+           var numberOfChannels = renderedBuffer.numberOfChannels;
+           for (var channel = 0; channel < numberOfChannels; ++channel) {
              var channelData = renderedBuffer.getChannelData(channel);
              for (var i = 0; i < channelData.length; ++i)
                vectorNomal +=
@@ -395,12 +394,8 @@ describe('HOARotator', function() {
            }
            vectorNomal /= renderedBuffer.getChannelData(0).length *
                renderedBuffer.numberOfChannels * vectorMagnitude;
-           console.log('index =', index);
-           console.log(
-               'vectorNomal =', vectorNomal,
-               'below threshold =', vectorNomal < THRESHOLD);
+           expect(vectorNomal).to.be.below(THRESHOLD);
            done();
-           // expect(vectorNomal).to.be.below(THRESHOLD);
          });
        });
   }
@@ -410,22 +405,19 @@ describe('HOARotator', function() {
         new OfflineAudioContext(numberOfChannels, renderLength, sampleRate);
     hoaRotator = Omnitone.createHOARotator(context, ambisonicOrder);
     source = context.createBufferSource();
-
-    testBuffer =
+    source.buffer =
         createConstantBuffer(context, forwardSphericalHarmonic, renderLength);
-    source.buffer = testBuffer;
 
     source.connect(hoaRotator.input);
     hoaRotator.output.connect(context.destination);
     source.start();
 
     vectorMagnitude = 0;
-    for (var i = 0; i < numberOfChannels; i++) {
+    for (var i = 0; i < numberOfChannels; ++i)
       vectorMagnitude += Math.pow(forwardSphericalHarmonic[i], 2);
-    }
     vectorMagnitude = Math.sqrt(vectorMagnitude);
   });
 
-  for (var index = 0; index < numberOfSphericalDirections; index++)
+  for (var index = 0; index < numberOfSphericalDirections; ++index)
     computeRotationAndTest(index);
 });
