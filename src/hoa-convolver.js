@@ -140,10 +140,14 @@ HOAConvolver.prototype._setHRIRBuffer = function(buffer) {
 
   // Generate Math.ceil(K/2) stereo buffers from a K-channel IR buffer.
   for (var i = 0; i < numberOfStereoBuffers; ++i) {
+    var leftIndex = i * 2;
+    var rightIndex = i * 2 + 1;
     var stereoHRIRBuffer =
         this._context.createBuffer(2, buffer.length, buffer.sampleRate);
-    stereoHRIRBuffer.copyToChannel(buffer.getChannelData(i * 2), 0);
-    stereoHRIRBuffer.copyToChannel(buffer.getChannelData(i * 2 + 1), 1);
+    stereoHRIRBuffer.copyToChannel(buffer.getChannelData(leftIndex), 0);
+    if (rightIndex < buffer.numberOfChannels) {
+      stereoHRIRBuffer.copyToChannel(buffer.getChannelData(rightIndex), 1);
+    }
     this._convolvers[i].buffer = stereoHRIRBuffer;
   }
 };

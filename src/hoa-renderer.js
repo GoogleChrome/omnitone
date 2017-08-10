@@ -47,12 +47,12 @@ function HOARenderer(context, options) {
   this._renderingMode = 'ambisonic';
   this._ambisonicOrder = 3;
 
-  if (options) {
-    if (options.HRIRUrl)
+  if (options !== undefined) {
+    if (options.HRIRUrl !== undefined)
       this._HRIRUrls = options.HRIRUrl;
-    if (options.renderingMode)
+    if (options.renderingMode !== undefined)
       this._renderingMode = options.renderingMode;
-    if (options.ambisonicOrder)
+    if (options.ambisonicOrder !== undefined)
       this._ambisonicOrder = options.ambisonicOrder;
   }
 
@@ -91,41 +91,34 @@ HOARenderer.prototype._initializeCallback = function(resolve, reject) {
   // This is because Chrome cannot decode the audio file >8  channels.
   var audioBufferData = [];
   this._HRIRUrls.forEach(function(key, index, urls) {
-    audioBufferData.push({name: key, url: urls[index]});
+    audioBufferData.push({name: index, url: urls[index]});
   });
 
   new AudioBufferManager(
       this._context, audioBufferData,
       function(buffers) {
-        var accumulatedChannelCount = 0;
-        buffers.forEach(function(buffer) {
+        buffers.forEach(function(buffer, key, buffers) {
           // Create a K channel buffer to integrate individual IR buffers.
           if (!hoaHRIRBuffer) {
             hoaHRIRBuffer = this._context.createBuffer(
                 this._numberOfChannels, buffer.length, buffer.sampleRate);
           }
 
+          // Determine channel offset for each buffer.
+          var channelOffset = 0;
+          for (var i = 0; i < key; i++) {
+            channelOffset += buffers.get(key).numberOfChannels;
+          }
           for (var channel = 0; channel < buffer.numberOfChannels; ++channel) {
             hoaHRIRBuffer.copyToChannel(
-                buffer.getChannelData(channel),
-                accumulatedChannelCount + channel);
+                buffer.getChannelData(channel), channelOffset + channel);
           }
-
-          accumulatedChannelCount += buffer.numberOfChannels;
         }.bind(this));
 
-        if (accumulatedChannelCount === this._numberOfChannels) {
-          this._buildAudioGraph(hoaHRIRBuffer);
-          this._isRendererReady = true;
-          Utils.log('Rendering via SH-MaxRE convolution.');
-          resolve();
-        } else {
-          var errorMessage = 'Only ' + accumulatedChannelCount +
-              ' HRIR channels were loaded (expected ' + this._numberOfChannels +
-              '). The renderer will not function correctly.';
-          Utils.log(errorMessage);
-          reject(errorMessage);
-        }
+        this._buildAudioGraph(hoaHRIRBuffer);
+        this._isRendererReady = true;
+        Utils.log('Rendering via SH-MaxRE convolution.');
+        resolve();
       }.bind(this),
       function(buffers) {
         // TODO: why is it failing?
