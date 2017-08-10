@@ -52,7 +52,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /************************************************************************/
 /******/ ([
 /* 0 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	/**
 	 * @license
@@ -76,9 +76,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.Omnitone = __webpack_require__(1);
 
 
-/***/ },
+/***/ }),
 /* 1 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	/**
 	 * Copyright 2016 Google Inc. All Rights Reserved.
@@ -248,9 +248,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = Omnitone;
 
 
-/***/ },
+/***/ }),
 /* 2 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	/**
 	 * Copyright 2016 Google Inc. All Rights Reserved.
@@ -384,9 +384,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = AudioBufferManager;
 
 
-/***/ },
+/***/ }),
 /* 3 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	/**
 	 * Copyright 2016 Google Inc. All Rights Reserved.
@@ -504,9 +504,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 
-/***/ },
+/***/ }),
 /* 4 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	/**
 	 * Copyright 2017 Google Inc. All Rights Reserved.
@@ -627,9 +627,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = FOAConvolver;
 
 
-/***/ },
+/***/ }),
 /* 5 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	/**
 	 * Copyright 2016 Google Inc. All Rights Reserved.
@@ -725,9 +725,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = FOARouter;
 
 
-/***/ },
+/***/ }),
 /* 6 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	/**
 	 * Copyright 2016 Google Inc. All Rights Reserved.
@@ -873,9 +873,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = FOARotator;
 
 
-/***/ },
+/***/ }),
 /* 7 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	/**
 	 * Copyright 2016 Google Inc. All Rights Reserved.
@@ -989,9 +989,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = FOAPhaseMatchedFilter;
 
 
-/***/ },
+/***/ }),
 /* 8 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	/**
 	 * Copyright 2016 Google Inc. All Rights Reserved.
@@ -1083,9 +1083,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = FOAVirtualSpeaker;
 
 
-/***/ },
+/***/ }),
 /* 9 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	/**
 	 * Copyright 2016 Google Inc. All Rights Reserved.
@@ -1300,9 +1300,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = FOADecoder;
 
 
-/***/ },
+/***/ }),
 /* 10 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	/**
 	 * Copyright 2016 Google Inc. All Rights Reserved.
@@ -1375,9 +1375,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = FOASpeakerData;
 
 
-/***/ },
+/***/ }),
 /* 11 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	/**
 	 * Copyright 2016 Google Inc. All Rights Reserved.
@@ -1407,9 +1407,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = '0.9.1';
 
 
-/***/ },
+/***/ }),
 /* 12 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	/**
 	 * Copyright 2017 Google Inc. All Rights Reserved.
@@ -1621,9 +1621,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = FOARenderer;
 
 
-/***/ },
+/***/ }),
 /* 13 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	/**
 	 * Copyright 2016 Google Inc. All Rights Reserved.
@@ -1999,9 +1999,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = HOARotator;
 
 
-/***/ },
+/***/ }),
 /* 14 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	/**
 	 * Copyright 2017 Google Inc. All Rights Reserved.
@@ -2145,10 +2145,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  // Generate Math.ceil(K/2) stereo buffers from a K-channel IR buffer.
 	  for (var i = 0; i < numberOfStereoBuffers; ++i) {
+	    var leftIndex = i * 2;
+	    var rightIndex = i * 2 + 1;
 	    var stereoHRIRBuffer =
 	        this._context.createBuffer(2, buffer.length, buffer.sampleRate);
-	    stereoHRIRBuffer.copyToChannel(buffer.getChannelData(i * 2), 0);
-	    stereoHRIRBuffer.copyToChannel(buffer.getChannelData(i * 2 + 1), 1);
+	    stereoHRIRBuffer.copyToChannel(buffer.getChannelData(leftIndex), 0);
+	    if (rightIndex < buffer.numberOfChannels) {
+	      stereoHRIRBuffer.copyToChannel(buffer.getChannelData(rightIndex), 1);
+	    }
 	    this._convolvers[i].buffer = stereoHRIRBuffer;
 	  }
 	};
@@ -2173,9 +2177,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = HOAConvolver;
 
 
-/***/ },
+/***/ }),
 /* 15 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	/**
 	 * Copyright 2017 Google Inc. All Rights Reserved.
@@ -2226,12 +2230,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  this._renderingMode = 'ambisonic';
 	  this._ambisonicOrder = 3;
 
-	  if (options) {
-	    if (options.HRIRUrl)
+	  if (options !== undefined) {
+	    if (options.HRIRUrl !== undefined)
 	      this._HRIRUrls = options.HRIRUrl;
-	    if (options.renderingMode)
+	    if (options.renderingMode !== undefined)
 	      this._renderingMode = options.renderingMode;
-	    if (options.ambisonicOrder)
+	    if (options.ambisonicOrder !== undefined)
 	      this._ambisonicOrder = options.ambisonicOrder;
 	  }
 
@@ -2270,41 +2274,34 @@ return /******/ (function(modules) { // webpackBootstrap
 	  // This is because Chrome cannot decode the audio file >8  channels.
 	  var audioBufferData = [];
 	  this._HRIRUrls.forEach(function(key, index, urls) {
-	    audioBufferData.push({name: key, url: urls[index]});
+	    audioBufferData.push({name: index, url: urls[index]});
 	  });
 
 	  new AudioBufferManager(
 	      this._context, audioBufferData,
 	      function(buffers) {
-	        var accumulatedChannelCount = 0;
-	        buffers.forEach(function(buffer) {
+	        buffers.forEach(function(buffer, key, buffers) {
 	          // Create a K channel buffer to integrate individual IR buffers.
 	          if (!hoaHRIRBuffer) {
 	            hoaHRIRBuffer = this._context.createBuffer(
 	                this._numberOfChannels, buffer.length, buffer.sampleRate);
 	          }
 
+	          // Determine channel offset for each buffer.
+	          var channelOffset = 0;
+	          for (var i = 0; i < key; i++) {
+	            channelOffset += buffers.get(key).numberOfChannels;
+	          }
 	          for (var channel = 0; channel < buffer.numberOfChannels; ++channel) {
 	            hoaHRIRBuffer.copyToChannel(
-	                buffer.getChannelData(channel),
-	                accumulatedChannelCount + channel);
+	                buffer.getChannelData(channel), channelOffset + channel);
 	          }
-
-	          accumulatedChannelCount += buffer.numberOfChannels;
 	        }.bind(this));
 
-	        if (accumulatedChannelCount === this._numberOfChannels) {
-	          this._buildAudioGraph(hoaHRIRBuffer);
-	          this._isRendererReady = true;
-	          Utils.log('Rendering via SH-MaxRE convolution.');
-	          resolve();
-	        } else {
-	          var errorMessage = 'Only ' + accumulatedChannelCount +
-	              ' HRIR channels were loaded (expected ' + this._numberOfChannels +
-	              '). The renderer will not function correctly.';
-	          Utils.log(errorMessage);
-	          reject(errorMessage);
-	        }
+	        this._buildAudioGraph(hoaHRIRBuffer);
+	        this._isRendererReady = true;
+	        Utils.log('Rendering via SH-MaxRE convolution.');
+	        resolve();
 	      }.bind(this),
 	      function(buffers) {
 	        // TODO: why is it failing?
@@ -2413,7 +2410,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = HOARenderer;
 
 
-/***/ }
+/***/ })
 /******/ ])
 });
 ;
