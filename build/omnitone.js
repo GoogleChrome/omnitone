@@ -52,7 +52,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /************************************************************************/
 /******/ ([
 /* 0 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	/**
 	 * @license
@@ -76,9 +76,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.Omnitone = __webpack_require__(1);
 
 
-/***/ },
+/***/ }),
 /* 1 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	/**
 	 * Copyright 2016 Google Inc. All Rights Reserved.
@@ -248,9 +248,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = Omnitone;
 
 
-/***/ },
+/***/ }),
 /* 2 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	/**
 	 * Copyright 2016 Google Inc. All Rights Reserved.
@@ -384,9 +384,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = AudioBufferManager;
 
 
-/***/ },
+/***/ }),
 /* 3 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	/**
 	 * Copyright 2016 Google Inc. All Rights Reserved.
@@ -424,76 +424,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 
-	// Static temp storage for matrix inversion.
-	var a00, a01, a02, a03, a10, a11, a12, a13;
-	var a20, a21, a22, a23, a30, a31, a32, a33;
-	var b00, b01, b02, b03, b04, b05, b06, b07, b08, b09, b10, b11;
-	var det;
-
-
-	/**
-	 * A 4x4 matrix inversion utility. This does not handle the case when the
-	 * arguments are not proper 4x4 matrices.
-	 * @param {Float32Array} out   The inverted result.
-	 * @param {Float32Array} a     The source matrix.
-	 * @returns {Float32Array} out
-	 */
-	exports.invertMatrix4 = function(out, a) {
-	  a00 = a[0];
-	  a01 = a[1];
-	  a02 = a[2];
-	  a03 = a[3];
-	  a10 = a[4];
-	  a11 = a[5];
-	  a12 = a[6];
-	  a13 = a[7];
-	  a20 = a[8];
-	  a21 = a[9];
-	  a22 = a[10];
-	  a23 = a[11];
-	  a30 = a[12];
-	  a31 = a[13];
-	  a32 = a[14];
-	  a33 = a[15];
-	  b00 = a00 * a11 - a01 * a10;
-	  b01 = a00 * a12 - a02 * a10;
-	  b02 = a00 * a13 - a03 * a10;
-	  b03 = a01 * a12 - a02 * a11;
-	  b04 = a01 * a13 - a03 * a11;
-	  b05 = a02 * a13 - a03 * a12;
-	  b06 = a20 * a31 - a21 * a30;
-	  b07 = a20 * a32 - a22 * a30;
-	  b08 = a20 * a33 - a23 * a30;
-	  b09 = a21 * a32 - a22 * a31;
-	  b10 = a21 * a33 - a23 * a31;
-	  b11 = a22 * a33 - a23 * a32;
-	  det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
-
-	  if (!det)
-	    return null;
-
-	  det = 1.0 / det;
-	  out[0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;
-	  out[1] = (a02 * b10 - a01 * b11 - a03 * b09) * det;
-	  out[2] = (a31 * b05 - a32 * b04 + a33 * b03) * det;
-	  out[3] = (a22 * b04 - a21 * b05 - a23 * b03) * det;
-	  out[4] = (a12 * b08 - a10 * b11 - a13 * b07) * det;
-	  out[5] = (a00 * b11 - a02 * b08 + a03 * b07) * det;
-	  out[6] = (a32 * b02 - a30 * b05 - a33 * b01) * det;
-	  out[7] = (a20 * b05 - a22 * b02 + a23 * b01) * det;
-	  out[8] = (a10 * b10 - a11 * b08 + a13 * b06) * det;
-	  out[9] = (a01 * b08 - a00 * b10 - a03 * b06) * det;
-	  out[10] = (a30 * b04 - a31 * b02 + a33 * b00) * det;
-	  out[11] = (a21 * b02 - a20 * b04 - a23 * b00) * det;
-	  out[12] = (a11 * b07 - a10 * b09 - a12 * b06) * det;
-	  out[13] = (a00 * b09 - a01 * b07 + a02 * b06) * det;
-	  out[14] = (a31 * b01 - a30 * b03 - a32 * b00) * det;
-	  out[15] = (a20 * b03 - a21 * b01 + a22 * b00) * det;
-
-	  return out;
-	};
-
-
 	/**
 	 * Get a total number of channels for a given ambisonic order.
 	 * @param {Number} order Ambisonic order
@@ -504,9 +434,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 
-/***/ },
+/***/ }),
 /* 4 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	/**
 	 * Copyright 2017 Google Inc. All Rights Reserved.
@@ -627,9 +557,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = FOAConvolver;
 
 
-/***/ },
+/***/ }),
 /* 5 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	/**
 	 * Copyright 2016 Google Inc. All Rights Reserved.
@@ -725,9 +655,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = FOARouter;
 
 
-/***/ },
+/***/ }),
 /* 6 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	/**
 	 * Copyright 2016 Google Inc. All Rights Reserved.
@@ -873,9 +803,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = FOARotator;
 
 
-/***/ },
+/***/ }),
 /* 7 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	/**
 	 * Copyright 2016 Google Inc. All Rights Reserved.
@@ -989,9 +919,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = FOAPhaseMatchedFilter;
 
 
-/***/ },
+/***/ }),
 /* 8 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	/**
 	 * Copyright 2016 Google Inc. All Rights Reserved.
@@ -1083,9 +1013,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = FOAVirtualSpeaker;
 
 
-/***/ },
+/***/ }),
 /* 9 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	/**
 	 * Copyright 2016 Google Inc. All Rights Reserved.
@@ -1300,9 +1230,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = FOADecoder;
 
 
-/***/ },
+/***/ }),
 /* 10 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	/**
 	 * Copyright 2016 Google Inc. All Rights Reserved.
@@ -1375,9 +1305,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = FOASpeakerData;
 
 
-/***/ },
+/***/ }),
 /* 11 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	/**
 	 * Copyright 2016 Google Inc. All Rights Reserved.
@@ -1407,9 +1337,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = '0.9.1';
 
 
-/***/ },
+/***/ }),
 /* 12 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	/**
 	 * Copyright 2017 Google Inc. All Rights Reserved.
@@ -1520,7 +1450,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        resolve();
 	      }.bind(this),
 	      function (buffers) {
-	        var errorMessage = 'Initialization failed: ' + key + ' is ' 
+	        var errorMessage = 'Initialization failed: ' + key + ' is '
 	            + buffers.get(0) + '.';
 	        Utils.log(errorMessage);
 	        reject(errorMessage);
@@ -1558,16 +1488,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	/**
 	 * Update the rotation matrix from a Three.js camera object.
-	 * @param  {Object} cameraMatrix      The Matrix4 obejct of Three.js the camera.
+	 * @param  {Object} camera            The Three.js camera obejct.
 	 */
-	FOARenderer.prototype.setRotationMatrixFromCamera = function (cameraMatrix) {
+	FOARenderer.prototype.setRotationMatrixFromCamera = function (camera) {
 	  if (!this._isRendererReady)
 	    return;
 
-	  // Extract the inner array elements and inverse. (The actual view rotation is
-	  // the opposite of the camera movement.)
-	  Utils.invertMatrix4(this._tempMatrix4, cameraMatrix.elements);
-	  this._foaRotator.setRotationMatrix4(this._tempMatrix4);
+	  this._foaRotator.setRotationMatrix4(camera.matrix.elements);
 	};
 
 
@@ -1621,9 +1548,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = FOARenderer;
 
 
-/***/ },
+/***/ }),
 /* 13 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	/**
 	 * Copyright 2016 Google Inc. All Rights Reserved.
@@ -1999,9 +1926,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = HOARotator;
 
 
-/***/ },
+/***/ }),
 /* 14 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	/**
 	 * Copyright 2017 Google Inc. All Rights Reserved.
@@ -2145,10 +2072,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  // Generate Math.ceil(K/2) stereo buffers from a K-channel IR buffer.
 	  for (var i = 0; i < numberOfStereoBuffers; ++i) {
+	    var leftIndex = i * 2;
+	    var rightIndex = i * 2 + 1;
 	    var stereoHRIRBuffer =
 	        this._context.createBuffer(2, buffer.length, buffer.sampleRate);
-	    stereoHRIRBuffer.copyToChannel(buffer.getChannelData(i * 2), 0);
-	    stereoHRIRBuffer.copyToChannel(buffer.getChannelData(i * 2 + 1), 1);
+	    stereoHRIRBuffer.copyToChannel(buffer.getChannelData(leftIndex), 0);
+	    if (rightIndex < buffer.numberOfChannels) {
+	      stereoHRIRBuffer.copyToChannel(buffer.getChannelData(rightIndex), 1);
+	    }
 	    this._convolvers[i].buffer = stereoHRIRBuffer;
 	  }
 	};
@@ -2173,9 +2104,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = HOAConvolver;
 
 
-/***/ },
+/***/ }),
 /* 15 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	/**
 	 * Copyright 2017 Google Inc. All Rights Reserved.
@@ -2226,12 +2157,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  this._renderingMode = 'ambisonic';
 	  this._ambisonicOrder = 3;
 
-	  if (options) {
-	    if (options.HRIRUrl)
+	  if (options !== undefined) {
+	    if (options.HRIRUrl !== undefined)
 	      this._HRIRUrls = options.HRIRUrl;
-	    if (options.renderingMode)
+	    if (options.renderingMode !== undefined)
 	      this._renderingMode = options.renderingMode;
-	    if (options.ambisonicOrder)
+	    if (options.ambisonicOrder !== undefined)
 	      this._ambisonicOrder = options.ambisonicOrder;
 	  }
 
@@ -2270,41 +2201,34 @@ return /******/ (function(modules) { // webpackBootstrap
 	  // This is because Chrome cannot decode the audio file >8  channels.
 	  var audioBufferData = [];
 	  this._HRIRUrls.forEach(function(key, index, urls) {
-	    audioBufferData.push({name: key, url: urls[index]});
+	    audioBufferData.push({name: index, url: urls[index]});
 	  });
 
 	  new AudioBufferManager(
 	      this._context, audioBufferData,
 	      function(buffers) {
-	        var accumulatedChannelCount = 0;
-	        buffers.forEach(function(buffer) {
+	        buffers.forEach(function(buffer, key, buffers) {
 	          // Create a K channel buffer to integrate individual IR buffers.
 	          if (!hoaHRIRBuffer) {
 	            hoaHRIRBuffer = this._context.createBuffer(
 	                this._numberOfChannels, buffer.length, buffer.sampleRate);
 	          }
 
+	          // Determine channel offset for each buffer.
+	          var channelOffset = 0;
+	          for (var i = 0; i < key; i++) {
+	            channelOffset += buffers.get(key).numberOfChannels;
+	          }
 	          for (var channel = 0; channel < buffer.numberOfChannels; ++channel) {
 	            hoaHRIRBuffer.copyToChannel(
-	                buffer.getChannelData(channel),
-	                accumulatedChannelCount + channel);
+	                buffer.getChannelData(channel), channelOffset + channel);
 	          }
-
-	          accumulatedChannelCount += buffer.numberOfChannels;
 	        }.bind(this));
 
-	        if (accumulatedChannelCount === this._numberOfChannels) {
-	          this._buildAudioGraph(hoaHRIRBuffer);
-	          this._isRendererReady = true;
-	          Utils.log('Rendering via SH-MaxRE convolution.');
-	          resolve();
-	        } else {
-	          var errorMessage = 'Only ' + accumulatedChannelCount +
-	              ' HRIR channels were loaded (expected ' + this._numberOfChannels +
-	              '). The renderer will not function correctly.';
-	          Utils.log(errorMessage);
-	          reject(errorMessage);
-	        }
+	        this._buildAudioGraph(hoaHRIRBuffer);
+	        this._isRendererReady = true;
+	        Utils.log('Rendering via SH-MaxRE convolution.');
+	        resolve();
 	      }.bind(this),
 	      function(buffers) {
 	        // TODO: why is it failing?
@@ -2339,7 +2263,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	/**
 	 * Set the rotation matrix for the sound field rotation.
-	 * @param {Array} rotationMatrix      3x3 rotation matrix (row-major
+	 * @param {Array} rotationMatrix      3x3 rotation matrix (col-major
 	 *                                    representation)
 	 */
 	HOARenderer.prototype.setRotationMatrix = function(rotationMatrix) {
@@ -2351,16 +2275,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	/**
 	 * Update the rotation matrix from a Three.js camera object.
-	 * @param  {Object} cameraMatrix      The Matrix4 obejct of Three.js the camera.
+	 * @param  {Object} camera            The Three.js camera obejct.
 	 */
-	HOARenderer.prototype.setRotationMatrixFromCamera = function(cameraMatrix) {
+	HOARenderer.prototype.setRotationMatrixFromCamera = function(camera) {
 	  if (!this._isRendererReady)
 	    return;
 
-	  // Extract the inner array elements and inverse. (The actual view rotation is
-	  // the opposite of the camera movement.)
-	  Utils.invertMatrix4(this._tempMatrix4, cameraMatrix.elements);
-	  this._hoaRotator.setRotationMatrix4(this._tempMatrix4);
+	  this._hoaRotator.setRotationMatrix4(camera.matrix.elements);
 	};
 
 
@@ -2413,7 +2334,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = HOARenderer;
 
 
-/***/ }
+/***/ })
 /******/ ])
 });
 ;
