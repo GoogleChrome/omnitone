@@ -107,7 +107,7 @@ FOARenderer.prototype._initializeCallback = function (resolve, reject) {
         resolve();
       }.bind(this),
       function (buffers) {
-        var errorMessage = 'Initialization failed: ' + key + ' is ' 
+        var errorMessage = 'Initialization failed: ' + key + ' is '
             + buffers.get(0) + '.';
         Utils.log(errorMessage);
         reject(errorMessage);
@@ -145,16 +145,13 @@ FOARenderer.prototype.setRotationMatrix = function (rotationMatrix) {
 
 /**
  * Update the rotation matrix from a Three.js camera object.
- * @param  {Object} cameraMatrix      The Matrix4 obejct of Three.js the camera.
+ * @param  {Object} camera            The Three.js camera obejct.
  */
-FOARenderer.prototype.setRotationMatrixFromCamera = function (cameraMatrix) {
+FOARenderer.prototype.setRotationMatrixFromCamera = function (camera) {
   if (!this._isRendererReady)
     return;
 
-  // Extract the inner array elements and inverse. (The actual view rotation is
-  // the opposite of the camera movement.)
-  Utils.invertMatrix4(this._tempMatrix4, cameraMatrix.elements);
-  this._foaRotator.setRotationMatrix4(this._tempMatrix4);
+  this._foaRotator.setRotationMatrix4(camera.matrix.elements);
 };
 
 

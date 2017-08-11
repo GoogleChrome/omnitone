@@ -153,7 +153,7 @@ HOARenderer.prototype._buildAudioGraph = function(hoaHRIRBuffer) {
 
 /**
  * Set the rotation matrix for the sound field rotation.
- * @param {Array} rotationMatrix      3x3 rotation matrix (row-major
+ * @param {Array} rotationMatrix      3x3 rotation matrix (col-major
  *                                    representation)
  */
 HOARenderer.prototype.setRotationMatrix = function(rotationMatrix) {
@@ -165,16 +165,13 @@ HOARenderer.prototype.setRotationMatrix = function(rotationMatrix) {
 
 /**
  * Update the rotation matrix from a Three.js camera object.
- * @param  {Object} cameraMatrix      The Matrix4 obejct of Three.js the camera.
+ * @param  {Object} camera            The Three.js camera obejct.
  */
-HOARenderer.prototype.setRotationMatrixFromCamera = function(cameraMatrix) {
+HOARenderer.prototype.setRotationMatrixFromCamera = function(camera) {
   if (!this._isRendererReady)
     return;
 
-  // Extract the inner array elements and inverse. (The actual view rotation is
-  // the opposite of the camera movement.)
-  Utils.invertMatrix4(this._tempMatrix4, cameraMatrix.elements);
-  this._hoaRotator.setRotationMatrix4(this._tempMatrix4);
+  this._hoaRotator.setRotationMatrix4(camera.matrix.elements);
 };
 
 
