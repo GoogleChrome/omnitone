@@ -61,6 +61,13 @@ function HOARenderer(context, options) {
   this._tempMatrix4 = new Float32Array(16);
 
   this._isRendererReady = false;
+
+  this.input = this._context.createGain();
+  this.output = this._context.createGain();
+  this._bypass = this._context.createGain();
+
+  this._hoaRotator = new HOARotator(this._context, this._ambisonicOrder);
+  this.input.connect(this._bypass);
 }
 
 
@@ -115,7 +122,7 @@ HOARenderer.prototype._initializeCallback = function(resolve, reject) {
           }
         }.bind(this));
 
-        this._buildAudioGraph(hoaHRIRBuffer);
+        this._buildConvolver(hoaHRIRBuffer);
         this._isRendererReady = true;
         Utils.log('Rendering via SH-MaxRE convolution.');
         resolve();
@@ -130,20 +137,14 @@ HOARenderer.prototype._initializeCallback = function(resolve, reject) {
 
 
 /**
- * Internal method that builds the audio graph.
+ * Internal method that builds and connects the convolver to the audio graph.
  */
-HOARenderer.prototype._buildAudioGraph = function(hoaHRIRBuffer) {
-  this.input = this._context.createGain();
-  this.output = this._context.createGain();
-  this._bypass = this._context.createGain();
-
-  this._hoaRotator = new HOARotator(this._context, this._ambisonicOrder);
+HOARenderer.prototype._buildConvolver = function(hoaHRIRBuffer) {
   this._hoaConvolver = new HOAConvolver(
       this._context,
       {IRBuffer: hoaHRIRBuffer, ambisonicOrder: this._ambisonicOrder});
 
   this.input.connect(this._hoaRotator.input);
-  this.input.connect(this._bypass);
   this._hoaRotator.output.connect(this._hoaConvolver.input);
   this._hoaConvolver.output.connect(this.output);
 
@@ -157,8 +158,6 @@ HOARenderer.prototype._buildAudioGraph = function(hoaHRIRBuffer) {
  *                                    representation)
  */
 HOARenderer.prototype.setRotationMatrix = function(rotationMatrix) {
-  if (!this._isRendererReady)
-    return;
   this._hoaRotator.setRotationMatrix(rotationMatrix);
 };
 
@@ -168,9 +167,6 @@ HOARenderer.prototype.setRotationMatrix = function(rotationMatrix) {
  * @param  {Object} cameraMatrix      The Matrix4 obejct of Three.js the camera.
  */
 HOARenderer.prototype.setRotationMatrixFromCamera = function(cameraMatrix) {
-  if (!this._isRendererReady)
-    return;
-
   // Extract the inner array elements and inverse. (The actual view rotation is
   // the opposite of the camera movement.)
   Utils.invertMatrix4(this._tempMatrix4, cameraMatrix.elements);
@@ -189,6 +185,7 @@ HOARenderer.prototype.setRotationMatrixFromCamera = function(cameraMatrix) {
  *                                    the CPU power.
  */
 HOARenderer.prototype.setRenderingMode = function(mode) {
+  // TODO(bitllama): _isRendererReady should be used here for _hoaConvovler.
   if (mode === this._renderingMode)
     return;
   switch (mode) {
