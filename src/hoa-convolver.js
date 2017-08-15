@@ -82,7 +82,6 @@ HOAConvolver.prototype._buildAudioGraph = function(options) {
     this._stereoMergers[i] = this._context.createChannelMerger(2);
     this._convolvers[i] = this._context.createConvolver();
     this._stereoSplitters[i] = this._context.createChannelSplitter(2);
-
     this._convolvers[i].normalize = false;
   }
 
@@ -142,8 +141,12 @@ HOAConvolver.prototype._setHRIRBuffer = function(buffer) {
   for (var i = 0; i < numberOfStereoBuffers; ++i) {
     var stereoHRIRBuffer =
         this._context.createBuffer(2, buffer.length, buffer.sampleRate);
-    stereoHRIRBuffer.copyToChannel(buffer.getChannelData(i * 2), 0);
-    stereoHRIRBuffer.copyToChannel(buffer.getChannelData(i * 2 + 1), 1);
+    var leftIndex = i * 2;
+    var rightIndex = i * 2 + 1;
+    stereoHRIRBuffer.copyToChannel(buffer.getChannelData(leftIndex), 0);
+    if (rightIndex < buffer.numberOfChannels) {
+      stereoHRIRBuffer.copyToChannel(buffer.getChannelData(rightIndex), 1);
+    }
     this._convolvers[i].buffer = stereoHRIRBuffer;
   }
 };

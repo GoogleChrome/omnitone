@@ -167,8 +167,9 @@ function W(matrix, m, n, l) {
   if (m === 0)
     return 0;
 
-  return m > 0 ? P(matrix, 1, m + 1, n, l) + P(matrix, -1, -m - 1, n, l) :
-                 P(matrix, 1, m - 1, n, l) - P(matrix, -1, -m + 1, n, l);
+  return m > 0
+      ? P(matrix, 1, m + 1, n, l) + P(matrix, -1, -m - 1, n, l)
+      : P(matrix, 1, m - 1, n, l) - P(matrix, -1, -m + 1, n, l);
 };
 
 /**
@@ -224,8 +225,7 @@ function computeBandRotation(matrix, l) {
       if (Math.abs(uvwCoefficients[2]) > 0)
         uvwCoefficients[2] *= W(matrix, m, n, l);
 
-      setCenteredElement(
-          matrix, l, m, n,
+      setCenteredElement(matrix, l, m, n,
           uvwCoefficients[0] + uvwCoefficients[1] + uvwCoefficients[2]);
     }
   }

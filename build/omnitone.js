@@ -1794,8 +1794,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  if (m === 0)
 	    return 0;
 
-	  return m > 0 ? P(matrix, 1, m + 1, n, l) + P(matrix, -1, -m - 1, n, l) :
-	                 P(matrix, 1, m - 1, n, l) - P(matrix, -1, -m + 1, n, l);
+	  return m > 0
+	      ? P(matrix, 1, m + 1, n, l) + P(matrix, -1, -m - 1, n, l)
+	      : P(matrix, 1, m - 1, n, l) - P(matrix, -1, -m + 1, n, l);
 	};
 
 	/**
@@ -1851,8 +1852,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (Math.abs(uvwCoefficients[2]) > 0)
 	        uvwCoefficients[2] *= W(matrix, m, n, l);
 
-	      setCenteredElement(
-	          matrix, l, m, n,
+	      setCenteredElement(matrix, l, m, n,
 	          uvwCoefficients[0] + uvwCoefficients[1] + uvwCoefficients[2]);
 	    }
 	  }
@@ -2087,7 +2087,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this._stereoMergers[i] = this._context.createChannelMerger(2);
 	    this._convolvers[i] = this._context.createConvolver();
 	    this._stereoSplitters[i] = this._context.createChannelSplitter(2);
-
 	    this._convolvers[i].normalize = false;
 	  }
 
@@ -2147,8 +2146,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  for (var i = 0; i < numberOfStereoBuffers; ++i) {
 	    var stereoHRIRBuffer =
 	        this._context.createBuffer(2, buffer.length, buffer.sampleRate);
-	    stereoHRIRBuffer.copyToChannel(buffer.getChannelData(i * 2), 0);
-	    stereoHRIRBuffer.copyToChannel(buffer.getChannelData(i * 2 + 1), 1);
+	    var leftIndex = i * 2;
+	    var rightIndex = i * 2 + 1;
+	    stereoHRIRBuffer.copyToChannel(buffer.getChannelData(leftIndex), 0);
+	    if (rightIndex < buffer.numberOfChannels) {
+	      stereoHRIRBuffer.copyToChannel(buffer.getChannelData(rightIndex), 1);
+	    }
 	    this._convolvers[i].buffer = stereoHRIRBuffer;
 	  }
 	};
@@ -2267,7 +2270,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  // Constrcut a consolidated HOA HRIR (e.g. 16 channels for TOA).
 	  // Handle multiple chunks of HRIR buffer data splitted by 8 channels each.
-	  // This is because Chrome cannot decode the audio file >8  channels.
+	  // This is because Chrome cannot decode the audio file >8 channels.
 	  var audioBufferData = [];
 	  this._HRIRUrls.forEach(function(key, index, urls) {
 	    audioBufferData.push({name: key, url: urls[index]});
@@ -2277,7 +2280,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	      this._context, audioBufferData,
 	      function(buffers) {
 	        var accumulatedChannelCount = 0;
-	        buffers.forEach(function(buffer) {
+	        // The iteration order of buffer in |buffers| might be different from
+	        // |audioBufferData| because it is a Map. Thus, iterate based on
+	        // |audioBufferData| instead of |buffers|.
+	        audioBufferData.forEach(function (data, index) {
+	          var buffer = buffers.get(data.name);
+
 	          // Create a K channel buffer to integrate individual IR buffers.
 	          if (!hoaHRIRBuffer) {
 	            hoaHRIRBuffer = this._context.createBuffer(
@@ -2285,13 +2293,27 @@ return /******/ (function(modules) { // webpackBootstrap
 	          }
 
 	          for (var channel = 0; channel < buffer.numberOfChannels; ++channel) {
-	            hoaHRIRBuffer.copyToChannel(
-	                buffer.getChannelData(channel),
-	                accumulatedChannelCount + channel);
+	            hoaHRIRBuffer.copyToChannel(buffer.getChannelData(channel),
+	                                        accumulatedChannelCount + channel);
 	          }
 
 	          accumulatedChannelCount += buffer.numberOfChannels;
 	        }.bind(this));
+
+	        // buffers.forEach(function(buffer, key, buffers) {
+	        //   // Create a K channel buffer to integrate individual IR buffers.
+	        //   if (!hoaHRIRBuffer) {
+	        //     hoaHRIRBuffer = this._context.createBuffer(
+	        //         this._numberOfChannels, buffer.length, buffer.sampleRate);
+	        //   }
+
+	        //   for (var channel = 0; channel < buffer.numberOfChannels; ++channel) {
+	        //     hoaHRIRBuffer.copyToChannel(buffer.getChannelData(channel),
+	        //                                 accumulatedChannelCount + channel);
+	        //   }
+
+	        //   accumulatedChannelCount += buffer.numberOfChannels;
+	        // }.bind(this));
 
 	        if (accumulatedChannelCount === this._numberOfChannels) {
 	          this._buildAudioGraph(hoaHRIRBuffer);
@@ -2307,11 +2329,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	      }.bind(this),
 	      function(buffers) {
-	        // TODO: why is it failing?
+	        // TODO: Deiliver more descriptive error message.
 	        var errorMessage = 'Initialization failed.';
 	        Utils.log(errorMessage);
 	        reject(errorMessage);
-	      }.bind(this));
+	      });
 	};
 
 
