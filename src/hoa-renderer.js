@@ -58,7 +58,6 @@ function HOARenderer(context, options) {
 
   this._numberOfChannels =
       (this._ambisonicOrder + 1) * (this._ambisonicOrder + 1);
-  this._tempMatrix4 = new Float32Array(16);
 
   this._isRendererReady = false;
 }
@@ -164,28 +163,28 @@ HOARenderer.prototype._buildAudioGraph = function(hoaHRIRBuffer) {
 
 /**
  * Set the rotation matrix for the sound field rotation.
- * @param {Array} rotationMatrix      3x3 rotation matrix (row-major
+ * @param {Array} rotationMatrix      3x3 rotation matrix (col-major
  *                                    representation)
  */
 HOARenderer.prototype.setRotationMatrix = function(rotationMatrix) {
   if (!this._isRendererReady)
     return;
+
   this._hoaRotator.setRotationMatrix(rotationMatrix);
 };
 
 
 /**
  * Update the rotation matrix from a Three.js camera object.
- * @param  {Object} cameraMatrix      The Matrix4 obejct of Three.js the camera.
+ * @param  {Object} camera            The Three.js camera obejct.
  */
-HOARenderer.prototype.setRotationMatrixFromCamera = function(cameraMatrix) {
+HOARenderer.prototype.setRotationMatrixFromCamera = function(camera) {
   if (!this._isRendererReady)
     return;
 
-  // Extract the inner array elements and inverse. (The actual view rotation is
-  // the opposite of the camera movement.)
-  Utils.invertMatrix4(this._tempMatrix4, cameraMatrix.elements);
-  this._hoaRotator.setRotationMatrix4(this._tempMatrix4);
+  // Use the camera object's local transform matrix for the rotation.
+  // See: https://threejs.org/docs/#api/core/Object3D
+  this._hoaRotator.setRotationMatrix4(camera.matrix.elements);
 };
 
 
