@@ -105,7 +105,7 @@ FOARenderer.prototype._initializeCallback = function (resolve, reject) {
         resolve();
       }.bind(this),
       function (buffers) {
-        var errorMessage = 'Initialization failed: ' + key + ' is ' 
+        var errorMessage = 'Initialization failed: ' + key + ' is '
             + buffers.get(0) + '.';
         Utils.log(errorMessage);
         reject(errorMessage);
@@ -149,9 +149,9 @@ FOARenderer.prototype.setRotationMatrixFromCamera = function(camera) {
   if (!this._isRendererReady)
     return;
 
-  // Use the camera object's local transform matrix for the rotation.
+  // Use the camera object's world transform matrix for the rotation.
   // See: https://threejs.org/docs/#api/core/Object3D
-  this._foaRotator.setRotationMatrix4(camera.matrix.elements);
+  this._foaRotator.setRotationMatrix4(camera.matrixWorld.elements);
 };
 
 

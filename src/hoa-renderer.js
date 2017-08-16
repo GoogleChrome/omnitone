@@ -182,9 +182,9 @@ HOARenderer.prototype.setRotationMatrixFromCamera = function(camera) {
   if (!this._isRendererReady)
     return;
 
-  // Use the camera object's local transform matrix for the rotation.
+  // Use the camera object's world transform matrix for the rotation.
   // See: https://threejs.org/docs/#api/core/Object3D
-  this._hoaRotator.setRotationMatrix4(camera.matrix.elements);
+  this._hoaRotator.setRotationMatrix4(camera.matrixWorld.elements);
 };
 
 
