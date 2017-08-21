@@ -424,6 +424,76 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 
+	// Static temp storage for matrix inversion.
+	var a00, a01, a02, a03, a10, a11, a12, a13;
+	var a20, a21, a22, a23, a30, a31, a32, a33;
+	var b00, b01, b02, b03, b04, b05, b06, b07, b08, b09, b10, b11;
+	var det;
+
+
+	/**
+	 * A 4x4 matrix inversion utility. This does not handle the case when the
+	 * arguments are not proper 4x4 matrices.
+	 * @param {Float32Array} out   The inverted result.
+	 * @param {Float32Array} a     The source matrix.
+	 * @returns {Float32Array} out
+	 */
+	exports.invertMatrix4 = function(out, a) {
+	  a00 = a[0];
+	  a01 = a[1];
+	  a02 = a[2];
+	  a03 = a[3];
+	  a10 = a[4];
+	  a11 = a[5];
+	  a12 = a[6];
+	  a13 = a[7];
+	  a20 = a[8];
+	  a21 = a[9];
+	  a22 = a[10];
+	  a23 = a[11];
+	  a30 = a[12];
+	  a31 = a[13];
+	  a32 = a[14];
+	  a33 = a[15];
+	  b00 = a00 * a11 - a01 * a10;
+	  b01 = a00 * a12 - a02 * a10;
+	  b02 = a00 * a13 - a03 * a10;
+	  b03 = a01 * a12 - a02 * a11;
+	  b04 = a01 * a13 - a03 * a11;
+	  b05 = a02 * a13 - a03 * a12;
+	  b06 = a20 * a31 - a21 * a30;
+	  b07 = a20 * a32 - a22 * a30;
+	  b08 = a20 * a33 - a23 * a30;
+	  b09 = a21 * a32 - a22 * a31;
+	  b10 = a21 * a33 - a23 * a31;
+	  b11 = a22 * a33 - a23 * a32;
+	  det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
+
+	  if (!det)
+	    return null;
+
+	  det = 1.0 / det;
+	  out[0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;
+	  out[1] = (a02 * b10 - a01 * b11 - a03 * b09) * det;
+	  out[2] = (a31 * b05 - a32 * b04 + a33 * b03) * det;
+	  out[3] = (a22 * b04 - a21 * b05 - a23 * b03) * det;
+	  out[4] = (a12 * b08 - a10 * b11 - a13 * b07) * det;
+	  out[5] = (a00 * b11 - a02 * b08 + a03 * b07) * det;
+	  out[6] = (a32 * b02 - a30 * b05 - a33 * b01) * det;
+	  out[7] = (a20 * b05 - a22 * b02 + a23 * b01) * det;
+	  out[8] = (a10 * b10 - a11 * b08 + a13 * b06) * det;
+	  out[9] = (a01 * b08 - a00 * b10 - a03 * b06) * det;
+	  out[10] = (a30 * b04 - a31 * b02 + a33 * b00) * det;
+	  out[11] = (a21 * b02 - a20 * b04 - a23 * b00) * det;
+	  out[12] = (a11 * b07 - a10 * b09 - a12 * b06) * det;
+	  out[13] = (a00 * b09 - a01 * b07 + a02 * b06) * det;
+	  out[14] = (a31 * b01 - a30 * b03 - a32 * b00) * det;
+	  out[15] = (a20 * b03 - a21 * b01 + a22 * b00) * det;
+
+	  return out;
+	};
+
+
 	/**
 	 * Get a total number of channels for a given ambisonic order.
 	 * @param {Number} order Ambisonic order
@@ -745,7 +815,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  this._outY.gain.value = -1;
 	  this._outX.gain.value = -1;
 
-	  this.setRotationMatrix(new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]));
+	  this.setRotationMatrix3(new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]));
 
 	  // input/output proxy.
 	  this.input = this._splitter;
@@ -754,20 +824,20 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	/**
-	 * Set 3x3 matrix for soundfield rotation. (gl-matrix.js style)
-	 * @param {Array} rotationMatrix    A 3x3 matrix of soundfield rotation. The
+	 * Set 3x3 matrix for soundfield rotation.
+	 * @param {Array} rotationMatrix3   A 3x3 matrix of soundfield rotation. The
 	 *                                  matrix is in the row-major representation.
 	 */
-	FOARotator.prototype.setRotationMatrix = function (rotationMatrix) {
-	  this._m0.gain.value = rotationMatrix[0];
-	  this._m1.gain.value = rotationMatrix[1];
-	  this._m2.gain.value = rotationMatrix[2];
-	  this._m3.gain.value = rotationMatrix[3];
-	  this._m4.gain.value = rotationMatrix[4];
-	  this._m5.gain.value = rotationMatrix[5];
-	  this._m6.gain.value = rotationMatrix[6];
-	  this._m7.gain.value = rotationMatrix[7];
-	  this._m8.gain.value = rotationMatrix[8];
+	FOARotator.prototype.setRotationMatrix3 = function (rotationMatrix3) {
+	  this._m0.gain.value = rotationMatrix3[0];
+	  this._m1.gain.value = rotationMatrix3[1];
+	  this._m2.gain.value = rotationMatrix3[2];
+	  this._m3.gain.value = rotationMatrix3[3];
+	  this._m4.gain.value = rotationMatrix3[4];
+	  this._m5.gain.value = rotationMatrix3[5];
+	  this._m6.gain.value = rotationMatrix3[6];
+	  this._m7.gain.value = rotationMatrix3[7];
+	  this._m8.gain.value = rotationMatrix3[8];
 	};
 
 	/**
@@ -1410,6 +1480,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  Utils.log('Initializing... (mode: ' + this._renderingMode + ')');
 	  Utils.log('Rendering via SH-MaxRE convolution.');
 
+	  this._tempMatrix4 = new Float32Array(16);
+
 	  return new Promise(this._initializeCallback.bind(this));
 	};
 
@@ -1473,28 +1545,27 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	/**
 	 * Set the rotation matrix for the sound field rotation.
-	 * @param {Array} rotationMatrix      3x3 rotation matrix (col-major
-	 *                                    representation)
+	 * @param {Array} rotationMatrix3     A 3x3 rotation matrix.
 	 */
-	FOARenderer.prototype.setRotationMatrix = function (rotationMatrix) {
+	FOARenderer.prototype.setRotationMatrix = function (rotationMatrix3) {
 	  if (!this._isRendererReady)
 	    return;
 
-	  this._foaRotator.setRotationMatrix(rotationMatrix);
+	  this._foaRotator.setRotationMatrix3(rotationMatrix3);
 	};
-
 
 	/**
 	 * Update the rotation matrix from a Three.js camera object.
-	 * @param  {Object} camera            The Three.js camera obejct.
+	 * @param  {Object} cameraMatrix      Matrix4 object from Three.js camera.
 	 */
-	FOARenderer.prototype.setRotationMatrixFromCamera = function(camera) {
+	FOARenderer.prototype.setRotationMatrixFromCamera = function(cameraMatrix) {
 	  if (!this._isRendererReady)
 	    return;
 
-	  // Use the camera object's local transform matrix for the rotation.
-	  // See: https://threejs.org/docs/#api/core/Object3D
-	  this._foaRotator.setRotationMatrix4(camera.matrix.elements);
+	  // Extract the inner array elements and inverse. (The actual view rotation is
+	  // the opposite of the camera movement.)
+	  Utils.invertMatrix4(this._tempMatrix4, cameraMatrix.elements);
+	  this._foaRotator.setRotationMatrix4(this._tempMatrix4);
 	};
 
 
@@ -1863,7 +1934,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  this._splitter.connect(this._merger, 0, 0);
 
 	  // Default Identity matrix.
-	  this.setRotationMatrix(new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]));
+	  this.setRotationMatrix3(new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]));
 
 	  // Input/Output proxy.
 	  this.input = this._splitter;
@@ -1871,23 +1942,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 	/**
-	 * Set 3x3 matrix for soundfield rotation. (gl-matrix.js style)
-	 * @param {Array} rotationMatrix    A 3x3 matrix of soundfield rotation. The
-	 *                                  matrix is in the col-major representation.
+	 * Set 3x3 matrix for soundfield rotation.
+	 * @param {Float32Array} rotationMatrix3   A 3x3 rotation matrix.
 	 */
-	HOARotator.prototype.setRotationMatrix = function(rotationMatrix) {
-	  // Ambisonic spherical coordinates flip the signs for left/right and
-	  // front/back compared to OpenGL.
+	HOARotator.prototype.setRotationMatrix3 = function(rotationMatrix3) {
 	  for (var i = 0; i < 9; ++i)
-	    this._gainNodeMatrix[0][i].gain.value = rotationMatrix[i];
-
+	    this._gainNodeMatrix[0][i].gain.value = rotationMatrix3[i];
 	  computeHOAMatrices(this._gainNodeMatrix);
 	};
 
 	/**
-	 * Set 4x4 matrix for soundfield rotation. Uses col-major representation.
-	 * (Three.js style)
-	 * @param {Array} rotationMatrix4   A 4x4 matrix of soundfield rotation.
+	 * Set 4x4 matrix for soundfield rotation.
+	 * @param {Float32Array} rotationMatrix4   A 4x4 rotation matrix.
 	 */
 	HOARotator.prototype.setRotationMatrix4 = function(rotationMatrix4) {
 	  this._gainNodeMatrix[0][0].gain.value = rotationMatrix4[0];
@@ -1903,14 +1969,31 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 	/**
-	 * Returns the current rotation matrix.
-	 * @return {Array}                  A 3x3 matrix of soundfield rotation. The
-	 *                                  matrix is in the col-major representation.
+	 * Returns the current 3x3 rotation matrix.
+	 * @return {Float32Array}                   A 3x3 rotation matrix.
 	 */
-	HOARotator.prototype.getRotationMatrix = function() {
-	  var rotationMatrix = Float32Array(9);
+	HOARotator.prototype.getRotationMatrix3 = function() {
+	  var rotationMatrix = new Float32Array(9);
 	  for (var i = 0; i < 9; ++i)
 	    rotationMatrix[i] = this._gainNodeMatrix[0][i].gain.value;
+	  return rotationMatrix;
+	};
+
+	/**
+	 * Returns the current 4x4 rotation matrix.
+	 * @return {Float32Array}                   A 4x4 rotation matrix.
+	 */
+	HOARotator.prototype.getRotationMatrix4 = function() {
+	  var rotationMatrix = new Float32Array(16);
+	  rotationMatrix4[0] = this._gainNodeMatrix[0][0].gain.value;
+	  rotationMatrix4[1] = this._gainNodeMatrix[0][1].gain.value;
+	  rotationMatrix4[2] = this._gainNodeMatrix[0][2].gain.value;
+	  rotationMatrix4[4] = this._gainNodeMatrix[0][3].gain.value;
+	  rotationMatrix4[5] = this._gainNodeMatrix[0][4].gain.value;
+	  rotationMatrix4[6] = this._gainNodeMatrix[0][5].gain.value;
+	  rotationMatrix4[8] = this._gainNodeMatrix[0][6].gain.value;
+	  rotationMatrix4[9] = this._gainNodeMatrix[0][7].gain.value;
+	  rotationMatrix4[10] = this._gainNodeMatrix[0][8].gain.value;
 	  return rotationMatrix;
 	};
 
@@ -2075,10 +2158,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	        this._context.createBuffer(2, buffer.length, buffer.sampleRate);
 	    var leftIndex = i * 2;
 	    var rightIndex = i * 2 + 1;
-	    stereoHRIRBuffer.copyToChannel(buffer.getChannelData(leftIndex), 0);
-	    if (rightIndex < buffer.numberOfChannels) {
-	      stereoHRIRBuffer.copyToChannel(buffer.getChannelData(rightIndex), 1);
-	    }
+	    // Omnitone uses getChannelData().set() over copyToChannel() because:
+	    // - None of these buffer won't get accessed until the initialization
+	    //   process finishes. No data race can happen.
+	    // - To support all browsers. CopyToChannel() is only supported from
+	    //   Chrome and FireFox.
+	    stereoHRIRBuffer.getChannelData(0).set(buffer.getChannelData(leftIndex));
+	    if (rightIndex < buffer.numberOfChannels)
+	      stereoHRIRBuffer.getChannelData(1).set(buffer.getChannelData(rightIndex));
 	    this._convolvers[i].buffer = stereoHRIRBuffer;
 	  }
 	};
@@ -2219,8 +2306,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	          }
 
 	          for (var channel = 0; channel < buffer.numberOfChannels; ++channel) {
-	            hoaHRIRBuffer.copyToChannel(buffer.getChannelData(channel),
-	                                        accumulatedChannelCount + channel);
+	            hoaHRIRBuffer.getChannelData(accumulatedChannelCount + channel)
+	                .set(buffer.getChannelData(channel));
 	          }
 
 	          accumulatedChannelCount += buffer.numberOfChannels;
@@ -2272,28 +2359,27 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	/**
 	 * Set the rotation matrix for the sound field rotation.
-	 * @param {Array} rotationMatrix      3x3 rotation matrix (col-major
-	 *                                    representation)
+	 * @param {Array} rotationMatrix3           A 3x3 rotation matrix (col-major)
 	 */
-	HOARenderer.prototype.setRotationMatrix = function(rotationMatrix) {
+	HOARenderer.prototype.setRotationMatrix3 = function(rotationMatrix3) {
 	  if (!this._isRendererReady)
 	    return;
 
-	  this._hoaRotator.setRotationMatrix(rotationMatrix);
+	  this._hoaRotator.setRotationMatrix3(rotationMatrix3);
 	};
 
 
 	/**
-	 * Update the rotation matrix from a Three.js camera object.
-	 * @param  {Object} camera            The Three.js camera obejct.
+	 * Update the rotation from a 4x4 matrix. This expects the model matrix of
+	 * Camera object. For example, Three.js offers |Object3D.matrixWorld| for this
+	 * purpose.
+	 * @param {Float32Array} rotationMatrix4    A 4x4 rotation matrix (col-major)
 	 */
-	HOARenderer.prototype.setRotationMatrixFromCamera = function(camera) {
+	HOARenderer.prototype.setRotationMatrix4 = function(rotationMatrix4) {
 	  if (!this._isRendererReady)
 	    return;
 
-	  // Use the camera object's local transform matrix for the rotation.
-	  // See: https://threejs.org/docs/#api/core/Object3D
-	  this._hoaRotator.setRotationMatrix4(camera.matrix.elements);
+	  this._hoaRotator.setRotationMatrix4(rotationMatrix4);
 	};
 
 

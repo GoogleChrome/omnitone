@@ -84,7 +84,7 @@ function FOARotator (context) {
   this._outY.gain.value = -1;
   this._outX.gain.value = -1;
 
-  this.setRotationMatrix(new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]));
+  this.setRotationMatrix3(new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]));
 
   // input/output proxy.
   this.input = this._splitter;
@@ -93,20 +93,20 @@ function FOARotator (context) {
 
 
 /**
- * Set 3x3 matrix for soundfield rotation. (gl-matrix.js style)
- * @param {Array} rotationMatrix    A 3x3 matrix of soundfield rotation. The
+ * Set 3x3 matrix for soundfield rotation.
+ * @param {Array} rotationMatrix3   A 3x3 matrix of soundfield rotation. The
  *                                  matrix is in the row-major representation.
  */
-FOARotator.prototype.setRotationMatrix = function (rotationMatrix) {
-  this._m0.gain.value = rotationMatrix[0];
-  this._m1.gain.value = rotationMatrix[1];
-  this._m2.gain.value = rotationMatrix[2];
-  this._m3.gain.value = rotationMatrix[3];
-  this._m4.gain.value = rotationMatrix[4];
-  this._m5.gain.value = rotationMatrix[5];
-  this._m6.gain.value = rotationMatrix[6];
-  this._m7.gain.value = rotationMatrix[7];
-  this._m8.gain.value = rotationMatrix[8];
+FOARotator.prototype.setRotationMatrix3 = function (rotationMatrix3) {
+  this._m0.gain.value = rotationMatrix3[0];
+  this._m1.gain.value = rotationMatrix3[1];
+  this._m2.gain.value = rotationMatrix3[2];
+  this._m3.gain.value = rotationMatrix3[3];
+  this._m4.gain.value = rotationMatrix3[4];
+  this._m5.gain.value = rotationMatrix3[5];
+  this._m6.gain.value = rotationMatrix3[6];
+  this._m7.gain.value = rotationMatrix3[7];
+  this._m8.gain.value = rotationMatrix3[8];
 };
 
 /**

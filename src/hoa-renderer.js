@@ -110,8 +110,8 @@ HOARenderer.prototype._initializeCallback = function(resolve, reject) {
           }
 
           for (var channel = 0; channel < buffer.numberOfChannels; ++channel) {
-            hoaHRIRBuffer.copyToChannel(buffer.getChannelData(channel),
-                                        accumulatedChannelCount + channel);
+            hoaHRIRBuffer.getChannelData(accumulatedChannelCount + channel)
+                .set(buffer.getChannelData(channel));
           }
 
           accumulatedChannelCount += buffer.numberOfChannels;
@@ -163,28 +163,27 @@ HOARenderer.prototype._buildAudioGraph = function(hoaHRIRBuffer) {
 
 /**
  * Set the rotation matrix for the sound field rotation.
- * @param {Array} rotationMatrix      3x3 rotation matrix (col-major
- *                                    representation)
+ * @param {Array} rotationMatrix3           A 3x3 rotation matrix (col-major)
  */
-HOARenderer.prototype.setRotationMatrix = function(rotationMatrix) {
+HOARenderer.prototype.setRotationMatrix3 = function(rotationMatrix3) {
   if (!this._isRendererReady)
     return;
 
-  this._hoaRotator.setRotationMatrix(rotationMatrix);
+  this._hoaRotator.setRotationMatrix3(rotationMatrix3);
 };
 
 
 /**
- * Update the rotation matrix from a Three.js camera object.
- * @param  {Object} camera            The Three.js camera obejct.
+ * Update the rotation from a 4x4 matrix. This expects the model matrix of
+ * Camera object. For example, Three.js offers |Object3D.matrixWorld| for this
+ * purpose.
+ * @param {Float32Array} rotationMatrix4    A 4x4 rotation matrix (col-major)
  */
-HOARenderer.prototype.setRotationMatrixFromCamera = function(camera) {
+HOARenderer.prototype.setRotationMatrix4 = function(rotationMatrix4) {
   if (!this._isRendererReady)
     return;
 
-  // Use the camera object's local transform matrix for the rotation.
-  // See: https://threejs.org/docs/#api/core/Object3D
-  this._hoaRotator.setRotationMatrix4(camera.matrix.elements);
+  this._hoaRotator.setRotationMatrix4(rotationMatrix4);
 };
 
 

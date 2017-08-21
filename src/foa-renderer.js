@@ -67,6 +67,8 @@ FOARenderer.prototype.initialize = function () {
   Utils.log('Initializing... (mode: ' + this._renderingMode + ')');
   Utils.log('Rendering via SH-MaxRE convolution.');
 
+  this._tempMatrix4 = new Float32Array(16);
+
   return new Promise(this._initializeCallback.bind(this));
 };
 
@@ -130,28 +132,27 @@ FOARenderer.prototype.setChannelMap = function (channelMap) {
 
 /**
  * Set the rotation matrix for the sound field rotation.
- * @param {Array} rotationMatrix      3x3 rotation matrix (col-major
- *                                    representation)
+ * @param {Array} rotationMatrix3     A 3x3 rotation matrix.
  */
-FOARenderer.prototype.setRotationMatrix = function (rotationMatrix) {
+FOARenderer.prototype.setRotationMatrix = function (rotationMatrix3) {
   if (!this._isRendererReady)
     return;
 
-  this._foaRotator.setRotationMatrix(rotationMatrix);
+  this._foaRotator.setRotationMatrix3(rotationMatrix3);
 };
-
 
 /**
  * Update the rotation matrix from a Three.js camera object.
- * @param  {Object} camera            The Three.js camera obejct.
+ * @param  {Object} cameraMatrix      Matrix4 object from Three.js camera.
  */
-FOARenderer.prototype.setRotationMatrixFromCamera = function(camera) {
+FOARenderer.prototype.setRotationMatrixFromCamera = function(cameraMatrix) {
   if (!this._isRendererReady)
     return;
 
-  // Use the camera object's local transform matrix for the rotation.
-  // See: https://threejs.org/docs/#api/core/Object3D
-  this._foaRotator.setRotationMatrix4(camera.matrix.elements);
+  // Extract the inner array elements and inverse. (The actual view rotation is
+  // the opposite of the camera movement.)
+  Utils.invertMatrix4(this._tempMatrix4, cameraMatrix.elements);
+  this._foaRotator.setRotationMatrix4(this._tempMatrix4);
 };
 
 

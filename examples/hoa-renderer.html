@@ -76,7 +76,7 @@
       var currentBufferSource;
       var inputGain;
       var mergedTOABuffer;
-      var rotationMatrix = new Float32Array(9);
+      var rotationMatrix3 = new Float32Array(9);
 
       var eButtonPlayback;
       var eRangeAzimuth;
@@ -138,17 +138,17 @@
         var right = normalize(crossProduct(forward, upInitial));
         var up = normalize(crossProduct(right, forward));
 
-        rotationMatrix[0] = right[0];
-        rotationMatrix[1] = right[1];
-        rotationMatrix[2] = right[2];
-        rotationMatrix[3] = up[0];
-        rotationMatrix[4] = up[1];
-        rotationMatrix[5] = up[2];
-        rotationMatrix[6] = forward[0];
-        rotationMatrix[7] = forward[1];
-        rotationMatrix[8] = forward[2];
+        rotationMatrix3[0] = right[0];
+        rotationMatrix3[1] = right[1];
+        rotationMatrix3[2] = right[2];
+        rotationMatrix3[3] = up[0];
+        rotationMatrix3[4] = up[1];
+        rotationMatrix3[5] = up[2];
+        rotationMatrix3[6] = forward[0];
+        rotationMatrix3[7] = forward[1];
+        rotationMatrix3[8] = forward[2];
 
-        hoaRenderer.setRotationMatrix(rotationMatrix);
+        hoaRenderer.setRotationMatrix3(rotationMatrix3);
       }
 
       function onToggleButton(event) {
@@ -189,10 +189,10 @@
         mergedTOABuffer = audioContext.createBuffer(
             16, buffers.get(partA).length, buffers.get(partA).sampleRate);
         for (var i = 0; i < 8; ++i) {
-          mergedTOABuffer.copyToChannel(
-              buffers.get(partA).getChannelData(i), i);
-          mergedTOABuffer.copyToChannel(
-              buffers.get(partB).getChannelData(i), i + 8);
+          mergedTOABuffer.getChannelData(i).set(
+              buffers.get(partA).getChannelData(i));
+          mergedTOABuffer.getChannelData(i + 8).set(
+              buffers.get(partB).getChannelData(i));
         }
       }
 
@@ -220,7 +220,6 @@
             inputGain.connect(hoaRenderer.input);
             hoaRenderer.output.connect(audioContext.destination);
             eButtonPlayback.disabled = false;
-
             exampleInitialized = true;
           });
       }

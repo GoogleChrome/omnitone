@@ -143,10 +143,14 @@ HOAConvolver.prototype._setHRIRBuffer = function(buffer) {
         this._context.createBuffer(2, buffer.length, buffer.sampleRate);
     var leftIndex = i * 2;
     var rightIndex = i * 2 + 1;
-    stereoHRIRBuffer.copyToChannel(buffer.getChannelData(leftIndex), 0);
-    if (rightIndex < buffer.numberOfChannels) {
-      stereoHRIRBuffer.copyToChannel(buffer.getChannelData(rightIndex), 1);
-    }
+    // Omnitone uses getChannelData().set() over copyToChannel() because:
+    // - None of these buffer won't get accessed until the initialization
+    //   process finishes. No data race can happen.
+    // - To support all browsers. CopyToChannel() is only supported from
+    //   Chrome and FireFox.
+    stereoHRIRBuffer.getChannelData(0).set(buffer.getChannelData(leftIndex));
+    if (rightIndex < buffer.numberOfChannels)
+      stereoHRIRBuffer.getChannelData(1).set(buffer.getChannelData(rightIndex));
     this._convolvers[i].buffer = stereoHRIRBuffer;
   }
 };

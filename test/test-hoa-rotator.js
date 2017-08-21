@@ -380,7 +380,7 @@ describe('HOARotator', function() {
     it('#setRotationMatrix: rotate the incoming stream using direction [' +
            sphericalDirections[index] + '].',
        function(done) {
-         hoaRotator.setRotationMatrix(generateRotationMatrix(
+         hoaRotator.setRotationMatrix3(generateRotationMatrix(
              sphericalDirections[index][0], sphericalDirections[index][1]));
          expectedValues = sphericalHarmonicsPerDirection[index];
          context.startRendering().then(function(renderedBuffer) {

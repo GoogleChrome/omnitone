@@ -41,7 +41,7 @@ describe('FOARotator', function () {
         source.start();
 
         // 90 degree clockwise along z-axis. (row-major representation)
-        rotator.setRotationMatrix([
+        rotator.setRotationMatrix3([
             0, -1,  0,
             1,  0,  0,
             0,  0,  1

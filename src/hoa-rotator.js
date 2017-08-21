@@ -309,7 +309,7 @@ function HOARotator(context, ambisonicOrder) {
   this._splitter.connect(this._merger, 0, 0);
 
   // Default Identity matrix.
-  this.setRotationMatrix(new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]));
+  this.setRotationMatrix3(new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]));
 
   // Input/Output proxy.
   this.input = this._splitter;
@@ -317,23 +317,18 @@ function HOARotator(context, ambisonicOrder) {
 };
 
 /**
- * Set 3x3 matrix for soundfield rotation. (gl-matrix.js style)
- * @param {Array} rotationMatrix    A 3x3 matrix of soundfield rotation. The
- *                                  matrix is in the col-major representation.
+ * Set 3x3 matrix for soundfield rotation.
+ * @param {Float32Array} rotationMatrix3   A 3x3 rotation matrix.
  */
-HOARotator.prototype.setRotationMatrix = function(rotationMatrix) {
-  // Ambisonic spherical coordinates flip the signs for left/right and
-  // front/back compared to OpenGL.
+HOARotator.prototype.setRotationMatrix3 = function(rotationMatrix3) {
   for (var i = 0; i < 9; ++i)
-    this._gainNodeMatrix[0][i].gain.value = rotationMatrix[i];
-
+    this._gainNodeMatrix[0][i].gain.value = rotationMatrix3[i];
   computeHOAMatrices(this._gainNodeMatrix);
 };
 
 /**
- * Set 4x4 matrix for soundfield rotation. Uses col-major representation.
- * (Three.js style)
- * @param {Array} rotationMatrix4   A 4x4 matrix of soundfield rotation.
+ * Set 4x4 matrix for soundfield rotation.
+ * @param {Float32Array} rotationMatrix4   A 4x4 rotation matrix.
  */
 HOARotator.prototype.setRotationMatrix4 = function(rotationMatrix4) {
   this._gainNodeMatrix[0][0].gain.value = rotationMatrix4[0];
@@ -349,14 +344,31 @@ HOARotator.prototype.setRotationMatrix4 = function(rotationMatrix4) {
 };
 
 /**
- * Returns the current rotation matrix.
- * @return {Array}                  A 3x3 matrix of soundfield rotation. The
- *                                  matrix is in the col-major representation.
+ * Returns the current 3x3 rotation matrix.
+ * @return {Float32Array}                   A 3x3 rotation matrix.
  */
-HOARotator.prototype.getRotationMatrix = function() {
-  var rotationMatrix = Float32Array(9);
+HOARotator.prototype.getRotationMatrix3 = function() {
+  var rotationMatrix = new Float32Array(9);
   for (var i = 0; i < 9; ++i)
     rotationMatrix[i] = this._gainNodeMatrix[0][i].gain.value;
+  return rotationMatrix;
+};
+
+/**
+ * Returns the current 4x4 rotation matrix.
+ * @return {Float32Array}                   A 4x4 rotation matrix.
+ */
+HOARotator.prototype.getRotationMatrix4 = function() {
+  var rotationMatrix = new Float32Array(16);
+  rotationMatrix4[0] = this._gainNodeMatrix[0][0].gain.value;
+  rotationMatrix4[1] = this._gainNodeMatrix[0][1].gain.value;
+  rotationMatrix4[2] = this._gainNodeMatrix[0][2].gain.value;
+  rotationMatrix4[4] = this._gainNodeMatrix[0][3].gain.value;
+  rotationMatrix4[5] = this._gainNodeMatrix[0][4].gain.value;
+  rotationMatrix4[6] = this._gainNodeMatrix[0][5].gain.value;
+  rotationMatrix4[8] = this._gainNodeMatrix[0][6].gain.value;
+  rotationMatrix4[9] = this._gainNodeMatrix[0][7].gain.value;
+  rotationMatrix4[10] = this._gainNodeMatrix[0][8].gain.value;
   return rotationMatrix;
 };
 
