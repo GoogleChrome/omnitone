@@ -19,11 +19,12 @@
  * @fileOverview Omnitone FOA decoder.
  */
 var AudioBufferManager = require('./audiobuffer-manager.js');
-var FOARouter = require('./foa-router.js');
-var FOARotator = require('./foa-rotator.js');
+var HRIRManager = require('./hrir-manager.js');
 var FOAConvolver = require('./foa-convolver.js');
+var FOARotator = require('./foa-rotator.js');
+var FOARouter = require('./foa-router.js');
+var Version = require('./version.js');
 var Utils = require('./utils.js');
-var SystemVersion = require('./version.js');
 
 // HRIR for optimized FOA rendering.
 // TODO(hongchan): change this with the absolute URL.
@@ -40,6 +41,9 @@ var SH_MAXRE_HRIR_URL = 'resources/sh_hrir_o_1.wav';
  */
 function FOARenderer (context, options) {
   this._context = context;
+
+  var pathSet = HRIRManager.generatePathSet('github');
+  console.log(pathSet);
 
   // Priming internal setting with |options|.
   this._HRIRUrl = SH_MAXRE_HRIR_URL;
@@ -63,7 +67,7 @@ function FOARenderer (context, options) {
  * @return {Promise}
  */
 FOARenderer.prototype.initialize = function () {
-  Utils.log('Version: ' + SystemVersion);
+  Utils.log('Version: ' + Version);
   Utils.log('Initializing... (mode: ' + this._renderingMode + ')');
   Utils.log('Rendering via SH-MaxRE convolution.');
 

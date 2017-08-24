@@ -23,9 +23,10 @@
   },
   "scripts": {
     "build": "webpack --progress --color",
-    "watch": "webpack --progress --color --watch",
     "build-all": "webpack --progress --color && webpack --config webpack.config.all.js --progress --color",
-    "test": "node_modules/karma/bin/karma start"
+    "build-omnitone-hrir": "./build-hrir.sh",
+    "test": "node_modules/karma/bin/karma start",
+    "watch": "webpack --progress --color --watch"
   },
   "homepage": "https://github.com/GoogleChrome/omnitone",
   "bugs": {
