@@ -26,32 +26,29 @@ var FOARouter = require('./foa-router.js');
 var Version = require('./version.js');
 var Utils = require('./utils.js');
 
-// HRIR for optimized FOA rendering.
-// TODO(hongchan): change this with the absolute URL.
-var SH_MAXRE_HRIR_URL = 'resources/sh_hrir_o_1.wav';
-
 
 /**
  * @class Omnitone FOA renderer class. Uses the optimized convolution technique.
  * @param {AudioContext} context          Associated AudioContext.
  * @param {Object} options
- * @param {String} options.HRIRUrl        Optional HRIR URL.
+ * @param {String} options.resourcePath    Base URL for HRIR files.
  * @param {String} options.renderingMode  Rendering mode.
  * @param {Array} options.channelMap      Custom channel map.
  */
 function FOARenderer (context, options) {
   this._context = context;
 
-  var pathSet = HRIRManager.generatePathSet('github');
-  console.log(pathSet);
+  // TODO(hongchan): default to github source.
+  this._hrirManager = new HRIRManager({
+    ambisonicOrder: 1,
+    location: 'local',
+    resourcePath: options.resourcePath
+  });
 
   // Priming internal setting with |options|.
-  this._HRIRUrl = SH_MAXRE_HRIR_URL;
   this._channelMap = FOARouter.CHANNEL_MAP.DEFAULT;
   this._renderingMode = 'ambisonic';
   if (options) {
-    if (options.HRIRUrl)
-      this._HRIRUrl = options.HRIRUrl;
     if (options.renderingMode)
       this._renderingMode = options.renderingMode;
     if (options.channelMap)
@@ -83,17 +80,21 @@ FOARenderer.prototype.initialize = function () {
  * @param {Function} reject Promise rejection.
  */
 FOARenderer.prototype._initializeCallback = function (resolve, reject) {
-  var key = 'FOA_HRIR_AUDIOBUFFER';
+  var bufferLoaderData = [];
+  var pathSet = this._hrirManager.getPathSet();
+  for (var i = 0; i < pathSet.length; ++i)
+    bufferLoaderData.push({ name: i, url: pathSet[i]});
+
   new AudioBufferManager(
       this._context,
-      [{ name: key, url: this._HRIRUrl }],
+      bufferLoaderData,
       function (buffers) {
         this.input = this._context.createGain();
         this._bypass = this._context.createGain();
         this._foaRouter = new FOARouter(this._context, this._channelMap);
         this._foaRotator = new FOARotator(this._context);
         this._foaConvolver = new FOAConvolver(this._context, {
-            IR: buffers.get(key)
+            HRIRBuffers: [buffers.get(0), buffers.get(1)]
           });
         this.output = this._context.createGain();
 

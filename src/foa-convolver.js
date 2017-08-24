@@ -13,12 +13,14 @@
  * limitations under the License.
  */
 
+'use strict';
+
 /**
  * @fileOverview A collection of convolvers. Can be used for the optimized FOA
  *               binaural rendering. (e.g. SH-MaxRe HRTFs)
  */
+var Utils = require('./utils.js');
 
-'use strict';
 
 /**
  * @class FOAConvolver
@@ -26,14 +28,27 @@
  * @param {AudioContext} context        Associated AudioContext.
  * @param {Object} options              Options for speaker.
  * @param {AudioBuffer} options.IR      Stereo IR buffer for HRTF convolution.
+ * @param {Array} options.HRIRBuffers   An array of AudioBuffers contains 2 
+ *                                      stereo HRIR files. (4-channel)
  * @param {Number} options.gain         Post-gain for the speaker.
  */
 function FOAConvolver (context, options) {
-  if (options.IR.numberOfChannels !== 4)
-    throw 'IR does not have 4 channels. cannot proceed.';
+  if (!options.HRIRBuffers)
+    Utils.throw('FOAConvolver: HRIR AudioBuffers are not specified.');
+
+  if (options.HRIRBuffers.length !== 2)
+    Utils.throw('FOAConvolver: Insufficient HRIR AudioBuffers. (got ' + 
+        options.HRIRBuffers.length + ', but expected 2.)');
+
+  for (var i = 0; i < options.HRIRBuffers.length; ++i) {
+    if (!(options.HRIRBuffers[i] instanceof AudioBuffer) ||
+        options.HRIRBuffers[i].numberOfChannels !== 2) {
+      Utils.throw('FOAConvolver: HRIR AudioBuffer (' + i + ') is not a valid' +
+          ' AudioBuffer or not stereo.');
+    }
+  }
 
   this._active = false;
-
   this._context = context;
 
   this._input = this._context.createChannelSplitter(4);
@@ -71,8 +86,7 @@ function FOAConvolver (context, options) {
   this._convolverWY.normalize = false;
   this._convolverZX.normalize = false;
 
-  // Generate 2 stereo buffers from a 4-channel IR.
-  this._setHRIRBuffers(options.IR);
+  this._setHRIRBuffers(options.HRIRBuffers);
 
   // For asymmetric degree.
   this._inverter.gain.value = -1;
@@ -84,24 +98,21 @@ function FOAConvolver (context, options) {
   this.enable();
 }
 
-FOAConvolver.prototype._setHRIRBuffers = function (hrirBuffer) {
-  // Use 2 stereo convolutions. This is because the mono convolution wastefully
-  // produces the stereo output with the same content.
-  this._hrirWY = this._context.createBuffer(2, hrirBuffer.length,
-                                            hrirBuffer.sampleRate);
-  this._hrirZX = this._context.createBuffer(2, hrirBuffer.length,
-                                            hrirBuffer.sampleRate);
 
-  // We do this because Safari does not support copyFromChannel/copyToChannel.
-  this._hrirWY.getChannelData(0).set(hrirBuffer.getChannelData(0));
-  this._hrirWY.getChannelData(1).set(hrirBuffer.getChannelData(1));
-  this._hrirZX.getChannelData(0).set(hrirBuffer.getChannelData(2));
-  this._hrirZX.getChannelData(1).set(hrirBuffer.getChannelData(3));
-
+/**
+ * Assigns 2 HRIR AudioBuffers to 2 convolvers. Note that we use 2 stereo
+ * convolutions for 4-channel direct convolution. Using mono convolver or
+ * 4-channel convolver is not possible. Because mono convolution wastefully
+ * produces the stereo outputs, and the 4-ch convolver does cross-channel
+ * convolution.
+ * 
+ * @param {Array} HRIRBuffers An array of stereo AudioBuffers for convolvers.
+ */
+FOAConvolver.prototype._setHRIRBuffers = function (HRIRBuffers) {
   // After these assignments, the channel data in the buffer is immutable in
   // FireFox. (i.e. neutered)
-  this._convolverWY.buffer = this._hrirWY;
-  this._convolverZX.buffer = this._hrirZX;
+  this._convolverWY.buffer = HRIRBuffers[0];
+  this._convolverZX.buffer = HRIRBuffers[1];
 };
 
 FOAConvolver.prototype.enable = function () {
@@ -113,5 +124,6 @@ FOAConvolver.prototype.disable = function () {
   this._mergerBinaural.disconnect();
   this._active = false;
 };
+
 
 module.exports = FOAConvolver;

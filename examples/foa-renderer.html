@@ -52,7 +52,7 @@
       'warbird': 'resources/jlwarbirds3.amb'
     };
 
-    var buttonPlayback, selectSource;
+    var buttonPlayback, selectSource, buttonBypass;
 
     var onLoad = function () {
       var audioContext = new AudioContext();
@@ -66,7 +66,7 @@
       foaRenderer = Omnitone.createFOARenderer(audioContext, {
         // The example audio is in the FuMa ordering (W,X,Y,Z). So remap the
         // channels to the ACN format.
-        HRIRUrl: '../build/resources/sh_hrir_o_1.wav',
+        resourcePath: '../build/resources/',
         channelMap: [0, 3, 1, 2]
       });
 

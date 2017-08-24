@@ -115,9 +115,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	var FOAVirtualSpeaker = __webpack_require__(8);
 	var FOADecoder = __webpack_require__(9);
 	var FOARenderer = __webpack_require__(12);
-	var HOARotator = __webpack_require__(13);
-	var HOAConvolver = __webpack_require__(14);
-	var HOARenderer = __webpack_require__(15);
+	var HOARotator = __webpack_require__(14);
+	var HOAConvolver = __webpack_require__(15);
+	var HOARenderer = __webpack_require__(16);
 
 	/**
 	 * Load audio buffers based on the speaker configuration map data.
@@ -411,16 +411,30 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	/**
 	 * Omnitone library logging function.
-	 * @type {Function}
 	 * @param {any} Message to be printed out.
 	 */
 	exports.log = function() {
 	  window.console.log.apply(window.console, [
 	    '%c[Omnitone]%c ' + Array.prototype.slice.call(arguments).join(' ') +
 	        ' %c(@' + performance.now().toFixed(2) + 'ms)',
-	    'background: #BBDEFB; color: #FF5722; font-weight: 700', 'font-weight: 400',
+	    'background: #BBDEFB; color: #FF5722; font-weight: 500', 'font-weight: 300',
 	    'color: #AAA'
 	  ]);
+	};
+
+	/**
+	 * Omnitone library error-throwing function.
+	 * @param {any} Message to be printed out.
+	 */
+	exports.throw = function() {
+	  window.console.error.apply(window.console, [
+	    '%c[Omnitone]%c ' + Array.prototype.slice.call(arguments).join(' ') +
+	        ' %c(@' + performance.now().toFixed(2) + 'ms)',
+	    'background: #C62828; color: #FFEBEE; font-weight: 800', 'font-weight: 400',
+	    'color: #AAA'
+	  ]);
+
+	  throw false;
 	};
 
 
@@ -506,7 +520,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 4 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	/**
 	 * Copyright 2017 Google Inc. All Rights Reserved.
@@ -528,6 +542,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *               binaural rendering. (e.g. SH-MaxRe HRTFs)
 	 */
 
+	var Utils = __webpack_require__(3);
+
 	'use strict';
 
 	/**
@@ -536,11 +552,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @param {AudioContext} context        Associated AudioContext.
 	 * @param {Object} options              Options for speaker.
 	 * @param {AudioBuffer} options.IR      Stereo IR buffer for HRTF convolution.
+	 * @param {Array} options.HRIRBuffers   An array of AudioBuffers contains 2 
+	 *                                      stereo HRIR files. (4-channel)
 	 * @param {Number} options.gain         Post-gain for the speaker.
 	 */
 	function FOAConvolver (context, options) {
-	  if (options.IR.numberOfChannels !== 4)
-	    throw 'IR does not have 4 channels. cannot proceed.';
+	  if (!options.HRIRBuffers)
+	    Utils.throw('HRIR AudioBuffers are not specified.');
+
+	  if (options.HRIRBuffers.length !== 2)
+	    Utils.throw('Insufficient HRIR AudioBuffers. (got ' + 
+	        options.HRIRBuffers.length + ', but expected 2.)');
+
+	  for (var i = 0; i < options.HRIRBuffers.length; ++i) {
+	    if (!(options.HRIRBuffers[i] instanceof AudioBuffer) ||
+	        options.HRIRBuffers[i].numberOfChannels !== 2) {
+	      Utils.throw('HRIR AudioBuffer (' + i + ') is not a valid AudioBuffer' +
+	          ' or not stereo.');
+	    }
+	  }
 
 	  this._active = false;
 
@@ -582,7 +612,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  this._convolverZX.normalize = false;
 
 	  // Generate 2 stereo buffers from a 4-channel IR.
-	  this._setHRIRBuffers(options.IR);
+	  // this._setHRIRBuffers(options.IR);
+	  this._setHRIRBuffers(options.HRIRBuffers);
 
 	  // For asymmetric degree.
 	  this._inverter.gain.value = -1;
@@ -594,24 +625,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	  this.enable();
 	}
 
-	FOAConvolver.prototype._setHRIRBuffers = function (hrirBuffer) {
+	FOAConvolver.prototype._setHRIRBuffers = function (HRIRBuffers) {
 	  // Use 2 stereo convolutions. This is because the mono convolution wastefully
 	  // produces the stereo output with the same content.
-	  this._hrirWY = this._context.createBuffer(2, hrirBuffer.length,
-	                                            hrirBuffer.sampleRate);
-	  this._hrirZX = this._context.createBuffer(2, hrirBuffer.length,
-	                                            hrirBuffer.sampleRate);
+	  // this._hrirWY = this._context.createBuffer(2, hrirBuffer.length,
+	  //                                           hrirBuffer.sampleRate);
+	  // this._hrirZX = this._context.createBuffer(2, hrirBuffer.length,
+	  //                                           hrirBuffer.sampleRate);
 
 	  // We do this because Safari does not support copyFromChannel/copyToChannel.
-	  this._hrirWY.getChannelData(0).set(hrirBuffer.getChannelData(0));
-	  this._hrirWY.getChannelData(1).set(hrirBuffer.getChannelData(1));
-	  this._hrirZX.getChannelData(0).set(hrirBuffer.getChannelData(2));
-	  this._hrirZX.getChannelData(1).set(hrirBuffer.getChannelData(3));
+	  // this._hrirWY.getChannelData(0).set(hrirBuffer.getChannelData(0));
+	  // this._hrirWY.getChannelData(1).set(hrirBuffer.getChannelData(1));
+	  // this._hrirZX.getChannelData(0).set(hrirBuffer.getChannelData(2));
+	  // this._hrirZX.getChannelData(1).set(hrirBuffer.getChannelData(3));
 
 	  // After these assignments, the channel data in the buffer is immutable in
 	  // FireFox. (i.e. neutered)
-	  this._convolverWY.buffer = this._hrirWY;
-	  this._convolverZX.buffer = this._hrirZX;
+	  this._convolverWY.buffer = HRIRBuffers[0]; //this._hrirWY;
+	  this._convolverZX.buffer = HRIRBuffers[1]; //this._hrirZX;
 	};
 
 	FOAConvolver.prototype.enable = function () {
@@ -1404,7 +1435,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * Omnitone library version
 	 * @type {String}
 	 */
-	module.exports = '0.9.2';
+	module.exports = '0.9.3';
 
 
 /***/ },
@@ -1432,11 +1463,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @fileOverview Omnitone FOA decoder.
 	 */
 	var AudioBufferManager = __webpack_require__(2);
-	var FOARouter = __webpack_require__(5);
-	var FOARotator = __webpack_require__(6);
+	var HRIRManager = __webpack_require__(13);
 	var FOAConvolver = __webpack_require__(4);
+	var FOARotator = __webpack_require__(6);
+	var FOARouter = __webpack_require__(5);
+	var Version = __webpack_require__(11);
 	var Utils = __webpack_require__(3);
-	var SystemVersion = __webpack_require__(11);
 
 	// HRIR for optimized FOA rendering.
 	// TODO(hongchan): change this with the absolute URL.
@@ -1447,12 +1479,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @class Omnitone FOA renderer class. Uses the optimized convolution technique.
 	 * @param {AudioContext} context          Associated AudioContext.
 	 * @param {Object} options
+	 * @param {String} options.resourcePath    Base URL for HRIR files.
 	 * @param {String} options.HRIRUrl        Optional HRIR URL.
 	 * @param {String} options.renderingMode  Rendering mode.
 	 * @param {Array} options.channelMap      Custom channel map.
 	 */
 	function FOARenderer (context, options) {
 	  this._context = context;
+	  this._hrirManager = new HRIRManager({
+	    ambisonicOrder: 1,
+	    location: 'local',
+	    resourcePath: options.resourcePath
+	  });
 
 	  // Priming internal setting with |options|.
 	  this._HRIRUrl = SH_MAXRE_HRIR_URL;
@@ -1476,7 +1514,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @return {Promise}
 	 */
 	FOARenderer.prototype.initialize = function () {
-	  Utils.log('Version: ' + SystemVersion);
+	  Utils.log('Version: ' + Version);
 	  Utils.log('Initializing... (mode: ' + this._renderingMode + ')');
 	  Utils.log('Rendering via SH-MaxRE convolution.');
 
@@ -1493,16 +1531,27 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	FOARenderer.prototype._initializeCallback = function (resolve, reject) {
 	  var key = 'FOA_HRIR_AUDIOBUFFER';
+
+	  var bufferLoaderData = [];
+	  var pathSet = this._hrirManager.getPathSet();
+	  for (var i = 0; i < pathSet.length; ++i) {
+	    bufferLoaderData.push({ name: i, url: pathSet[i]});
+	  }
+	  
+
+
+
+
 	  new AudioBufferManager(
 	      this._context,
-	      [{ name: key, url: this._HRIRUrl }],
+	      bufferLoaderData,
 	      function (buffers) {
 	        this.input = this._context.createGain();
 	        this._bypass = this._context.createGain();
 	        this._foaRouter = new FOARouter(this._context, this._channelMap);
 	        this._foaRotator = new FOARotator(this._context);
 	        this._foaConvolver = new FOAConvolver(this._context, {
-	            IR: buffers.get(key)
+	            HRIRBuffers: [buffers.get(0), buffers.get(1)]
 	          });
 	        this.output = this._context.createGain();
 
@@ -1621,6 +1670,156 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 13 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * Copyright 2017 Google Inc. All Rights Reserved.
+	 * Licensed under the Apache License, Version 2.0 (the "License");
+	 * you may not use this file except in compliance with the License.
+	 * You may obtain a copy of the License at
+	 *
+	 *     http://www.apache.org/licenses/LICENSE-2.0
+	 *
+	 * Unless required by applicable law or agreed to in writing, software
+	 * distributed under the License is distributed on an "AS IS" BASIS,
+	 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	 * See the License for the specific language governing permissions and
+	 * limitations under the License.
+	 */
+
+	/**
+	 * @fileOverview Static data manager for HRIR sets and URLs. For Omnitone's
+	 *               HRIR set structure, see src/resources/README.md for the detail.
+	 */
+
+	'use strict';
+
+	var Utils = __webpack_require__(3);
+
+
+	// HRIR file set structure.
+	var HRIRSets = {
+	  FOA: [
+	    'omnitone-foa-1.wav',
+	    'omnitone-foa-2.wav'
+	  ],
+	  SOA: [
+	    'omnitone-soa-1.wav',
+	    'omnitone-soa-2.wav',
+	    'omnitone-soa-3.wav',
+	    'omnitone-soa-4.wav',
+	    'omnitone-soa-5.wav'
+	  ],
+	  TOA: [
+	    'omnitone-toa-1.wav',
+	    'omnitone-toa-2.wav',
+	    'omnitone-toa-3.wav',
+	    'omnitone-toa-4.wav',
+	    'omnitone-toa-5.wav',
+	    'omnitone-toa-6.wav',
+	    'omnitone-toa-7.wav',
+	    'omnitone-toa-8.wav'
+	  ]
+	};
+
+	// 2 different types of base URL.
+	var ResourceURL = {
+	  GSTATIC:
+	      'https://www.gstatic.com/external_hosted/omnitone/build/resources/',
+	  GITHUB:
+	      'https://cdn.rawgit.com/GoogleChrome/omnitone/master/build/resources/'
+	};
+
+
+	/**
+	 * @class HRIRMananger
+	 * @description Manages HRIR set database. Also does URL checking and resource
+	 *              loading.
+	 * @param {Object} options                  Constructor options.
+	 * @param {String} options.ambisonicOrder   Ambisonic order. [1, 2, 3]
+	 * @param {String} options.location         Location specifier: ['gstatic',
+	 *                                          'github', 'local'].
+	 * @param {String} options.resourcePath     Relative resource path for 'local'
+	 *                                          location.
+	 */
+	var HRIRManager = function (options) {
+	  this._location = options.location || 'github';
+	  this._pathSet = this._generatePathSet(options.ambisonicOrder,
+	                                        this._location,
+	                                        options.resourcePath);
+	};
+
+
+	// TODO: sniffing URLs, make decision on how to load resources
+	// TODO: load resource -> return a set of AudioBuffers
+
+	/**
+	 * Generate path data for HRIR sets based on the requested location.
+	 * @param {String} location       Location specifier: ['gstatic', 'github', 
+	 *                                'local'].
+	 * @param {String} resourcePath   Relative resource path for 'local' location.
+	 * @return {Object} pathSet       HRIR path set.
+	 * @return {Array} pashSet.FOA    FOA HRIR paths. (2 paths)
+	 * @return {Array} pashSet.SOA    SOA HRIR paths. (5 paths)
+	 * @return {Array} pashSet.TOA    TOA HRIR paths. (8 paths)
+	 */
+	HRIRManager.prototype._generatePathSet = function (requestedOrder, 
+	                                                   location,
+	                                                   resourcePath) {
+	  var requestedOrderKey;
+	  switch (requestedOrder) {
+	    case 1:
+	      requestedOrderKey = 'FOA';
+	      break;
+	    case 2:
+	      requestedOrderKey = 'SOA';
+	      break;
+	    case 3:
+	      requestedOrderKey = 'TOA';
+	      break;
+	    default:
+	      Utils.log('Requested ambisonic order is not supported. (' + 
+	          requestedOrder + ')');
+	      break;
+	  }
+
+	  var prefixURL;
+	  switch (location) {
+	    case 'gstatic':
+	      prefixURL = ResourceURL.GSTATIC;
+	      break;
+	    case 'local':
+	      prefixURL = resourcePath || '';
+	      break;
+	    case 'github':
+	    default:
+	      // By default, use GitHub's CDN until Gstatic setup is completed.
+	      prefixURL = ResourceURL.GITHUB;
+	      break;
+	  }
+
+	  var pathSet = [];
+	  HRIRSets[requestedOrderKey].forEach(function (filename) {
+	    pathSet.push(prefixURL + filename);
+	  });
+	  return pathSet;
+	};
+
+
+	/**
+	 * Get the path set based on the information provided at construction.
+	 * @return {Array} A set of file paths.
+	 */
+	HRIRManager.prototype.getPathSet = function() {
+	  return this._pathSet;
+	};
+
+
+	module.exports = HRIRManager;
+
+
+/***/ },
+/* 14 */
 /***/ function(module, exports) {
 
 	/**
@@ -2010,7 +2209,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 14 */
+/* 15 */
 /***/ function(module, exports) {
 
 	/**
@@ -2191,7 +2390,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 15 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -2217,8 +2416,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	// Internal dependencies.
 	var AudioBufferManager = __webpack_require__(2);
-	var HOARotator = __webpack_require__(13);
-	var HOAConvolver = __webpack_require__(14);
+	var HOARotator = __webpack_require__(14);
+	var HOAConvolver = __webpack_require__(15);
 	var Utils = __webpack_require__(3);
 	var SystemVersion = __webpack_require__(11);
 

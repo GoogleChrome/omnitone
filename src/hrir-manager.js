@@ -48,23 +48,32 @@ var HRIRSets = {
   ]
 };
 
-// 3 different types of base URL.
+// 2 different types of base URL.
 var ResourceURL = {
   GSTATIC:
       'https://www.gstatic.com/external_hosted/omnitone/build/resources/',
   GITHUB:
-      'https://cdn.rawgit.com/GoogleChrome/omnitone/master/build/resources/',
-  LOCAL:
-      'build/resources/',
+      'https://cdn.rawgit.com/GoogleChrome/omnitone/master/build/resources/'
 };
 
 
 /**
- * @object HRIRMananger
+ * @class HRIRMananger
  * @description Manages HRIR set database. Also does URL checking and resource
  *              loading.
+ * @param {Object} options                  Constructor options.
+ * @param {String} options.ambisonicOrder   Ambisonic order. [1, 2, 3]
+ * @param {String} options.location         Location specifier: ['gstatic',
+ *                                          'github', 'local'].
+ * @param {String} options.resourcePath     Relative resource path for 'local'
+ *                                          location.
  */
-var HRIRManager = {};
+var HRIRManager = function (options) {
+  this._location = options.location || 'github';
+  this._pathSet = this._generatePathSet(options.ambisonicOrder,
+                                        this._location,
+                                        options.resourcePath);
+};
 
 
 // TODO: sniffing URLs, make decision on how to load resources
@@ -72,20 +81,41 @@ var HRIRManager = {};
 
 /**
  * Generate path data for HRIR sets based on the requested location.
- * @param  {String} location Location specifier. 'gstatic', 'github', 'local'.
- * @return {Object} pathSet HRIR path set.
- * @return {Array} pashSet.FOA FOA HRIR paths. (2 paths)
- * @return {Array} pashSet.SOA SOA HRIR paths. (5 paths)
- * @return {Array} pashSet.TOA TOA HRIR paths. (8 paths)
+ * @param {String} location       Location specifier: ['gstatic', 'github', 
+ *                                'local'].
+ * @param {String} resourcePath   Relative resource path for 'local' location.
+ * @return {Object} pathSet       HRIR path set.
+ * @return {Array} pashSet.FOA    FOA HRIR paths. (2 paths)
+ * @return {Array} pashSet.SOA    SOA HRIR paths. (5 paths)
+ * @return {Array} pashSet.TOA    TOA HRIR paths. (8 paths)
  */
-HRIRManager.generatePathSet = function (location) {
+HRIRManager.prototype._generatePathSet = function (requestedOrder, 
+                                                   location,
+                                                   resourcePath) {
+  var requestedOrderKey;
+  switch (requestedOrder) {
+    case 1:
+      requestedOrderKey = 'FOA';
+      break;
+    case 2:
+      requestedOrderKey = 'SOA';
+      break;
+    case 3:
+      requestedOrderKey = 'TOA';
+      break;
+    default:
+      Utils.log('Requested ambisonic order is not supported. (' + 
+          requestedOrder + ')');
+      break;
+  }
+
   var prefixURL;
   switch (location) {
     case 'gstatic':
       prefixURL = ResourceURL.GSTATIC;
       break;
     case 'local':
-      prefixURL = ResourceURL.LOCAL;
+      prefixURL = resourcePath || '';
       break;
     case 'github':
     default:
@@ -94,14 +124,20 @@ HRIRManager.generatePathSet = function (location) {
       break;
   }
 
-  var pathSet = {};
-  for (var ambisonicOrder in HRIRSets) {
-    pathSet[ambisonicOrder] = [];
-    HRIRSets[ambisonicOrder].forEach(function (filename) {
-      pathSet[ambisonicOrder].push(prefixURL + filename);
-    });
-  }
+  var pathSet = [];
+  HRIRSets[requestedOrderKey].forEach(function (filename) {
+    pathSet.push(prefixURL + filename);
+  });
   return pathSet;
+};
+
+
+/**
+ * Get the path set based on the information provided at construction.
+ * @return {Array} A set of file paths.
+ */
+HRIRManager.prototype.getPathSet = function() {
+  return this._pathSet;
 };
 
 
