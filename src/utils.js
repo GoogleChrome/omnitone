@@ -126,3 +126,23 @@ exports.invertMatrix4 = function(out, a) {
 exports.getNumberOfChannelsFromAmbisonicOrder = function(order) {
   return (order + 1) * (order + 1);
 };
+
+
+/**
+ * Check if the given object is an instance of BaseAudioContext.
+ * @param {Object} context A context object to be checked.
+ * @return {Boolean}
+ */
+exports.isBaseAudioContext = function (context) {
+  return context instanceof BaseAudioContext;
+};
+
+
+/**
+ * Check if the given object is a valid AudioBuffer.
+ * @param {Object} audioBuffer An AudioBuffer object to be checked.
+ * @return {Boolean}
+ */
+exports.isAudioBuffer = function (audioBuffer) {
+  return audioBuffer instanceof AudioBuffer;
+};

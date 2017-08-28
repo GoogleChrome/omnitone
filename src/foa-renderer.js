@@ -13,142 +13,204 @@
  * limitations under the License.
  */
 
-'use strict';
 
 /**
- * @fileOverview Omnitone FOA decoder.
+ * @file Omnitone FOARenderer. This is user-facing API for the first-order
+ * ambisonic decoder and the optimized binaural renderer.
  */
+
+
+'use strict';
+
 var AudioBufferManager = require('./audiobuffer-manager.js');
-var HRIRManager = require('./hrir-manager.js');
 var FOAConvolver = require('./foa-convolver.js');
 var FOARotator = require('./foa-rotator.js');
 var FOARouter = require('./foa-router.js');
-var Version = require('./version.js');
+var HRIRManager = require('./hrir-manager.js');
 var Utils = require('./utils.js');
+var Version = require('./version.js');
 
 
 /**
- * @class Omnitone FOA renderer class. Uses the optimized convolution technique.
- * @param {AudioContext} context          Associated AudioContext.
- * @param {Object} options
- * @param {String} options.resourcePath    Base URL for HRIR files.
- * @param {String} options.renderingMode  Rendering mode.
- * @param {Array} options.channelMap      Custom channel map.
+ * @typedef {string} RenderingMode
  */
-function FOARenderer (context, options) {
-  this._context = context;
 
-  // TODO(hongchan): default to github source.
-  this._hrirManager = new HRIRManager({
-    ambisonicOrder: 1,
-    location: 'local',
-    resourcePath: options.resourcePath
-  });
+/**
+ * Rendering mode ENUM.
+ * @enum {RenderingMode}
+ */
+var RenderingMode = {
+  /** @type {string} Use ambisonic rendering. */
+  AMBISONIC: 'ambisonic',
+  /** @type {string} Bypass. No ambisonic rendering. */
+  BYPASS: 'bypass',
+  /** @type {string} Disable audio output. */
+  OFF: 'off'
+};
 
-  // Priming internal setting with |options|.
-  this._channelMap = FOARouter.CHANNEL_MAP.DEFAULT;
-  this._renderingMode = 'ambisonic';
-  if (options) {
-    if (options.renderingMode)
-      this._renderingMode = options.renderingMode;
-    if (options.channelMap)
-      this._channelMap = options.channelMap;
+
+/**
+ * Omnitone FOA renderer class. Uses the optimized convolution technique.
+ * @constructor
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {Object} config
+ * @param {Array} [config.channelMap] - Custom channel routing map. Useful for
+ * handling the inconsistency in browser's multichannel audio decoding.
+ * @param {Array} [config.hrirPathList] - A list of paths to HRIR files. It
+ * overrides the internal HRIR list if given.
+ * @param {RenderingMode} [config.renderingMode='ambisonic'] - Rendering mode.
+ */
+function FOARenderer (context, config) {
+  this._context = Utils.isAudioContext(context)
+      ? context
+      : Utils.throw('FOARenderer: Invalid BaseAudioContext.');
+
+  this._config = {};
+
+  if (config.channelMap &&
+      Array.isArray(config.channelMap)) {
+    this._config.channelMap = config.channelMap;
+  } else {
+    this._config.channelMap = FOARouter.CHANNEL_MAP.DEFAULT;
   }
 
+  if (config.renderingMode &&
+      Object.values(RenderingMode).includes(config.renderingMode))) {
+    this._config.renderingMode = config.renderingMode;
+  } else {
+    this._config.renderingMode = RenderingMode.AMBISONIC;
+  }
+
+  if (config.hrirPathList) {
+    if (Array.isArray(config.hrirPathList) &&
+        config.hrirPathList.length === 2) {
+      this._config.pathList = config.hrirPathList;
+    } else {
+      Utils.throw('FOARenderer: Invalid HRIR URLs. It must be an array with ' +
+          '2 URLs to HRIR files. (got ' + config.hrirPathList + ')');
+    }
+  } else {
+    // By default, the path list points to GitHub CDN with FOA files.
+    // TODO(hoch): update this to Gstatic server when it's available.
+    this._config.pathList = HRIRManager.getPathList();
+  }
+
+  this._tempMatrix4 = new Float32Array(16);
   this._isRendererReady = false;
 }
 
 
 /**
- * Initialize and load the resources for the decode.
- * @return {Promise}
+ * Builds the internal audio graph.
+ * @private
  */
-FOARenderer.prototype.initialize = function () {
-  Utils.log('Version: ' + Version);
-  Utils.log('Initializing... (mode: ' + this._renderingMode + ')');
-  Utils.log('Rendering via SH-MaxRE convolution.');
-
-  this._tempMatrix4 = new Float32Array(16);
-
-  return new Promise(this._initializeCallback.bind(this));
+FOARenderer.prototype._buildAudioGraph = function() {
+  this.input = this._context.createGain();
+  this.output = this._context.createGain();
+  this._bypass = this._context.createGain();
+  this._foaRouter = new FOARouter(this._context, this._channelMap);
+  this._foaRotator = new FOARotator(this._context);
+  this._foaConvolver = new FOAConvolver(this._context);
+  this.input.connect(this._foaRouter.input);
+  this.input.connect(this._bypass);
+  this._foaRouter.output.connect(this._foaRotator.input);
+  this._foaRotator.output.connect(this._foaConvolver.input);
+  this._foaConvolver.output.connect(this.output);
 };
 
 
 /**
  * Internal callback handler for |initialize| method.
- * @param {Function} resolve Promise resolution.
- * @param {Function} reject Promise rejection.
+ * @private
+ * @param {function} resolve - Resolution handler.
+ * @param {function} reject - Rejection handler.
  */
 FOARenderer.prototype._initializeCallback = function (resolve, reject) {
   var bufferLoaderData = [];
-  var pathSet = this._hrirManager.getPathSet();
-  for (var i = 0; i < pathSet.length; ++i)
-    bufferLoaderData.push({ name: i, url: pathSet[i]});
+  for (var i = 0; i < this._config.pathList.length; ++i)
+    bufferLoaderData.push({ name: i, url: this._config.pathList[i] });
 
   new AudioBufferManager(
       this._context,
       bufferLoaderData,
       function (buffers) {
-        this.input = this._context.createGain();
-        this._bypass = this._context.createGain();
-        this._foaRouter = new FOARouter(this._context, this._channelMap);
-        this._foaRotator = new FOARotator(this._context);
-        this._foaConvolver = new FOAConvolver(this._context, {
-            HRIRBuffers: [buffers.get(0), buffers.get(1)]
-          });
-        this.output = this._context.createGain();
-
-        this.input.connect(this._foaRouter.input);
-        this.input.connect(this._bypass);
-        this._foaRouter.output.connect(this._foaRotator.input);
-        this._foaRotator.output.connect(this._foaConvolver.input);
-        this._foaConvolver.output.connect(this.output);
-
-        this.setChannelMap(this._channelMap);
-        this.setRenderingMode(this._renderingMode);
-
+        this._buildAudioGraph();
+        this._foaConvolver.setHRIRBufferList([buffers.get(0), buffers.get(1)]);
+        this.setChannelMap(this._config.channelMap);
+        this.setRenderingMode(this._config.renderingMode);
         this._isRendererReady = true;
-        Utils.log('HRIRs are loaded successfully. The renderer is ready.');
+        Utils.log('FOARenderer: HRIRs loaded successfully. Ready.');
         resolve();
       }.bind(this),
       function (buffers) {
-        var errorMessage = 'Initialization failed: ' + key + ' is ' 
-            + buffers.get(0) + '.';
-        Utils.log(errorMessage);
+        var errorMessage = 'FOARenderer: HRIR loading/decoding failed.';
+        Utils.throw(errorMessage);
         reject(errorMessage);
       });
 };
 
+
+/**
+ * Initializes and loads the resource for the renderer.
+ * @return {Promise}
+ */
+FOARenderer.prototype.initialize = function () {
+  Utils.log('Version: ' + Version + ' (SH-MaxRE convolution)');
+  Utils.log('Initializing... (mode: ' + this._config.renderingMode + ')');
+
+  return new Promise(this._initializeCallback.bind(this), function (error) {
+    Utils.throw('FOARenderer: Initialization failed.');
+  });
+};
+
+
 /**
  * Set the channel map.
- * @param {Array} channelMap          A custom channel map for FOA stream.
+ * @param {number[]} channelMap - Custom channel routing for FOA stream.
  */
 FOARenderer.prototype.setChannelMap = function (channelMap) {
   if (!this._isRendererReady)
     return;
 
-  if (channelMap.toString() !== this._channelMap.toString()) {
-    Utils.log('Remapping channels ([' + this._channelMap.toString() + '] -> ['
-      + channelMap.toString() + ']).');
-    this._channelMap = channelMap.slice();
-    this._foaRouter.setChannelMap(this._channelMap);
+  if (channelMap.toString() !== this._config.channelMap.toString()) {
+    Utils.log('Remapping channels ([' + this._config.channelMap.toString() +
+        '] -> [' + channelMap.toString() + ']).');
+    this._config.channelMap = channelMap.slice();
+    this._foaRouter.setChannelMap(this._config.channelMap);
   }
 };
 
+
 /**
- * Set the rotation matrix for the sound field rotation.
- * @param {Array} rotationMatrix3     A 3x3 rotation matrix.
+ * Updates the rotation matrix with 3x3 matrix.
+ * @param {number[]} rotationMatrix3 - A 3x3 rotation matrix. (column-major)
  */
-FOARenderer.prototype.setRotationMatrix = function (rotationMatrix3) {
+FOARenderer.prototype.setRotationMatrix3 = function (rotationMatrix3) {
   if (!this._isRendererReady)
     return;
 
   this._foaRotator.setRotationMatrix3(rotationMatrix3);
 };
 
+
 /**
- * Update the rotation matrix from a Three.js camera object.
- * @param  {Object} cameraMatrix      Matrix4 object from Three.js camera.
+ * Updates the rotation matrix with 4x4 matrix.
+ * @param {number[]} rotationMatrix4 - A 4x4 rotation matrix. (column-major)
+ */
+FOARenderer.prototype.setRotationMatrix4 = function (rotationMatrix4) {
+  if (!this._isRendererReady)
+    return;
+
+  this._foaRotator.setRotationMatrix4(rotationMatrix4);
+};
+
+
+/**
+ * Set the rotation matrix from a Three.js camera object. Depreated in V1, and
+ * this exists only for the backward compatiblity. Instead, use
+ * |setRotatationMatrix4()| with Three.js |camera.worldMatrix.elements|.
+ * @deprecated
+ * @param {Object} cameraMatrix - Matrix4 from Three.js |camera.matrix|.
  */
 FOARenderer.prototype.setRotationMatrixFromCamera = function(cameraMatrix) {
   if (!this._isRendererReady)
@@ -163,48 +225,37 @@ FOARenderer.prototype.setRotationMatrixFromCamera = function(cameraMatrix) {
 
 /**
  * Set the decoding mode.
- * @param {String} mode               Decoding mode. When the mode is 'bypass'
- *                                    the decoder is disabled and bypass the
- *                                    input stream to the output. Setting the
- *                                    mode to 'ambisonic' activates the decoder.
- *                                    When the mode is 'off', all the
- *                                    processing is completely turned off saving
- *                                    the CPU power.
+ * @param {RenderingMode} renderingMode - Decoding mode.
+ *  - 'ambisonic': activates the ambisonic decoding/binaurl rendering.
+ *  - 'bypass': bypasses the input stream directly to the output. No ambisonic
+ *    decoding or encoding.
+ *  - 'off': all the processing off saving the CPU power.
  */
 FOARenderer.prototype.setRenderingMode = function (mode) {
-  if (mode === this._renderingMode)
+  if (mode === this._config.renderingMode)
     return;
 
   switch (mode) {
-    // Bypass mode: The convolution path is disabled, disconnected (thus consume
-    // no CPU). Use bypass gain node to pass-through the input stream.
-    case 'bypass':
-      this._renderingMode = 'bypass';
-      this._foaConvolver.disable();
-      this._bypass.connect(this.output);
-      break;
-
-    // Ambisonic mode: Use the convolution and shut down the bypass path.
-    case 'ambisonic':
-      this._renderingMode = 'ambisonic';
+    case RenderingMode.AMBISONIC:
       this._foaConvolver.enable();
       this._bypass.disconnect();
       break;
-
-    // Off mode: Shut down all sound from the renderer.
-    case 'off':
-      this._renderingMode = 'off';
+    case RenderingMode.BYPASS:
+      this._foaConvolver.disable();
+      this._bypass.connect(this.output);
+      break;
+    case RenderingMode.OFF:
       this._foaConvolver.disable();
       this._bypass.disconnect();
       break;
-
     default:
-      // Unsupported mode. Ignore it.
-      Utils.log('Rendering mode "' + mode + '" is not supported.');
+      Utils.log('FOARenderer: Rendering mode "' + mode + '" is not ' +
+          'supported.');
       return;
   }
 
-  Utils.log('Rendering mode changed. (' + mode + ')');
+  this._config.renderingMode = mode;
+  Utils.log('FOARenderer: Rendering mode changed. (' + mode + ')');
 };
 
 

@@ -14,29 +14,31 @@
  */
 
 /**
- * @fileOverview Static data manager for HRIR sets and URLs. For Omnitone's
- *               HRIR set structure, see src/resources/README.md for the detail.
+ * @fileOverview Static data manager for HRIR list and URLs. For Omnitone's
+ * HRIR list structure, see src/resources/README.md for the detail.
  */
 
 'use strict';
 
-var Utils = require('./utils.js');
 
-
-// HRIR file set structure.
-var HRIRSets = {
-  FOA: [
+var HRIRList = [
+  // Zero-order ambisonic. Not supported. (0 files, 1 channel)
+  null,
+  // First-order ambisonic. (2 files, 4 channels)
+  [
     'omnitone-foa-1.wav',
     'omnitone-foa-2.wav'
   ],
-  SOA: [
+  // Second-order ambisonic. (5 files, 9 channels)
+  [
     'omnitone-soa-1.wav',
     'omnitone-soa-2.wav',
     'omnitone-soa-3.wav',
     'omnitone-soa-4.wav',
     'omnitone-soa-5.wav'
   ],
-  TOA: [
+  // Third-order ambisonic. (8 files, 16 channels)
+  [
     'omnitone-toa-1.wav',
     'omnitone-toa-2.wav',
     'omnitone-toa-3.wav',
@@ -46,10 +48,11 @@ var HRIRSets = {
     'omnitone-toa-7.wav',
     'omnitone-toa-8.wav'
   ]
-};
+];
+
 
 // 2 different types of base URL.
-var ResourceURL = {
+var SourceURL = {
   GSTATIC:
       'https://www.gstatic.com/external_hosted/omnitone/build/resources/',
   GITHUB:
@@ -58,87 +61,46 @@ var ResourceURL = {
 
 
 /**
- * @class HRIRMananger
- * @description Manages HRIR set database. Also does URL checking and resource
- *              loading.
- * @param {Object} options                  Constructor options.
- * @param {String} options.ambisonicOrder   Ambisonic order. [1, 2, 3]
- * @param {String} options.location         Location specifier: ['gstatic',
- *                                          'github', 'local'].
- * @param {String} options.resourcePath     Relative resource path for 'local'
- *                                          location.
+ * [getPathSet description]
+ * @param {object} setting Setting object.
+ * @param {string} [source="github"] - The base location for the HRIR set.
+ * @param {number} [ambisonicOrder=1] - Requested ambisonic order.
+ * @return {string[]} pathList - HRIR path set (2~8 URLs)
  */
-var HRIRManager = function (options) {
-  this._location = options.location || 'github';
-  this._pathSet = this._generatePathSet(options.ambisonicOrder,
-                                        this._location,
-                                        options.resourcePath);
-};
+module.exports.getPathList = function (setting) {
+  var filenames;
+  var staticPath;
+  var pathList;
 
-
-// TODO: sniffing URLs, make decision on how to load resources
-// TODO: load resource -> return a set of AudioBuffers
-
-/**
- * Generate path data for HRIR sets based on the requested location.
- * @param {String} location       Location specifier: ['gstatic', 'github', 
- *                                'local'].
- * @param {String} resourcePath   Relative resource path for 'local' location.
- * @return {Object} pathSet       HRIR path set.
- * @return {Array} pashSet.FOA    FOA HRIR paths. (2 paths)
- * @return {Array} pashSet.SOA    SOA HRIR paths. (5 paths)
- * @return {Array} pashSet.TOA    TOA HRIR paths. (8 paths)
- */
-HRIRManager.prototype._generatePathSet = function (requestedOrder, 
-                                                   location,
-                                                   resourcePath) {
-  var requestedOrderKey;
-  switch (requestedOrder) {
+  switch (setting.ambisonicOrder) {
     case 1:
-      requestedOrderKey = 'FOA';
-      break;
     case 2:
-      requestedOrderKey = 'SOA';
-      break;
     case 3:
-      requestedOrderKey = 'TOA';
+      filenames = HRIRList[setting.ambisonicOrder];
       break;
     default:
-      Utils.log('Requested ambisonic order is not supported. (' + 
-          requestedOrder + ')');
+      // Default to null.
+      filenames = HRIRList[0];
       break;
   }
 
-  var prefixURL;
-  switch (location) {
+  switch (settings.source) {
     case 'gstatic':
-      prefixURL = ResourceURL.GSTATIC;
-      break;
-    case 'local':
-      prefixURL = resourcePath || '';
+      staticPath = SourceURL.GSTATIC;
       break;
     case 'github':
     default:
       // By default, use GitHub's CDN until Gstatic setup is completed.
-      prefixURL = ResourceURL.GITHUB;
+      staticPath = SourceURL.GITHUB;
       break;
   }
 
-  var pathSet = [];
-  HRIRSets[requestedOrderKey].forEach(function (filename) {
-    pathSet.push(prefixURL + filename);
-  });
-  return pathSet;
+  if (filenames) {
+    pathList = [];
+    filenames.forEach(function (filename) {
+      pathList.push(staticPath + filename);
+    });
+  }
+
+  return pathList;
 };
-
-
-/**
- * Get the path set based on the information provided at construction.
- * @return {Array} A set of file paths.
- */
-HRIRManager.prototype.getPathSet = function() {
-  return this._pathSet;
-};
-
-
-module.exports = HRIRManager;
