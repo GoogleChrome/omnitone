@@ -21,8 +21,6 @@
 
 'use strict';
 
-var Utils = require('./utils.js');
-
 
 /**
  * A convolver network for N-channel HOA stream.
@@ -43,16 +41,7 @@ function HOAConvolver(context, ambisonicOrder, hrirBufferList) {
   this._numberOfChannels =
       (this._ambisonicOrder + 1) * (this._ambisonicOrder + 1);
 
-  // Sanity check should happen in HOARenderer.
-  // // Ensure that the ambisonic order matches the IR channel count.
-  // if (config.IRBuffer.numberOfChannels !== this._numberOfChannels) {
-  //   throw 'The order of ambisonic (' + ambisonicOrder + ') requires ' +
-  //       numberOfChannels + '-channel IR buffer. The given IR buffer has ' +
-  //       config.IRBuffer.numberOfChannels + ' channels.';
-  // }
-
   this._buildAudioGraph();
-
   if (hrirBufferList)
     this.setHRIRBufferList(hrirBufferList);
 
@@ -153,25 +142,6 @@ HOAConvolver.prototype.setHRIRBufferList = function(hrirBufferList) {
     this._convolvers[i].buffer = hrirBufferList[i];
 
   this._isBufferLoaded = true;
-  // Compute the number of stereo buffers to create from a given buffer.
-  // var numberOfStereoBuffers = Math.ceil(buffer.numberOfChannels / 2);
-
-  // Generate Math.ceil(K/2) stereo buffers from a K-channel IR buffer.
-  // for (var i = 0; i < numberOfStereoBuffers; ++i) {
-  //   var stereoHRIRBuffer =
-  //       this._context.createBuffer(2, buffer.length, buffer.sampleRate);
-  //   var leftIndex = i * 2;
-  //   var rightIndex = i * 2 + 1;
-  //   // Omnitone uses getChannelData().set() over copyToChannel() because:
-  //   // - None of these buffer won't get accessed until the initialization
-  //   //   process finishes. No data race can happen.
-  //   // - To support all browsers. CopyToChannel() is only supported from
-  //   //   Chrome and FireFox.
-  //   stereoHRIRBuffer.getChannelData(0).set(buffer.getChannelData(leftIndex));
-  //   if (rightIndex < buffer.numberOfChannels)
-  //     stereoHRIRBuffer.getChannelData(1).set(buffer.getChannelData(rightIndex));
-  //   this._convolvers[i].buffer = stereoHRIRBuffer;
-  // }
 };
 
 

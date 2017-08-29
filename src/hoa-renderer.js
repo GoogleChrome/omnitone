@@ -49,13 +49,6 @@ var RenderingMode = {
 var SupportedAmbisonicOrder = [2, 3];
 
 
-// HRIRs for optimized HOA rendering.
-// TODO(hongchan): change this with the absolute URL.
-// var SH_MAXRE_HRIR_URLS =
-//     ['resources/sh_hrir_o_3_ch0-ch7.wav',
-//     'resources/sh_hrir_o_3_ch8-ch15.wav'];
-
-
 /**
  * Omnitone HOA renderer class. Uses the optimized convolution technique.
  * @constructor
@@ -79,7 +72,7 @@ function HOARenderer(context, config) {
   } else {
     this._config.ambisonicOrder = 3;
     Utils.log(
-        'HOARenderer: Invalid ambisonic order. (got' + config.ambisonicOrder +
+        'HOARenderer: Invalid ambisonic order. (got ' + config.ambisonicOrder +
         ') Fallbacks to 3rd-order ambisonic.');
   }
 
@@ -111,32 +104,11 @@ function HOARenderer(context, config) {
     this._config.renderingMode = config.renderingMode;
   } else {
     this._config.renderingMode = RenderingMode.AMBISONIC;
-    Utils.log(
-        'HOARenderer: Invalid rendering mode order. (got' +
-        config.renderingMode + ') Fallbacks to the mode "ambisonic".');
   }
 
-  // this._HRIRUrls = SH_MAXRE_HRIR_URLS;
-  // this._renderingMode = 'ambisonic';
-  // this._ambisonicOrder = 3;
+  this._buildAudioGraph();
 
-
-
-  // if (config) {
-  //   if (config.HRIRUrl)
-  //     this._HRIRUrls = options.HRIRUrl;
-  //   if (options.renderingMode)
-  //     this._renderingMode = options.renderingMode;
-  //   if (options.ambisonicOrder)
-  //     this._ambisonicOrder = options.ambisonicOrder;
-}
-
-// this._numberOfChannels =
-//     (this._ambisonicOrder + 1) * (this._ambisonicOrder + 1);
-
-this._buildAudioGraph();
-
-this._isRendererReady = false;
+  this._isRendererReady = false;
 }
 
 
@@ -176,41 +148,10 @@ HOARenderer.prototype._initializeCallback = function(resolve, reject) {
         for (var i = 0; i < bufferLoaderData.length; ++i)
           hrirBufferList.push(bufferMap.get(i));
         this._hoaConvolver.setHRIRBufferList(hrirBufferList);
-        this.setRenderingMode(this._renderingMode);
+        this.setRenderingMode(this._config.renderingMode);
         this._isRendererReady = true;
         Utils.log('HOARenderer: HRIRs loaded successfully. Ready.');
         resolve();
-        // var accumulatedChannelCount = 0;
-        // The iteration order of buffer in |buffers| might be flaky because it
-        // is a Map. Thus, iterate based on the |audioBufferData| array instead
-        // of the |buffers| map.
-        // audioBufferData.forEach(function (data) {
-        //   var buffer = buffers.get(data.name);
-
-        //   // Create a K channel buffer to integrate individual IR buffers.
-        //   if (!hoaHRIRBuffer) {
-        //     hoaHRIRBuffer = this._context.createBuffer(
-        //         this._numberOfChannels, buffer.length, buffer.sampleRate);
-        //   }
-
-        //   for (var channel = 0; channel < buffer.numberOfChannels; ++channel)
-        //   {
-        //     hoaHRIRBuffer.getChannelData(accumulatedChannelCount + channel)
-        //         .set(buffer.getChannelData(channel));
-        //   }
-
-        //   accumulatedChannelCount += buffer.numberOfChannels;
-        // }.bind(this));
-
-        // if (accumulatedChannelCount === this._numberOfChannels) {
-        // } else {
-        //   var errorMessage = 'Only ' + accumulatedChannelCount +
-        //       ' HRIR channels were loaded (expected ' +
-        //       this._numberOfChannels +
-        //       '). The renderer will not function correctly.';
-        //   Utils.log(errorMessage);
-        //   reject(errorMessage);
-        // }
       }.bind(this),
       function(bufferMap) {
         var errorMessage = 'HOARenderer: HRIR loading/decoding failed. (' +
@@ -230,7 +171,7 @@ HOARenderer.prototype.initialize = function() {
       'HOARenderer: Initializing... (mode: ' + this._config.renderingMode +
       ', ambisonic order: ' + this._config.ambisonicOrder + ')');
 
-  return new Promise(this._initializeCallback.bind(this), , function(error) {
+  return new Promise(this._initializeCallback.bind(this), function(error) {
     Utils.throw('FOARenderer: Initialization failed. (' + error + ')');
   });
 };

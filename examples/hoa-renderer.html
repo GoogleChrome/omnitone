@@ -83,12 +83,17 @@
       var eRangeElevation;
       var eRangeGain;
 
-      var omnitoneOptions = {
+      var omnitoneConfig = {
         ambisonicOrder: 3,
-        HRIRUrl: [
-          '../build/resources/sh_hrir_o_3_ch0-ch7.wav',
-          '../build/resources/sh_hrir_o_3_ch8-ch15.wav'
-        ]
+        hrirPathList: [
+          '../build/resources/omnitone-toa-1.wav',
+          '../build/resources/omnitone-toa-2.wav',
+          '../build/resources/omnitone-toa-3.wav',
+          '../build/resources/omnitone-toa-4.wav',
+          '../build/resources/omnitone-toa-5.wav',
+          '../build/resources/omnitone-toa-6.wav',
+          '../build/resources/omnitone-toa-7.wav',
+          '../build/resources/omnitone-toa-8.wav'],
       };
 
       var exampleSoundData = [{
@@ -210,7 +215,7 @@
 
         audioContext = new AudioContext();
         inputGain = audioContext.createGain();
-        hoaRenderer = Omnitone.createHOARenderer(audioContext, omnitoneOptions);
+        hoaRenderer = Omnitone.createHOARenderer(audioContext, omnitoneConfig);
 
         Promise.all([
           Omnitone.loadAudioBuffers(audioContext, exampleSoundData),

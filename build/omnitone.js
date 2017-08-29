@@ -138,6 +138,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  });
 	};
 
+
 	/**
 	 * Create an instance of FOA Convolver. For parameters, refer the definition of
 	 * Router class.
@@ -146,6 +147,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	Omnitone.createFOAConvolver = function(context, options) {
 	  return new FOAConvolver(context, options);
 	};
+
 
 	/**
 	 * Create an instance of FOA Router. For parameters, refer the definition of
@@ -156,6 +158,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return new FOARouter(context, channelMap);
 	};
 
+
 	/**
 	 * Create an instance of FOA Rotator. For parameters, refer the definition of
 	 * Rotator class.
@@ -164,6 +167,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	Omnitone.createFOARotator = function(context) {
 	  return new FOARotator(context);
 	};
+
 
 	/**
 	 * Create an instance of FOAPhaseMatchedFilter. For parameters, refer the
@@ -174,6 +178,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return new FOAPhaseMatchedFilter(context);
 	};
 
+
 	/**
 	 * Create an instance of FOAVirtualSpeaker. For parameters, refer the
 	 * definition of VirtualSpeaker class.
@@ -182,6 +187,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	Omnitone.createFOAVirtualSpeaker = function(context, options) {
 	  return new FOAVirtualSpeaker(context, options);
 	};
+
 
 	/**
 	 * Create a singleton FOADecoder instance.
@@ -199,53 +205,60 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return new FOADecoder(context, videoElement, options);
 	};
 
+
 	/**
-	 * Create a FOARenderer.
-	 * @param {AudioContext} context      Associated AudioContext.
-	 * @param {Object} options            Options.
-	 * @param {String} options.HRIRUrl    Optional HRIR URL.
-	 * @param {Number} options.postGainDB Optional post-decoding gain in dB.
-	 * @param {Array} options.channelMap  Optional custom channel map.
+	 * Create a FOARenderer, the first-order ambisonic decoder and the optimized
+	 * binaural renderer.
+	 * @param {AudioContext} context - Associated AudioContext.
+	 * @param {Object} config
+	 * @param {Array} [config.channelMap] - Custom channel routing map. Useful for
+	 * handling the inconsistency in browser's multichannel audio decoding.
+	 * @param {Array} [config.hrirPathList] - A list of paths to HRIR files. It
+	 * overrides the internal HRIR list if given.
+	 * @param {RenderingMode} [config.renderingMode='ambisonic'] - Rendering mode.
 	 * @return {FOARenderer}
 	 */
-	Omnitone.createFOARenderer = function(context, options) {
-	  return new FOARenderer(context, options);
+	Omnitone.createFOARenderer = function(context, config) {
+	  return new FOARenderer(context, config);
 	};
+
 
 	/**
 	 * Creates HOARotator for higher-order ambisonics rotation.
-	 * @param {AudioContext} context    Associated AudioContext.
-	 * @param {Number} ambisonicOrder   Ambisonic order.
+	 * @param {AudioContext} context - Associated AudioContext.
+	 * @param {Number} ambisonicOrder - Ambisonic order.
 	 */
 	Omnitone.createHOARotator = function(context, ambisonicOrder) {
 	  return new HOARotator(context, ambisonicOrder);
 	};
 
-	/**
-	 * Creates HOAConvolver performs the multi-channel convolution for binaural
-	 * rendering.
-	 * @param {AudioContext} context          Associated AudioContext.
-	 * @param {Object} options
-	 * @param {Number} options.ambisonicOrder Ambisonic order (default is 3).
-	 * @param {AudioBuffer} options.IRBuffer  IR Audiobuffer for convolution. The
-	 *                                        number of channels must be (N+1)^2
-	 *                                        where N is the ambisonic order.
-	 */
-	Omnitone.createHOAConvolver = function(context, options) {
-	  return new HOAConvolver(context, options);
-	};
 
 	/**
-	 * Creates HOARenderer for higher-order ambisonic decoding and binaural
+	 * Creates HOAConvolver performs the multi-channel convolution for the optmized
 	 * binaural rendering.
-	 * @param {AudioContext} context            Associated AudioContext.
-	 * @param {Object} options
-	 * @param {Array} options.HRIRUrl           Optional HRIR URLs in an array.
-	 * @param {String} options.renderingMode    Rendering mode.
-	 * @param {Number} options.ambisonicOrder   Ambisonic order (default is 3).
+	* @param {AudioContext} context - Associated AudioContext.
+	 * @param {Number} ambisonicOrder - Ambisonic order. (2 or 3)
+	 * @param {AudioBuffer[]} [hrirBufferList] - An ordered-list of stereo
+	 * AudioBuffers for convolution. (SOA: 5 AudioBuffers, TOA: 8 AudioBuffers)
 	 */
-	Omnitone.createHOARenderer = function(context, options) {
-	  return new HOARenderer(context, options);
+	Omnitone.createHOAConvolver =
+	    function(context, ambisonicOrder, hrirBufferList) {
+	  return new HOAConvolver(context, ambisonicOrder, hrirBufferList);
+	};
+
+
+	/**
+	 * Creates HOARenderer for higher-order ambisonic decoding and the optimized
+	 * binaural rendering.
+	 * @param {AudioContext} context - Associated AudioContext.
+	 * @param {Object} config
+	 * @param {Number} [config.ambisonicOrder=3] - Ambisonic order.
+	 * @param {Array} [config.hrirPathList] - A list of paths to HRIR files. It
+	 * overrides the internal HRIR list if given.
+	 * @param {RenderingMode} [config.renderingMode='ambisonic'] - Rendering mode.
+	 */
+	Omnitone.createHOARenderer = function(context, config) {
+	  return new HOARenderer(context, config);
 	};
 
 
@@ -572,7 +585,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * rendering. (e.g. SH-MaxRe HRTFs)
 	 */
 
-
 	'use strict';
 
 
@@ -580,8 +592,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * FOAConvolver. A collection of 2 stereo convolvers for 4-channel FOA stream.
 	 * @constructor
 	 * @param {BaseAudioContext} context The associated AudioContext.
-	 * @param {AudioBuffer[]} hrirBufferList - An array of AudioBuffers for 2 stereo
-	 * HRIR files. (4-channel)
+	 * @param {AudioBuffer[]} [hrirBufferList] - An ordered-list of stereo
+	 * AudioBuffers for convolution. (FOA: 2 AudioBuffers)
 	 */
 	function FOAConvolver(context, hrirBufferList) {
 	  this._context = context;
@@ -652,7 +664,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	/**
-	 * Assigns 2 HRIR AudioBuffers to 2 convolvers. Note that we use 2 stereo
+	 * Assigns 2 HRIR AudioBuffers to 2 convolvers: Note that we use 2 stereo
 	 * convolutions for 4-channel direct convolution. Using mono convolver or
 	 * 4-channel convolver is not viable because mono convolution wastefully
 	 * produces the stereo outputs, and the 4-ch convolver does cross-channel
@@ -1030,19 +1042,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * limitations under the License.
 	 */
 
+	/**
+	 * @file Sound field rotator for first-order-ambisonics decoding.
+	 */
+
 	'use strict';
 
 
 	/**
-	 * @fileOverview Sound field rotator for first-order-ambisonics decoding.
+	 * First-order-ambisonic decoder based on gain node network.
+	 * @constructor
+	 * @param {AudioContext} context - Associated AudioContext.
 	 */
-
-
-	/**
-	 * @class First-order-ambisonic decoder based on gain node network.
-	 * @param {AudioContext} context    Associated AudioContext.
-	 */
-	function FOARotator (context) {
+	function FOARotator(context) {
 	  this._context = context;
 
 	  this._splitter = this._context.createChannelSplitter(4);
@@ -1063,10 +1075,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  this._outX = this._context.createGain();
 	  this._merger = this._context.createChannelMerger(4);
 
-	    // ACN channel ordering: [1, 2, 3] => [-Y, Z, -X]
-	  this._splitter.connect(this._inY, 1); // Y (from channel 1)
-	  this._splitter.connect(this._inZ, 2); // Z (from channel 2)
-	  this._splitter.connect(this._inX, 3); // X (from channel 3)
+	  // ACN channel ordering: [1, 2, 3] => [-Y, Z, -X]
+	  this._splitter.connect(this._inY, 1);  // Y (from channel 1)
+	  this._splitter.connect(this._inZ, 2);  // Z (from channel 2)
+	  this._splitter.connect(this._inX, 3);  // X (from channel 3)
 	  this._inY.gain.value = -1;
 	  this._inX.gain.value = -1;
 
@@ -1094,10 +1106,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  this._m8.connect(this._outX);
 
 	  // Transform 3: world space to audio space.
-	  this._splitter.connect(this._merger, 0, 0); // W -> W (to channel 0)
-	  this._outY.connect(this._merger, 0, 1); // Y (to channel 1)
-	  this._outZ.connect(this._merger, 0, 2); // Z (to channel 2)
-	  this._outX.connect(this._merger, 0, 3); // X (to channel 3)
+	  this._splitter.connect(this._merger, 0, 0);  // W -> W (to channel 0)
+	  this._outY.connect(this._merger, 0, 1);      // Y (to channel 1)
+	  this._outZ.connect(this._merger, 0, 2);      // Z (to channel 2)
+	  this._outX.connect(this._merger, 0, 3);      // X (to channel 3)
 	  this._outY.gain.value = -1;
 	  this._outX.gain.value = -1;
 
@@ -1110,11 +1122,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	/**
-	 * Set 3x3 matrix for soundfield rotation.
-	 * @param {Array} rotationMatrix3   A 3x3 matrix of soundfield rotation. The
-	 *                                  matrix is in the row-major representation.
+	 * Updates the rotation matrix with 3x3 matrix.
+	 * @param {Number[]} rotationMatrix3 - A 3x3 rotation matrix. (column-major)
 	 */
-	FOARotator.prototype.setRotationMatrix3 = function (rotationMatrix3) {
+	FOARotator.prototype.setRotationMatrix3 = function(rotationMatrix3) {
 	  this._m0.gain.value = rotationMatrix3[0];
 	  this._m1.gain.value = rotationMatrix3[1];
 	  this._m2.gain.value = rotationMatrix3[2];
@@ -1126,11 +1137,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  this._m8.gain.value = rotationMatrix3[8];
 	};
 
+
 	/**
-	 * Set 4x4 matrix for soundfield rotation. (Three.js style)
-	 * @param {Array} rotationMatrix4   A 4x4 matrix of soundfield rotation.
+	 * Updates the rotation matrix with 4x4 matrix.
+	 * @param {Number[]} rotationMatrix4 - A 4x4 rotation matrix. (column-major)
 	 */
-	FOARotator.prototype.setRotationMatrix4 = function (rotationMatrix4) {
+	FOARotator.prototype.setRotationMatrix4 = function(rotationMatrix4) {
 	  this._m0.gain.value = rotationMatrix4[0];
 	  this._m1.gain.value = rotationMatrix4[1];
 	  this._m2.gain.value = rotationMatrix4[2];
@@ -1142,17 +1154,36 @@ return /******/ (function(modules) { // webpackBootstrap
 	  this._m8.gain.value = rotationMatrix4[10];
 	};
 
+
 	/**
-	 * Returns the current rotation matrix.
-	 * @return {Array}                  A 3x3 matrix of soundfield rotation. The
-	 *                                  matrix is in the row-major representation.
+	 * Returns the current 3x3 rotation matrix.
+	 * @return {Number[]} - A 3x3 rotation matrix. (column-major)
 	 */
-	FOARotator.prototype.getRotationMatrix = function () {
+	FOARotator.prototype.getRotationMatrix3 = function() {
 	  return [
 	    this._m0.gain.value, this._m1.gain.value, this._m2.gain.value,
 	    this._m3.gain.value, this._m4.gain.value, this._m5.gain.value,
 	    this._m6.gain.value, this._m7.gain.value, this._m8.gain.value
 	  ];
+	};
+
+
+	/**
+	 * Returns the current 4x4 rotation matrix.
+	 * @return {Number[]} - A 4x4 rotation matrix. (column-major)
+	 */
+	FOARotator.prototype.getRotationMatrix4 = function() {
+	  var rotationMatrix4 = new Float32Array(16);
+	  rotationMatrix4[0] = this._m0.gain.value;
+	  rotationMatrix4[1] = this._m1.gain.value;
+	  rotationMatrix4[2] = this._m2.gain.value;
+	  rotationMatrix4[4] = this._m3.gain.value;
+	  rotationMatrix4[5] = this._m4.gain.value;
+	  rotationMatrix4[6] = this._m5.gain.value;
+	  rotationMatrix4[8] = this._m6.gain.value;
+	  rotationMatrix4[9] = this._m7.gain.value;
+	  rotationMatrix4[10] = this._m8.gain.value;
+	  return rotationMatrix4;
 	};
 
 
@@ -1473,7 +1504,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * Omnitone library version
 	 * @type {String}
 	 */
-	module.exports = '0.9.3';
+	module.exports = '0.9.5';
 
 
 /***/ },
@@ -1500,7 +1531,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @file Omnitone FOARenderer. This is user-facing API for the first-order
 	 * ambisonic decoder and the optimized binaural renderer.
 	 */
-
 
 	'use strict';
 
@@ -1554,13 +1584,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this._config.channelMap = FOARouter.CHANNEL_MAP.DEFAULT;
 	  }
 
-	  if (config.renderingMode &&
-	      Object.values(RenderingMode).includes(config.renderingMode)) {
-	    this._config.renderingMode = config.renderingMode;
-	  } else {
-	    this._config.renderingMode = RenderingMode.AMBISONIC;
-	  }
-
 	  if (config.hrirPathList) {
 	    if (Array.isArray(config.hrirPathList) &&
 	        config.hrirPathList.length === 2) {
@@ -1575,6 +1598,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // TODO(hoch): update this to Gstatic server when it's available.
 	    this._config.pathList = HRIRManager.getPathList();
 	  }
+
+	  if (config.renderingMode &&
+	      Object.values(RenderingMode).includes(config.renderingMode)) {
+	    this._config.renderingMode = config.renderingMode;
+	  } else {
+	    this._config.renderingMode = RenderingMode.AMBISONIC;
+	    Utils.log(
+	        'FOARenderer: Invalid rendering mode order. (got' +
+	        config.renderingMode + ') Fallbacks to the mode "ambisonic".');
+	  }
+
+	  this._buildAudioGraph();
 
 	  this._tempMatrix4 = new Float32Array(16);
 	  this._isRendererReady = false;
@@ -1611,18 +1646,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	  for (var i = 0; i < this._config.pathList.length; ++i)
 	    bufferLoaderData.push({name: i, url: this._config.pathList[i]});
 
+	  var hrirBufferList = [];
 	  new AudioBufferManager(
 	      this._context, bufferLoaderData,
-	      function(buffers) {
-	        this._buildAudioGraph();
-	        this._foaConvolver.setHRIRBufferList([buffers.get(0), buffers.get(1)]);
+	      function(bufferMap) {
+	        for (var i = 0; i < bufferLoaderData.length; ++i)
+	          hrirBufferList.push(bufferMap.get(i));
+	        this._foaConvolver.setHRIRBufferList(hrirBufferList);
 	        this.setRenderingMode(this._config.renderingMode);
 	        this._isRendererReady = true;
 	        Utils.log('FOARenderer: HRIRs loaded successfully. Ready.');
 	        resolve();
 	      }.bind(this),
-	      function(buffers) {
-	        var errorMessage = 'FOARenderer: HRIR loading/decoding failed.';
+	      function(bufferMap) {
+	        var errorMessage = 'FOARenderer: HRIR loading/decoding failed. (' +
+	            Array.from(bufferMap) + ')';
 	        Utils.throw(errorMessage);
 	        reject(errorMessage);
 	      });
@@ -1639,14 +1677,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	      ')');
 
 	  return new Promise(this._initializeCallback.bind(this), function(error) {
-	    Utils.throw('FOARenderer: Initialization failed.');
+	    Utils.throw('FOARenderer: Initialization failed. (' + error + ')');
 	  });
 	};
 
 
 	/**
 	 * Set the channel map.
-	 * @param {number[]} channelMap - Custom channel routing for FOA stream.
+	 * @param {Number[]} channelMap - Custom channel routing for FOA stream.
 	 */
 	FOARenderer.prototype.setChannelMap = function(channelMap) {
 	  if (!this._isRendererReady)
@@ -1664,7 +1702,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	/**
 	 * Updates the rotation matrix with 3x3 matrix.
-	 * @param {number[]} rotationMatrix3 - A 3x3 rotation matrix. (column-major)
+	 * @param {Number[]} rotationMatrix3 - A 3x3 rotation matrix. (column-major)
 	 */
 	FOARenderer.prototype.setRotationMatrix3 = function(rotationMatrix3) {
 	  if (!this._isRendererReady)
@@ -1676,7 +1714,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	/**
 	 * Updates the rotation matrix with 4x4 matrix.
-	 * @param {number[]} rotationMatrix4 - A 4x4 rotation matrix. (column-major)
+	 * @param {Number[]} rotationMatrix4 - A 4x4 rotation matrix. (column-major)
 	 */
 	FOARenderer.prototype.setRotationMatrix4 = function(rotationMatrix4) {
 	  if (!this._isRendererReady)
@@ -1800,8 +1838,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 * [getPathSet description]
 	 * @param {object} [setting] - Setting object.
-	 * @param {string} [source="github"] - The base location for the HRIR set.
-	 * @param {number} [ambisonicOrder=1] - Requested ambisonic order.
+	 * @param {string} [setting.source="github"] - The base location for the HRIR
+	 * set.
+	 * @param {number} [setting.ambisonicOrder=1] - Requested ambisonic order.
 	 * @return {string[]} pathList - HRIR path set (2~8 URLs)
 	 */
 	module.exports.getPathList = function(setting) {
@@ -1866,56 +1905,49 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	/**
-	 * @fileOverview A collection of convolvers. Can be used for the optimized HOA
-	 *               binaural rendering. (e.g. SH-MaxRe HRTFs)
+	 * @file A collection of convolvers. Can be used for the optimized HOA binaural
+	 * rendering. (e.g. SH-MaxRe HRTFs)
 	 */
+
+	'use strict';
 
 
 	/**
-	 * @class HOAConvolver
-	 * @description A collection of convolvers for N-channel HOA stream.
-	 * @param {AudioContext} context          Associated AudioContext.
-	 * @param {Object} options
-	 * @param {Number} options.ambisonicOrder Ambisonic order (default is 3).
-	 * @param {AudioBuffer} options.IRBuffer  IR Audiobuffer for convolution. The
-	 *                                        number of channels must be (N+1)^2
-	 *                                        where N is the ambisonic order.
+	 * A convolver network for N-channel HOA stream.
+	 * @constructor
+	 * @param {AudioContext} context - Associated AudioContext.
+	 * @param {Number} ambisonicOrder - Ambisonic order. (2 or 3)
+	 * @param {AudioBuffer[]} [hrirBufferList] - An ordered-list of stereo
+	 * AudioBuffers for convolution. (SOA: 5 AudioBuffers, TOA: 8 AudioBuffers)
 	 */
-	function HOAConvolver(context, options) {
-	  this._active = false;
+	function HOAConvolver(context, ambisonicOrder, hrirBufferList) {
 	  this._context = context;
 
-	  // If unspecified, the default ambisonic mode is third order.
-	  this._ambisonicOrder = options.ambisonicOrder ? options.ambisonicOrder : 3;
+	  this._active = false;
+	  this._isBufferLoaded = false;
 
-	  // We need to determine the number of channels K based on the ambisonic
-	  // order N where K = (N+1)^2.
+	  // The number of channels K based on the ambisonic order N where K = (N+1)^2.
+	  this._ambisonicOrder = ambisonicOrder;
 	  this._numberOfChannels =
 	      (this._ambisonicOrder + 1) * (this._ambisonicOrder + 1);
 
-	  // Ensure that the ambisonic order matches the IR channel count.
-	  // TODO(hoch): Error reporting should be unified. Don't use |throw|.
-	  if (options.IRBuffer.numberOfChannels !== this._numberOfChannels) {
-	    throw 'The order of ambisonic (' + ambisonicOrder + ') requires ' +
-	        numberOfChannels + '-channel IR buffer. The given IR buffer has ' +
-	        options.IRBuffer.numberOfChannels + ' channels.';
-	  }
-
 	  this._buildAudioGraph();
-	  this._setHRIRBuffer(options.IRBuffer);
+	  if (hrirBufferList)
+	    this.setHRIRBufferList(hrirBufferList);
 
 	  this.enable();
 	}
 
 
-	// Build the audio graph for HOA processing.
-	//
-	// For TOA convolution:
-	// input -> splitter(16) -[0,1]-> merger(2) -> convolver(2) -> splitter(2)
-	//                       -[2,3]-> merger(2) -> convolver(2) -> splitter(2)
-	//                       -[4,5]-> ... (6 more, 8 branches total)
-	HOAConvolver.prototype._buildAudioGraph = function(options) {
-	  // Compute the number of stereo convolvers needed.
+	/**
+	 * Build the internal audio graph.
+	 * For TOA convolution:
+	 *   input -> splitter(16) -[0,1]-> merger(2) -> convolver(2) -> splitter(2)
+	 *                         -[2,3]-> merger(2) -> convolver(2) -> splitter(2)
+	 *                         -[4,5]-> ... (6 more, 8 branches total)
+	 * @private
+	 */
+	HOAConvolver.prototype._buildAudioGraph = function() {
 	  var numberOfStereoChannels = Math.ceil(this._numberOfChannels / 2);
 
 	  this._inputSplitter =
@@ -1964,6 +1996,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 	    }
 	  }
+
 	  this._positiveIndexSphericalHarmonics.connect(this._binauralMerger, 0, 0);
 	  this._positiveIndexSphericalHarmonics.connect(this._binauralMerger, 0, 1);
 	  this._negativeIndexSphericalHarmonics.connect(this._binauralMerger, 0, 0);
@@ -1979,45 +2012,44 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 
-	HOAConvolver.prototype._setHRIRBuffer = function(buffer) {
-	  // For the optimum performance/resource usage, we use stereo convolvers
-	  // instead of mono convolvers. In Web Audio API, the convolution on
-	  // >3 channels activates the "true stereo" mode in theconvolver, which is not
-	  // compatible to HOA convolution.
+	/**
+	 * Assigns N HRIR AudioBuffers to N convolvers: Note that we use 2 stereo
+	 * convolutions for 4-channel direct convolution. Using mono convolver or
+	 * 4-channel convolver is not viable because mono convolution wastefully
+	 * produces the stereo outputs, and the 4-ch convolver does cross-channel
+	 * convolution. (See Web Audio API spec)
+	 * @param {AudioBuffer[]} hrirBufferList - An array of stereo AudioBuffers for
+	 * convolvers.
+	 */
+	HOAConvolver.prototype.setHRIRBufferList = function(hrirBufferList) {
+	  // After these assignments, the channel data in the buffer is immutable in
+	  // FireFox. (i.e. neutered) So we should avoid re-assigning buffers, otherwise
+	  // an exception will be thrown.
+	  if (this._isBufferLoaded)
+	    return;
 
-	  // Compute the number of stereo buffers to create from a given buffer.
-	  var numberOfStereoBuffers = Math.ceil(buffer.numberOfChannels / 2);
+	  for (var i = 0; i < hrirBufferList.length; ++i)
+	    this._convolvers[i].buffer = hrirBufferList[i];
 
-	  // Generate Math.ceil(K/2) stereo buffers from a K-channel IR buffer.
-	  for (var i = 0; i < numberOfStereoBuffers; ++i) {
-	    var stereoHRIRBuffer =
-	        this._context.createBuffer(2, buffer.length, buffer.sampleRate);
-	    var leftIndex = i * 2;
-	    var rightIndex = i * 2 + 1;
-	    // Omnitone uses getChannelData().set() over copyToChannel() because:
-	    // - None of these buffer won't get accessed until the initialization
-	    //   process finishes. No data race can happen.
-	    // - To support all browsers. CopyToChannel() is only supported from
-	    //   Chrome and FireFox.
-	    stereoHRIRBuffer.getChannelData(0).set(buffer.getChannelData(leftIndex));
-	    if (rightIndex < buffer.numberOfChannels)
-	      stereoHRIRBuffer.getChannelData(1).set(buffer.getChannelData(rightIndex));
-	    this._convolvers[i].buffer = stereoHRIRBuffer;
-	  }
+	  this._isBufferLoaded = true;
 	};
 
 
+	/**
+	 * Enable HOAConvolver instance. The audio graph will be activated and pulled by
+	 * the WebAudio engine. (i.e. consume CPU cycle)
+	 */
 	HOAConvolver.prototype.enable = function() {
-	  if (this._active)
-	    return;
 	  this._binauralMerger.connect(this._outputGain);
 	  this._active = true;
 	};
 
 
+	/**
+	 * Disable HOAConvolver instance. The inner graph will be disconnected from the
+	 * audio destination, thus no CPU cycle will be consumed.
+	 */
 	HOAConvolver.prototype.disable = function() {
-	  if (!this._active)
-	    return;
 	  this._binauralMerger.disconnect();
 	  this._active = false;
 	};
@@ -2045,157 +2077,173 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * limitations under the License.
 	 */
 
+
+	/**
+	 * @file Omnitone HOA decoder.
+	 */
+
 	'use strict';
 
-	/**
-	 * @fileOverview Omnitone HOA decoder.
-	 */
-
-	// Internal dependencies.
 	var AudioBufferManager = __webpack_require__(2);
-	var HOARotator = __webpack_require__(16);
 	var HOAConvolver = __webpack_require__(14);
+	var HOARotator = __webpack_require__(16);
+	var HRIRManager = __webpack_require__(13);
 	var Utils = __webpack_require__(3);
-	var SystemVersion = __webpack_require__(11);
-
-	// HRIRs for optimized HOA rendering.
-	// TODO(hongchan): change this with the absolute URL.
-	var SH_MAXRE_HRIR_URLS =
-	    ['resources/sh_hrir_o_3_ch0-ch7.wav', 'resources/sh_hrir_o_3_ch8-ch15.wav'];
 
 
 	/**
-	 * @class Omnitone HOA renderer class. Uses the optimized convolution technique.
-	 * @param {AudioContext} context            Associated AudioContext.
-	 * @param {Object} options
-	 * @param {Array} options.HRIRUrl           Optional HRIR URLs in an array.
-	 * @param {String} options.renderingMode    Rendering mode.
-	 * @param {Number} options.ambisonicOrder   Ambisonic order (default is 3).
+	 * @typedef {string} RenderingMode
 	 */
-	function HOARenderer(context, options) {
-	  this._context = context;
 
-	  this._HRIRUrls = SH_MAXRE_HRIR_URLS;
-	  this._renderingMode = 'ambisonic';
-	  this._ambisonicOrder = 3;
+	/**
+	 * Rendering mode ENUM.
+	 * @enum {RenderingMode}
+	 */
+	var RenderingMode = {
+	  /** @type {string} Use ambisonic rendering. */
+	  AMBISONIC: 'ambisonic',
+	  /** @type {string} Bypass. No ambisonic rendering. */
+	  BYPASS: 'bypass',
+	  /** @type {string} Disable audio output. */
+	  OFF: 'off'
+	};
 
-	  if (options) {
-	    if (options.HRIRUrl)
-	      this._HRIRUrls = options.HRIRUrl;
-	    if (options.renderingMode)
-	      this._renderingMode = options.renderingMode;
-	    if (options.ambisonicOrder)
-	      this._ambisonicOrder = options.ambisonicOrder;
+
+	// Currently SOA and TOA are only supported.
+	var SupportedAmbisonicOrder = [2, 3];
+
+
+	/**
+	 * Omnitone HOA renderer class. Uses the optimized convolution technique.
+	 * @constructor
+	 * @param {AudioContext} context - Associated AudioContext.
+	 * @param {Object} config
+	 * @param {Number} [config.ambisonicOrder=3] - Ambisonic order.
+	 * @param {Array} [config.hrirPathList] - A list of paths to HRIR files. It
+	 * overrides the internal HRIR list if given.
+	 * @param {RenderingMode} [config.renderingMode='ambisonic'] - Rendering mode.
+	 */
+	function HOARenderer(context, config) {
+	  this._context = Utils.isBaseAudioContext(context) ?
+	      context :
+	      Utils.throw('FOARenderer: Invalid BaseAudioContext.');
+
+	  this._config = {};
+
+	  if (config.ambisonicOrder &&
+	      SupportedAmbisonicOrder.includes(config.ambisonicOrder)) {
+	    this._config.ambisonicOrder = config.ambisonicOrder;
+	  } else {
+	    this._config.ambisonicOrder = 3;
+	    Utils.log(
+	        'HOARenderer: Invalid ambisonic order. (got ' + config.ambisonicOrder +
+	        ') Fallbacks to 3rd-order ambisonic.');
 	  }
 
-	  this._numberOfChannels =
-	      (this._ambisonicOrder + 1) * (this._ambisonicOrder + 1);
+	  this._config.numberOfChannels =
+	      (this._config.ambisonicOrder + 1) * (this._config.ambisonicOrder + 1);
+	  this._config.numberOfStereoChannels =
+	      Math.ceil(this._config.numberOfChannels / 2);
+
+	  if (config.hrirPathList) {
+	    if (Array.isArray(config.hrirPathList) &&
+	        config.hrirPathList.length === this._config.numberOfStereoChannels) {
+	      this._config.pathList = config.hrirPathList;
+	    } else {
+	      Utils.throw(
+	          'HOARenderer: Invalid HRIR URLs. It must be an array with ' +
+	          this._config.numberOfStereoChannels + ' URLs to HRIR files.' +
+	          ' (got ' + config.hrirPathList + ')');
+	    }
+	  } else {
+	    // By default, the path list points to GitHub CDN with FOA files.
+	    // TODO(hoch): update this to Gstatic server when it's available.
+	    this._config.pathList =
+	        HRIRManager.getPathList({ambisonicOrder: this._config.ambisonicOrder});
+	  }
+
+
+	  if (config.renderingMode &&
+	      Object.values(RenderingMode).includes(config.renderingMode)) {
+	    this._config.renderingMode = config.renderingMode;
+	  } else {
+	    this._config.renderingMode = RenderingMode.AMBISONIC;
+	  }
+
+	  this._buildAudioGraph();
 
 	  this._isRendererReady = false;
 	}
 
 
 	/**
-	 * Initialize and load the resources for the decode.
-	 * @return {Promise}
+	 * Builds the internal audio graph.
+	 * @private
 	 */
-	HOARenderer.prototype.initialize = function() {
-	  Utils.log('Version: ' + SystemVersion);
-	  Utils.log(
-	      'Initializing... (mode: ' + this._renderingMode +
-	      ', order: ' + this._ambisonicOrder + ')');
-
-	  return new Promise(this._initializeCallback.bind(this));
+	HOARenderer.prototype._buildAudioGraph = function() {
+	  this.input = this._context.createGain();
+	  this.output = this._context.createGain();
+	  this._bypass = this._context.createGain();
+	  this._hoaRotator = new HOARotator(this._context, this._config.ambisonicOrder);
+	  this._hoaConvolver =
+	      new HOAConvolver(this._context, this._config.ambisonicOrder);
+	  this.input.connect(this._hoaRotator.input);
+	  this.input.connect(this._bypass);
+	  this._hoaRotator.output.connect(this._hoaConvolver.input);
+	  this._hoaConvolver.output.connect(this.output);
 	};
 
 
 	/**
 	 * Internal callback handler for |initialize| method.
-	 * @param {Function} resolve Promise resolution.
-	 * @param {Function} reject Promise rejection.
+	 * @private
+	 * @param {function} resolve - Resolution handler.
+	 * @param {function} reject - Rejection handler.
 	 */
 	HOARenderer.prototype._initializeCallback = function(resolve, reject) {
-	  var hoaHRIRBuffer;
+	  var bufferLoaderData = [];
+	  for (var i = 0; i < this._config.pathList.length; ++i)
+	    bufferLoaderData.push({name: i, url: this._config.pathList[i]});
 
-	  // Constrcut a consolidated HOA HRIR (e.g. 16 channels for TOA).
-	  // Handle multiple chunks of HRIR buffer data splitted by 8 channels each.
-	  // This is because Chrome cannot decode the audio file >8 channels.
-	  var audioBufferData = [];
-	  this._HRIRUrls.forEach(function(key, index, urls) {
-	    audioBufferData.push({name: key, url: urls[index]});
-	  });
-
+	  var hrirBufferList = [];
 	  new AudioBufferManager(
-	      this._context, audioBufferData,
-	      function(buffers) {
-	        var accumulatedChannelCount = 0;
-	        // The iteration order of buffer in |buffers| might be flaky because it
-	        // is a Map. Thus, iterate based on the |audioBufferData| array instead
-	        // of the |buffers| map.
-	        audioBufferData.forEach(function (data) {
-	          var buffer = buffers.get(data.name);
-
-	          // Create a K channel buffer to integrate individual IR buffers.
-	          if (!hoaHRIRBuffer) {
-	            hoaHRIRBuffer = this._context.createBuffer(
-	                this._numberOfChannels, buffer.length, buffer.sampleRate);
-	          }
-
-	          for (var channel = 0; channel < buffer.numberOfChannels; ++channel) {
-	            hoaHRIRBuffer.getChannelData(accumulatedChannelCount + channel)
-	                .set(buffer.getChannelData(channel));
-	          }
-
-	          accumulatedChannelCount += buffer.numberOfChannels;
-	        }.bind(this));
-
-	        if (accumulatedChannelCount === this._numberOfChannels) {
-	          this._buildAudioGraph(hoaHRIRBuffer);
-	          this._isRendererReady = true;
-	          Utils.log('Rendering via SH-MaxRE convolution.');
-	          resolve();
-	        } else {
-	          var errorMessage = 'Only ' + accumulatedChannelCount +
-	              ' HRIR channels were loaded (expected ' + this._numberOfChannels +
-	              '). The renderer will not function correctly.';
-	          Utils.log(errorMessage);
-	          reject(errorMessage);
-	        }
+	      this._context, bufferLoaderData,
+	      function(bufferMap) {
+	        for (var i = 0; i < bufferLoaderData.length; ++i)
+	          hrirBufferList.push(bufferMap.get(i));
+	        this._hoaConvolver.setHRIRBufferList(hrirBufferList);
+	        this.setRenderingMode(this._config.renderingMode);
+	        this._isRendererReady = true;
+	        Utils.log('HOARenderer: HRIRs loaded successfully. Ready.');
+	        resolve();
 	      }.bind(this),
-	      function(buffers) {
-	        // TODO: Deiliver more descriptive error message.
-	        var errorMessage = 'Initialization failed.';
-	        Utils.log(errorMessage);
+	      function(bufferMap) {
+	        var errorMessage = 'HOARenderer: HRIR loading/decoding failed. (' +
+	            Array.from(bufferMap) + ')';
+	        Utils.throw(errorMessage);
 	        reject(errorMessage);
 	      });
 	};
 
 
 	/**
-	 * Internal method that builds the audio graph.
+	 * Initializes and loads the resource for the renderer.
+	 * @return {Promise}
 	 */
-	HOARenderer.prototype._buildAudioGraph = function(hoaHRIRBuffer) {
-	  this.input = this._context.createGain();
-	  this.output = this._context.createGain();
-	  this._bypass = this._context.createGain();
+	HOARenderer.prototype.initialize = function() {
+	  Utils.log(
+	      'HOARenderer: Initializing... (mode: ' + this._config.renderingMode +
+	      ', ambisonic order: ' + this._config.ambisonicOrder + ')');
 
-	  this._hoaRotator = new HOARotator(this._context, this._ambisonicOrder);
-	  this._hoaConvolver = new HOAConvolver(
-	      this._context,
-	      {IRBuffer: hoaHRIRBuffer, ambisonicOrder: this._ambisonicOrder});
-
-	  this.input.connect(this._hoaRotator.input);
-	  this.input.connect(this._bypass);
-	  this._hoaRotator.output.connect(this._hoaConvolver.input);
-	  this._hoaConvolver.output.connect(this.output);
-
-	  this.setRenderingMode(this._renderingMode);
+	  return new Promise(this._initializeCallback.bind(this), function(error) {
+	    Utils.throw('FOARenderer: Initialization failed. (' + error + ')');
+	  });
 	};
 
 
 	/**
-	 * Set the rotation matrix for the sound field rotation.
-	 * @param {Array} rotationMatrix3           A 3x3 rotation matrix (col-major)
+	 * Updates the rotation matrix with 3x3 matrix.
+	 * @param {Number[]} rotationMatrix3 - A 3x3 rotation matrix. (column-major)
 	 */
 	HOARenderer.prototype.setRotationMatrix3 = function(rotationMatrix3) {
 	  if (!this._isRendererReady)
@@ -2206,10 +2254,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	/**
-	 * Update the rotation from a 4x4 matrix. This expects the model matrix of
-	 * Camera object. For example, Three.js offers |Object3D.matrixWorld| for this
-	 * purpose.
-	 * @param {Float32Array} rotationMatrix4    A 4x4 rotation matrix (col-major)
+	 * Updates the rotation matrix with 4x4 matrix.
+	 * @param {Number[]} rotationMatrix4 - A 4x4 rotation matrix. (column-major)
 	 */
 	HOARenderer.prototype.setRotationMatrix4 = function(rotationMatrix4) {
 	  if (!this._isRendererReady)
@@ -2221,47 +2267,38 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	/**
 	 * Set the decoding mode.
-	 * @param {String} mode               Decoding mode. When the mode is 'bypass'
-	 *                                    the decoder is disabled and bypass the
-	 *                                    input stream to the output. Setting the
-	 *                                    mode to 'ambisonic' activates the decoder.
-	 *                                    When the mode is 'off', all the
-	 *                                    processing is completely turned off saving
-	 *                                    the CPU power.
+	 * @param {RenderingMode} renderingMode - Decoding mode.
+	 *  - 'ambisonic': activates the ambisonic decoding/binaurl rendering.
+	 *  - 'bypass': bypasses the input stream directly to the output. No ambisonic
+	 *    decoding or encoding.
+	 *  - 'off': all the processing off saving the CPU power.
 	 */
 	HOARenderer.prototype.setRenderingMode = function(mode) {
-	  if (mode === this._renderingMode)
+	  if (mode === this._config.renderingMode)
 	    return;
-	  switch (mode) {
-	    // Bypass mode: The convolution path is disabled, disconnected (thus consume
-	    // no CPU). Use bypass gain node to pass-through the input stream.
-	    case 'bypass':
-	      this._renderingMode = 'bypass';
-	      this._hoaConvolver.disable();
-	      this._bypass.connect(this.output);
-	      break;
 
-	    // Ambisonic mode: Use the convolution and shut down the bypass path.
-	    case 'ambisonic':
-	      this._renderingMode = 'ambisonic';
+	  switch (mode) {
+	    case RenderingMode.AMBISONIC:
 	      this._hoaConvolver.enable();
 	      this._bypass.disconnect();
 	      break;
-
-	    // Off mode: Shut down all sound from the renderer.
-	    case 'off':
-	      this._renderingMode = 'off';
+	    case RenderingMode.BYPASS:
+	      this._hoaConvolver.disable();
+	      this._bypass.connect(this.output);
+	      break;
+	    case RenderingMode.OFF:
 	      this._hoaConvolver.disable();
 	      this._bypass.disconnect();
 	      break;
-
 	    default:
-	      // Unsupported mode. Ignore it.
-	      Utils.log('Rendering mode "' + mode + '" is not supported.');
+	      Utils.log(
+	          'HOARenderer: Rendering mode "' + mode + '" is not ' +
+	          'supported.');
 	      return;
 	  }
 
-	  Utils.log('Rendering mode changed. (' + mode + ')');
+	  this._config.renderingMode = mode;
+	  Utils.log('HOARenderer: Rendering mode changed. (' + mode + ')');
 	};
 
 
@@ -2288,12 +2325,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 
 	/**
-	 * @fileOverview Sound field rotator for higher-order-ambisonics decoding.
+	 * @file Sound field rotator for higher-order-ambisonics decoding.
 	 */
 
 	'use strict';
 
-	// Utility functions for rotation matrix computation.
 
 	/**
 	 * Kronecker Delta function.
@@ -2303,50 +2339,50 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	function getKroneckerDelta(i, j) {
 	  return i === j ? 1 : 0;
-	};
+	}
+
 
 	/**
-	 * This is a convenience function to allow us to access a matrix array
-	 * in the same manner, assuming it is a (2l+1)x(2l+1) matrix.
-	 * [2] uses an odd convention of referring to the rows and columns using
-	 * centered indices, so the middle row and column are (0, 0) and the upper
-	 * left would have negative coordinates.
-	 * @param {Array} matrix               N matrices of gainNodes, each with
-	 *                                     (2n+1)x(2n+1) elements,
-	 *                                     where n=1,2,...,N.
+	 * A helper function to allow us to access a matrix array in the same
+	 * manner, assuming it is a (2l+1)x(2l+1) matrix. [2] uses an odd convention of
+	 * referring to the rows and columns using centered indices, so the middle row
+	 * and column are (0, 0) and the upper left would have negative coordinates.
+	 * @param {Number[]} matrix - N matrices of gainNodes, each with (2n+1) x (2n+1)
+	 * elements, where n=1,2,...,N.
 	 * @param {Number} l
 	 * @param {Number} i
 	 * @param {Number} j
 	 * @param {Number} gainValue
 	 */
 	function setCenteredElement(matrix, l, i, j, gainValue) {
-	  var index = (j + l) * (2 * l + 1) + (i + l);  // Row-wise indexing.
+	  var index = (j + l) * (2 * l + 1) + (i + l);
+	  // Row-wise indexing.
 	  matrix[l - 1][index].gain.value = gainValue;
-	};
+	}
+
 
 	/**
-	 * This is a convenience function to allow us to access a matrix array
-	 * in the same manner, assuming it is a (2l+1)x(2l+1) matrix.
-	 * @param {Array} matrix               N matrices of gainNodes, each with
-	 *                                     (2n+1)x(2n+1) elements,
-	 *                                     where n=1,2,...,N.
+	 * This is a helper function to allow us to access a matrix array in the same
+	 * manner, assuming it is a (2l+1) x (2l+1) matrix.
+	 * @param {Number[]} matrix - N matrices of gainNodes, each with (2n+1) x (2n+1)
+	 * elements, where n=1,2,...,N.
 	 * @param {Number} l
 	 * @param {Number} i
 	 * @param {Number} j
-	 * @return {Number} Gain node's gain parameter value.
+	 * @return {Number}
 	 */
 	function getCenteredElement(matrix, l, i, j) {
 	  var index = (j + l) * (2 * l + 1) + (i + l);  // Row-wise indexing.
 	  return matrix[l - 1][index].gain.value;
-	};
+	}
+
 
 	/**
 	 * Helper function defined in [2] that is used by the functions U, V, W.
 	 * This should not be called on its own, as U, V, and W (and their coefficients)
 	 * select the appropriate matrix elements to access arguments |a| and |b|.
-	 * @param {Array} matrix               N matrices of gainNodes, each with
-	 *                                     (2n+1)x(2n+1) elements,
-	 *                                     where n=1,2,...,N.
+	 * @param {Number[]} matrix - N matrices of gainNodes, each with (2n+1) x (2n+1)
+	 * elements, where n=1,2,...,N.
 	 * @param {Number} i
 	 * @param {Number} a
 	 * @param {Number} b
@@ -2368,7 +2404,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return getCenteredElement(matrix, 1, i, 0) *
 	        getCenteredElement(matrix, l - 1, a, b);
 	  }
-	};
+	}
+
 
 	/**
 	 * The functions U, V, and W should only be called if the correspondingly
@@ -2376,9 +2413,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * When the coefficient is 0, these would attempt to access matrix elements that
 	 * are out of bounds. The vector of rotations, |r|, must have the |l - 1|
 	 * previously completed band rotations. These functions are valid for |l >= 2|.
-	 * @param {Array} matrix               N matrices of gainNodes, each with
-	 *                                     (2n+1)x(2n+1) elements,
-	 *                                     where n=1,2,...,N.
+	 * @param {Number[]} matrix - N matrices of gainNodes, each with (2n+1) x (2n+1)
+	 * elements, where n=1,2,...,N.
 	 * @param {Number} m
 	 * @param {Number} n
 	 * @param {Number} l
@@ -2388,7 +2424,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  // Although [1, 2] split U into three cases for m == 0, m < 0, m > 0
 	  // the actual values are the same for all three cases.
 	  return P(matrix, 0, m, n, l);
-	};
+	}
+
 
 	/**
 	 * The functions U, V, and W should only be called if the correspondingly
@@ -2396,9 +2433,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * When the coefficient is 0, these would attempt to access matrix elements that
 	 * are out of bounds. The vector of rotations, |r|, must have the |l - 1|
 	 * previously completed band rotations. These functions are valid for |l >= 2|.
-	 * @param {Array} matrix               N matrices of gainNodes, each with
-	 *                                     (2n+1)x(2n+1) elements,
-	 *                                     where n=1,2,...,N.
+	 * @param {Number[]} matrix - N matrices of gainNodes, each with (2n+1) x (2n+1)
+	 * elements, where n=1,2,...,N.
 	 * @param {Number} m
 	 * @param {Number} n
 	 * @param {Number} l
@@ -2421,7 +2457,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return P(matrix, 1, m + 1, n, l) * (1 - d) +
 	        P(matrix, -1, -m - 1, n, l) * Math.sqrt(1 + d);
 	  }
-	};
+	}
+
 
 	/**
 	 * The functions U, V, and W should only be called if the correspondingly
@@ -2429,9 +2466,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * When the coefficient is 0, these would attempt to access matrix elements that
 	 * are out of bounds. The vector of rotations, |r|, must have the |l - 1|
 	 * previously completed band rotations. These functions are valid for |l >= 2|.
-	 * @param {Array} matrix               N matrices of gainNodes, each with
-	 *                                     (2n+1)x(2n+1) elements,
-	 *                                     where n=1,2,...,N.
+	 * @param {Number[]} matrix N matrices of gainNodes, each with (2n+1) x (2n+1)
+	 * elements, where n=1,2,...,N.
 	 * @param {Number} m
 	 * @param {Number} n
 	 * @param {Number} l
@@ -2441,10 +2477,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  if (m === 0)
 	    return 0;
 
-	  return m > 0
-	      ? P(matrix, 1, m + 1, n, l) + P(matrix, -1, -m - 1, n, l)
-	      : P(matrix, 1, m - 1, n, l) - P(matrix, -1, -m + 1, n, l);
-	};
+	  return m > 0 ? P(matrix, 1, m + 1, n, l) + P(matrix, -1, -m - 1, n, l) :
+	                 P(matrix, 1, m - 1, n, l) - P(matrix, -1, -m + 1, n, l);
+	}
+
 
 	/**
 	 * Calculates the coefficients applied to the U, V, and W functions. Because
@@ -2468,19 +2504,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	    -0.5 * (1 - d) * Math.sqrt((l - Math.abs(m) - 1) * (l - Math.abs(m))) *
 	        reciprocalDenominator
 	  ];
-	};
+	}
+
 
 	/**
-	 * Calculates the (2l+1)x(2l+1) rotation matrix for the band l.
+	 * Calculates the (2l+1) x (2l+1) rotation matrix for the band l.
 	 * This uses the matrices computed for band 1 and band l-1 to compute the
 	 * matrix for band l. |rotations| must contain the previously computed l-1
 	 * rotation matrices.
-	 *
 	 * This implementation comes from p. 5 (6346), Table 1 and 2 in [2] taking
 	 * into account the corrections from [2b].
-	 * @param {Array} matrix               N matrices of gainNodes, each with
-	 *                                     (2n+1)x(2n+1) elements,
-	 *                                     where n=1,2,...,N.
+	 * @param {Number[]} matrix - N matrices of gainNodes, each with where
+	 * n=1,2,...,N.
 	 * @param {Number} l
 	 */
 	function computeBandRotation(matrix, l) {
@@ -2499,40 +2534,42 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (Math.abs(uvwCoefficients[2]) > 0)
 	        uvwCoefficients[2] *= W(matrix, m, n, l);
 
-	      setCenteredElement(matrix, l, m, n,
+	      setCenteredElement(
+	          matrix, l, m, n,
 	          uvwCoefficients[0] + uvwCoefficients[1] + uvwCoefficients[2]);
 	    }
 	  }
-	};
+	}
+
 
 	/**
 	 * Compute the HOA rotation matrix after setting the transform matrix.
-	 * @param {Array} matrix               N matrices of gainNodes, each with
-	 *                                     (2n+1)x(2n+1) elements, where n=1,2,...,
-	 *                                     N.
+	 * @param {Array} matrix - N matrices of gainNodes, each with (2n+1) x (2n+1)
+	 * elements, where n=1,2,...,N.
 	 */
 	function computeHOAMatrices(matrix) {
 	  // We start by computing the 2nd-order matrix from the 1st-order matrix.
 	  for (var i = 2; i <= matrix.length; i++)
 	    computeBandRotation(matrix, i);
-	};
+	}
+
 
 	/**
-	 * @class Higher-order-ambisonic decoder based on gain node network.
-	 *        We expect the order of the channels to conform to ACN ordering.
-	 *        Below are the helper methods to compute SH rotation using recursion.
-	 *        The code uses maths described in the following papers:
-	 *        [1]  R. Green, "Spherical Harmonic Lighting: The Gritty Details",
-	 *             GDC 2003,
-	 *          http://www.research.scea.com/gdc2003/spherical-harmonic-lighting.pdf
-	 *        [2]  J. Ivanic and K. Ruedenberg, "Rotation Matrices for Real
-	 *             Spherical Harmonics. Direct Determination by Recursion", J. Phys.
-	 *             Chem., vol. 100, no. 15, pp. 6342-6347, 1996.
-	 *             http://pubs.acs.org/doi/pdf/10.1021/jp953350u
-	 *        [2b] Corrections to initial publication:
-	 *             http://pubs.acs.org/doi/pdf/10.1021/jp9833350
-	 * @param {AudioContext} context    Associated AudioContext.
-	 * @param {Number} ambisonicOrder   Ambisonic order.
+	 * Higher-order-ambisonic decoder based on gain node network. We expect
+	 * the order of the channels to conform to ACN ordering. Below are the helper
+	 * methods to compute SH rotation using recursion. The code uses maths described
+	 * in the following papers:
+	 *  [1] R. Green, "Spherical Harmonic Lighting: The Gritty Details", GDC 2003,
+	 *      http://www.research.scea.com/gdc2003/spherical-harmonic-lighting.pdf
+	 *  [2] J. Ivanic and K. Ruedenberg, "Rotation Matrices for Real
+	 *      Spherical Harmonics. Direct Determination by Recursion", J. Phys.
+	 *      Chem., vol. 100, no. 15, pp. 6342-6347, 1996.
+	 *      http://pubs.acs.org/doi/pdf/10.1021/jp953350u
+	 *  [2b] Corrections to initial publication:
+	 *       http://pubs.acs.org/doi/pdf/10.1021/jp9833350
+	 * @constructor
+	 * @param {AudioContext} context - Associated AudioContext.
+	 * @param {Number} ambisonicOrder - Ambisonic order.
 	 */
 	function HOARotator(context, ambisonicOrder) {
 	  this._context = context;
@@ -2588,11 +2625,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  // Input/Output proxy.
 	  this.input = this._splitter;
 	  this.output = this._merger;
-	};
+	}
+
 
 	/**
-	 * Set 3x3 matrix for soundfield rotation.
-	 * @param {Float32Array} rotationMatrix3   A 3x3 rotation matrix.
+	 * Updates the rotation matrix with 3x3 matrix.
+	 * @param {Number[]} rotationMatrix3 - A 3x3 rotation matrix. (column-major)
 	 */
 	HOARotator.prototype.setRotationMatrix3 = function(rotationMatrix3) {
 	  for (var i = 0; i < 9; ++i)
@@ -2600,9 +2638,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  computeHOAMatrices(this._gainNodeMatrix);
 	};
 
+
 	/**
-	 * Set 4x4 matrix for soundfield rotation.
-	 * @param {Float32Array} rotationMatrix4   A 4x4 rotation matrix.
+	 * Updates the rotation matrix with 4x4 matrix.
+	 * @param {Number[]} rotationMatrix4 - A 4x4 rotation matrix. (column-major)
 	 */
 	HOARotator.prototype.setRotationMatrix4 = function(rotationMatrix4) {
 	  this._gainNodeMatrix[0][0].gain.value = rotationMatrix4[0];
@@ -2617,23 +2656,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	  computeHOAMatrices(this._gainNodeMatrix);
 	};
 
+
 	/**
 	 * Returns the current 3x3 rotation matrix.
-	 * @return {Float32Array}                   A 3x3 rotation matrix.
+	 * @return {Number[]} - A 3x3 rotation matrix. (column-major)
 	 */
 	HOARotator.prototype.getRotationMatrix3 = function() {
-	  var rotationMatrix = new Float32Array(9);
+	  var rotationMatrix3 = new Float32Array(9);
 	  for (var i = 0; i < 9; ++i)
-	    rotationMatrix[i] = this._gainNodeMatrix[0][i].gain.value;
-	  return rotationMatrix;
+	    rotationMatrix3[i] = this._gainNodeMatrix[0][i].gain.value;
+	  return rotationMatrix3;
 	};
+
 
 	/**
 	 * Returns the current 4x4 rotation matrix.
-	 * @return {Float32Array}                   A 4x4 rotation matrix.
+	 * @return {Number[]} - A 4x4 rotation matrix. (column-major)
 	 */
 	HOARotator.prototype.getRotationMatrix4 = function() {
-	  var rotationMatrix = new Float32Array(16);
+	  var rotationMatrix4 = new Float32Array(16);
 	  rotationMatrix4[0] = this._gainNodeMatrix[0][0].gain.value;
 	  rotationMatrix4[1] = this._gainNodeMatrix[0][1].gain.value;
 	  rotationMatrix4[2] = this._gainNodeMatrix[0][2].gain.value;
@@ -2643,8 +2684,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  rotationMatrix4[8] = this._gainNodeMatrix[0][6].gain.value;
 	  rotationMatrix4[9] = this._gainNodeMatrix[0][7].gain.value;
 	  rotationMatrix4[10] = this._gainNodeMatrix[0][8].gain.value;
-	  return rotationMatrix;
+	  return rotationMatrix4;
 	};
+
 
 	/**
 	 * Get the current ambisonic order.

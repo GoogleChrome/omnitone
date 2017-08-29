@@ -56,6 +56,7 @@ Omnitone.loadAudioBuffers = function(context, speakerData) {
   });
 };
 
+
 /**
  * Create an instance of FOA Convolver. For parameters, refer the definition of
  * Router class.
@@ -64,6 +65,7 @@ Omnitone.loadAudioBuffers = function(context, speakerData) {
 Omnitone.createFOAConvolver = function(context, options) {
   return new FOAConvolver(context, options);
 };
+
 
 /**
  * Create an instance of FOA Router. For parameters, refer the definition of
@@ -74,6 +76,7 @@ Omnitone.createFOARouter = function(context, channelMap) {
   return new FOARouter(context, channelMap);
 };
 
+
 /**
  * Create an instance of FOA Rotator. For parameters, refer the definition of
  * Rotator class.
@@ -82,6 +85,7 @@ Omnitone.createFOARouter = function(context, channelMap) {
 Omnitone.createFOARotator = function(context) {
   return new FOARotator(context);
 };
+
 
 /**
  * Create an instance of FOAPhaseMatchedFilter. For parameters, refer the
@@ -92,6 +96,7 @@ Omnitone.createFOAPhaseMatchedFilter = function(context) {
   return new FOAPhaseMatchedFilter(context);
 };
 
+
 /**
  * Create an instance of FOAVirtualSpeaker. For parameters, refer the
  * definition of VirtualSpeaker class.
@@ -100,6 +105,7 @@ Omnitone.createFOAPhaseMatchedFilter = function(context) {
 Omnitone.createFOAVirtualSpeaker = function(context, options) {
   return new FOAVirtualSpeaker(context, options);
 };
+
 
 /**
  * Create a singleton FOADecoder instance.
@@ -117,53 +123,60 @@ Omnitone.createFOADecoder = function(context, videoElement, options) {
   return new FOADecoder(context, videoElement, options);
 };
 
+
 /**
- * Create a FOARenderer.
- * @param {AudioContext} context      Associated AudioContext.
- * @param {Object} options            Options.
- * @param {String} options.HRIRUrl    Optional HRIR URL.
- * @param {Number} options.postGainDB Optional post-decoding gain in dB.
- * @param {Array} options.channelMap  Optional custom channel map.
+ * Create a FOARenderer, the first-order ambisonic decoder and the optimized
+ * binaural renderer.
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {Object} config
+ * @param {Array} [config.channelMap] - Custom channel routing map. Useful for
+ * handling the inconsistency in browser's multichannel audio decoding.
+ * @param {Array} [config.hrirPathList] - A list of paths to HRIR files. It
+ * overrides the internal HRIR list if given.
+ * @param {RenderingMode} [config.renderingMode='ambisonic'] - Rendering mode.
  * @return {FOARenderer}
  */
-Omnitone.createFOARenderer = function(context, options) {
-  return new FOARenderer(context, options);
+Omnitone.createFOARenderer = function(context, config) {
+  return new FOARenderer(context, config);
 };
+
 
 /**
  * Creates HOARotator for higher-order ambisonics rotation.
- * @param {AudioContext} context    Associated AudioContext.
- * @param {Number} ambisonicOrder   Ambisonic order.
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {Number} ambisonicOrder - Ambisonic order.
  */
 Omnitone.createHOARotator = function(context, ambisonicOrder) {
   return new HOARotator(context, ambisonicOrder);
 };
 
-/**
- * Creates HOAConvolver performs the multi-channel convolution for binaural
- * rendering.
- * @param {AudioContext} context          Associated AudioContext.
- * @param {Object} options
- * @param {Number} options.ambisonicOrder Ambisonic order (default is 3).
- * @param {AudioBuffer} options.IRBuffer  IR Audiobuffer for convolution. The
- *                                        number of channels must be (N+1)^2
- *                                        where N is the ambisonic order.
- */
-Omnitone.createHOAConvolver = function(context, options) {
-  return new HOAConvolver(context, options);
-};
 
 /**
- * Creates HOARenderer for higher-order ambisonic decoding and binaural
+ * Creates HOAConvolver performs the multi-channel convolution for the optmized
  * binaural rendering.
- * @param {AudioContext} context            Associated AudioContext.
- * @param {Object} options
- * @param {Array} options.HRIRUrl           Optional HRIR URLs in an array.
- * @param {String} options.renderingMode    Rendering mode.
- * @param {Number} options.ambisonicOrder   Ambisonic order (default is 3).
+* @param {AudioContext} context - Associated AudioContext.
+ * @param {Number} ambisonicOrder - Ambisonic order. (2 or 3)
+ * @param {AudioBuffer[]} [hrirBufferList] - An ordered-list of stereo
+ * AudioBuffers for convolution. (SOA: 5 AudioBuffers, TOA: 8 AudioBuffers)
  */
-Omnitone.createHOARenderer = function(context, options) {
-  return new HOARenderer(context, options);
+Omnitone.createHOAConvolver =
+    function(context, ambisonicOrder, hrirBufferList) {
+  return new HOAConvolver(context, ambisonicOrder, hrirBufferList);
+};
+
+
+/**
+ * Creates HOARenderer for higher-order ambisonic decoding and the optimized
+ * binaural rendering.
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {Object} config
+ * @param {Number} [config.ambisonicOrder=3] - Ambisonic order.
+ * @param {Array} [config.hrirPathList] - A list of paths to HRIR files. It
+ * overrides the internal HRIR list if given.
+ * @param {RenderingMode} [config.renderingMode='ambisonic'] - Rendering mode.
+ */
+Omnitone.createHOARenderer = function(context, config) {
+  return new HOARenderer(context, config);
 };
 
 
