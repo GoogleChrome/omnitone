@@ -15,56 +15,60 @@
 
 
 /**
- * @fileOverview A collection of convolvers. Can be used for the optimized HOA
- *               binaural rendering. (e.g. SH-MaxRe HRTFs)
+ * @file A collection of convolvers. Can be used for the optimized HOA binaural
+ * rendering. (e.g. SH-MaxRe HRTFs)
  */
+
+'use strict';
+
+var Utils = require('./utils.js');
 
 
 /**
- * @class HOAConvolver
- * @description A collection of convolvers for N-channel HOA stream.
- * @param {AudioContext} context          Associated AudioContext.
- * @param {Object} options
- * @param {Number} options.ambisonicOrder Ambisonic order (default is 3).
- * @param {AudioBuffer} options.IRBuffer  IR Audiobuffer for convolution. The
- *                                        number of channels must be (N+1)^2
- *                                        where N is the ambisonic order.
+ * A convolver network for N-channel HOA stream.
+ * @constructor
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {Number} ambisonicOrder - Ambisonic order. (2 or 3)
+ * @param {AudioBuffer[]} [hrirBufferList] - An ordered-list of stereo
+ * AudioBuffers for convolution. (SOA: 5 AudioBuffers, TOA: 8 AudioBuffers)
  */
-function HOAConvolver(context, options) {
-  this._active = false;
+function HOAConvolver(context, ambisonicOrder, hrirBufferList) {
   this._context = context;
 
-  // If unspecified, the default ambisonic mode is third order.
-  this._ambisonicOrder = options.ambisonicOrder ? options.ambisonicOrder : 3;
+  this._active = false;
+  this._isBufferLoaded = false;
 
-  // We need to determine the number of channels K based on the ambisonic
-  // order N where K = (N+1)^2.
+  // The number of channels K based on the ambisonic order N where K = (N+1)^2.
+  this._ambisonicOrder = ambisonicOrder;
   this._numberOfChannels =
       (this._ambisonicOrder + 1) * (this._ambisonicOrder + 1);
 
-  // Ensure that the ambisonic order matches the IR channel count.
-  // TODO(hoch): Error reporting should be unified. Don't use |throw|.
-  if (options.IRBuffer.numberOfChannels !== this._numberOfChannels) {
-    throw 'The order of ambisonic (' + ambisonicOrder + ') requires ' +
-        numberOfChannels + '-channel IR buffer. The given IR buffer has ' +
-        options.IRBuffer.numberOfChannels + ' channels.';
-  }
+  // Sanity check should happen in HOARenderer.
+  // // Ensure that the ambisonic order matches the IR channel count.
+  // if (config.IRBuffer.numberOfChannels !== this._numberOfChannels) {
+  //   throw 'The order of ambisonic (' + ambisonicOrder + ') requires ' +
+  //       numberOfChannels + '-channel IR buffer. The given IR buffer has ' +
+  //       config.IRBuffer.numberOfChannels + ' channels.';
+  // }
 
   this._buildAudioGraph();
-  this._setHRIRBuffer(options.IRBuffer);
+
+  if (hrirBufferList)
+    this.setHRIRBufferList(hrirBufferList);
 
   this.enable();
 }
 
 
-// Build the audio graph for HOA processing.
-//
-// For TOA convolution:
-// input -> splitter(16) -[0,1]-> merger(2) -> convolver(2) -> splitter(2)
-//                       -[2,3]-> merger(2) -> convolver(2) -> splitter(2)
-//                       -[4,5]-> ... (6 more, 8 branches total)
-HOAConvolver.prototype._buildAudioGraph = function(options) {
-  // Compute the number of stereo convolvers needed.
+/**
+ * Build the internal audio graph.
+ * For TOA convolution:
+ *   input -> splitter(16) -[0,1]-> merger(2) -> convolver(2) -> splitter(2)
+ *                         -[2,3]-> merger(2) -> convolver(2) -> splitter(2)
+ *                         -[4,5]-> ... (6 more, 8 branches total)
+ * @private
+ */
+HOAConvolver.prototype._buildAudioGraph = function() {
   var numberOfStereoChannels = Math.ceil(this._numberOfChannels / 2);
 
   this._inputSplitter =
@@ -113,6 +117,7 @@ HOAConvolver.prototype._buildAudioGraph = function(options) {
       }
     }
   }
+
   this._positiveIndexSphericalHarmonics.connect(this._binauralMerger, 0, 0);
   this._positiveIndexSphericalHarmonics.connect(this._binauralMerger, 0, 1);
   this._negativeIndexSphericalHarmonics.connect(this._binauralMerger, 0, 0);
@@ -128,45 +133,63 @@ HOAConvolver.prototype._buildAudioGraph = function(options) {
 };
 
 
-HOAConvolver.prototype._setHRIRBuffer = function(buffer) {
-  // For the optimum performance/resource usage, we use stereo convolvers
-  // instead of mono convolvers. In Web Audio API, the convolution on
-  // >3 channels activates the "true stereo" mode in theconvolver, which is not
-  // compatible to HOA convolution.
+/**
+ * Assigns N HRIR AudioBuffers to N convolvers: Note that we use 2 stereo
+ * convolutions for 4-channel direct convolution. Using mono convolver or
+ * 4-channel convolver is not viable because mono convolution wastefully
+ * produces the stereo outputs, and the 4-ch convolver does cross-channel
+ * convolution. (See Web Audio API spec)
+ * @param {AudioBuffer[]} hrirBufferList - An array of stereo AudioBuffers for
+ * convolvers.
+ */
+HOAConvolver.prototype.setHRIRBufferList = function(hrirBufferList) {
+  // After these assignments, the channel data in the buffer is immutable in
+  // FireFox. (i.e. neutered) So we should avoid re-assigning buffers, otherwise
+  // an exception will be thrown.
+  if (this._isBufferLoaded)
+    return;
 
+  for (var i = 0; i < hrirBufferList.length; ++i)
+    this._convolvers[i].buffer = hrirBufferList[i];
+
+  this._isBufferLoaded = true;
   // Compute the number of stereo buffers to create from a given buffer.
-  var numberOfStereoBuffers = Math.ceil(buffer.numberOfChannels / 2);
+  // var numberOfStereoBuffers = Math.ceil(buffer.numberOfChannels / 2);
 
   // Generate Math.ceil(K/2) stereo buffers from a K-channel IR buffer.
-  for (var i = 0; i < numberOfStereoBuffers; ++i) {
-    var stereoHRIRBuffer =
-        this._context.createBuffer(2, buffer.length, buffer.sampleRate);
-    var leftIndex = i * 2;
-    var rightIndex = i * 2 + 1;
-    // Omnitone uses getChannelData().set() over copyToChannel() because:
-    // - None of these buffer won't get accessed until the initialization
-    //   process finishes. No data race can happen.
-    // - To support all browsers. CopyToChannel() is only supported from
-    //   Chrome and FireFox.
-    stereoHRIRBuffer.getChannelData(0).set(buffer.getChannelData(leftIndex));
-    if (rightIndex < buffer.numberOfChannels)
-      stereoHRIRBuffer.getChannelData(1).set(buffer.getChannelData(rightIndex));
-    this._convolvers[i].buffer = stereoHRIRBuffer;
-  }
+  // for (var i = 0; i < numberOfStereoBuffers; ++i) {
+  //   var stereoHRIRBuffer =
+  //       this._context.createBuffer(2, buffer.length, buffer.sampleRate);
+  //   var leftIndex = i * 2;
+  //   var rightIndex = i * 2 + 1;
+  //   // Omnitone uses getChannelData().set() over copyToChannel() because:
+  //   // - None of these buffer won't get accessed until the initialization
+  //   //   process finishes. No data race can happen.
+  //   // - To support all browsers. CopyToChannel() is only supported from
+  //   //   Chrome and FireFox.
+  //   stereoHRIRBuffer.getChannelData(0).set(buffer.getChannelData(leftIndex));
+  //   if (rightIndex < buffer.numberOfChannels)
+  //     stereoHRIRBuffer.getChannelData(1).set(buffer.getChannelData(rightIndex));
+  //   this._convolvers[i].buffer = stereoHRIRBuffer;
+  // }
 };
 
 
+/**
+ * Enable HOAConvolver instance. The audio graph will be activated and pulled by
+ * the WebAudio engine. (i.e. consume CPU cycle)
+ */
 HOAConvolver.prototype.enable = function() {
-  if (this._active)
-    return;
   this._binauralMerger.connect(this._outputGain);
   this._active = true;
 };
 
 
+/**
+ * Disable HOAConvolver instance. The inner graph will be disconnected from the
+ * audio destination, thus no CPU cycle will be consumed.
+ */
 HOAConvolver.prototype.disable = function() {
-  if (!this._active)
-    return;
   this._binauralMerger.disconnect();
   this._active = false;
 };

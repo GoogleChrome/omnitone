@@ -14,12 +14,11 @@
  */
 
 /**
- * @fileOverview Sound field rotator for higher-order-ambisonics decoding.
+ * @file Sound field rotator for higher-order-ambisonics decoding.
  */
 
 'use strict';
 
-// Utility functions for rotation matrix computation.
 
 /**
  * Kronecker Delta function.
@@ -29,50 +28,50 @@
  */
 function getKroneckerDelta(i, j) {
   return i === j ? 1 : 0;
-};
+}
+
 
 /**
- * This is a convenience function to allow us to access a matrix array
- * in the same manner, assuming it is a (2l+1)x(2l+1) matrix.
- * [2] uses an odd convention of referring to the rows and columns using
- * centered indices, so the middle row and column are (0, 0) and the upper
- * left would have negative coordinates.
- * @param {Array} matrix               N matrices of gainNodes, each with
- *                                     (2n+1)x(2n+1) elements,
- *                                     where n=1,2,...,N.
+ * A helper function to allow us to access a matrix array in the same
+ * manner, assuming it is a (2l+1)x(2l+1) matrix. [2] uses an odd convention of
+ * referring to the rows and columns using centered indices, so the middle row
+ * and column are (0, 0) and the upper left would have negative coordinates.
+ * @param {Number[]} matrix - N matrices of gainNodes, each with (2n+1) x (2n+1)
+ * elements, where n=1,2,...,N.
  * @param {Number} l
  * @param {Number} i
  * @param {Number} j
  * @param {Number} gainValue
  */
 function setCenteredElement(matrix, l, i, j, gainValue) {
-  var index = (j + l) * (2 * l + 1) + (i + l);  // Row-wise indexing.
+  var index = (j + l) * (2 * l + 1) + (i + l);
+  // Row-wise indexing.
   matrix[l - 1][index].gain.value = gainValue;
-};
+}
+
 
 /**
- * This is a convenience function to allow us to access a matrix array
- * in the same manner, assuming it is a (2l+1)x(2l+1) matrix.
- * @param {Array} matrix               N matrices of gainNodes, each with
- *                                     (2n+1)x(2n+1) elements,
- *                                     where n=1,2,...,N.
+ * This is a helper function to allow us to access a matrix array in the same
+ * manner, assuming it is a (2l+1) x (2l+1) matrix.
+ * @param {Number[]} matrix - N matrices of gainNodes, each with (2n+1) x (2n+1)
+ * elements, where n=1,2,...,N.
  * @param {Number} l
  * @param {Number} i
  * @param {Number} j
- * @return {Number} Gain node's gain parameter value.
+ * @return {Number}
  */
 function getCenteredElement(matrix, l, i, j) {
   var index = (j + l) * (2 * l + 1) + (i + l);  // Row-wise indexing.
   return matrix[l - 1][index].gain.value;
-};
+}
+
 
 /**
  * Helper function defined in [2] that is used by the functions U, V, W.
  * This should not be called on its own, as U, V, and W (and their coefficients)
  * select the appropriate matrix elements to access arguments |a| and |b|.
- * @param {Array} matrix               N matrices of gainNodes, each with
- *                                     (2n+1)x(2n+1) elements,
- *                                     where n=1,2,...,N.
+ * @param {Number[]} matrix - N matrices of gainNodes, each with (2n+1) x (2n+1)
+ * elements, where n=1,2,...,N.
  * @param {Number} i
  * @param {Number} a
  * @param {Number} b
@@ -94,7 +93,8 @@ function P(matrix, i, a, b, l) {
     return getCenteredElement(matrix, 1, i, 0) *
         getCenteredElement(matrix, l - 1, a, b);
   }
-};
+}
+
 
 /**
  * The functions U, V, and W should only be called if the correspondingly
@@ -102,9 +102,8 @@ function P(matrix, i, a, b, l) {
  * When the coefficient is 0, these would attempt to access matrix elements that
  * are out of bounds. The vector of rotations, |r|, must have the |l - 1|
  * previously completed band rotations. These functions are valid for |l >= 2|.
- * @param {Array} matrix               N matrices of gainNodes, each with
- *                                     (2n+1)x(2n+1) elements,
- *                                     where n=1,2,...,N.
+ * @param {Number[]} matrix - N matrices of gainNodes, each with (2n+1) x (2n+1)
+ * elements, where n=1,2,...,N.
  * @param {Number} m
  * @param {Number} n
  * @param {Number} l
@@ -114,7 +113,8 @@ function U(matrix, m, n, l) {
   // Although [1, 2] split U into three cases for m == 0, m < 0, m > 0
   // the actual values are the same for all three cases.
   return P(matrix, 0, m, n, l);
-};
+}
+
 
 /**
  * The functions U, V, and W should only be called if the correspondingly
@@ -122,9 +122,8 @@ function U(matrix, m, n, l) {
  * When the coefficient is 0, these would attempt to access matrix elements that
  * are out of bounds. The vector of rotations, |r|, must have the |l - 1|
  * previously completed band rotations. These functions are valid for |l >= 2|.
- * @param {Array} matrix               N matrices of gainNodes, each with
- *                                     (2n+1)x(2n+1) elements,
- *                                     where n=1,2,...,N.
+ * @param {Number[]} matrix - N matrices of gainNodes, each with (2n+1) x (2n+1)
+ * elements, where n=1,2,...,N.
  * @param {Number} m
  * @param {Number} n
  * @param {Number} l
@@ -147,7 +146,8 @@ function V(matrix, m, n, l) {
     return P(matrix, 1, m + 1, n, l) * (1 - d) +
         P(matrix, -1, -m - 1, n, l) * Math.sqrt(1 + d);
   }
-};
+}
+
 
 /**
  * The functions U, V, and W should only be called if the correspondingly
@@ -155,9 +155,8 @@ function V(matrix, m, n, l) {
  * When the coefficient is 0, these would attempt to access matrix elements that
  * are out of bounds. The vector of rotations, |r|, must have the |l - 1|
  * previously completed band rotations. These functions are valid for |l >= 2|.
- * @param {Array} matrix               N matrices of gainNodes, each with
- *                                     (2n+1)x(2n+1) elements,
- *                                     where n=1,2,...,N.
+ * @param {Number[]} matrix N matrices of gainNodes, each with (2n+1) x (2n+1)
+ * elements, where n=1,2,...,N.
  * @param {Number} m
  * @param {Number} n
  * @param {Number} l
@@ -167,10 +166,10 @@ function W(matrix, m, n, l) {
   if (m === 0)
     return 0;
 
-  return m > 0
-      ? P(matrix, 1, m + 1, n, l) + P(matrix, -1, -m - 1, n, l)
-      : P(matrix, 1, m - 1, n, l) - P(matrix, -1, -m + 1, n, l);
-};
+  return m > 0 ? P(matrix, 1, m + 1, n, l) + P(matrix, -1, -m - 1, n, l) :
+                 P(matrix, 1, m - 1, n, l) - P(matrix, -1, -m + 1, n, l);
+}
+
 
 /**
  * Calculates the coefficients applied to the U, V, and W functions. Because
@@ -194,19 +193,18 @@ function computeUVWCoeff(m, n, l) {
     -0.5 * (1 - d) * Math.sqrt((l - Math.abs(m) - 1) * (l - Math.abs(m))) *
         reciprocalDenominator
   ];
-};
+}
+
 
 /**
- * Calculates the (2l+1)x(2l+1) rotation matrix for the band l.
+ * Calculates the (2l+1) x (2l+1) rotation matrix for the band l.
  * This uses the matrices computed for band 1 and band l-1 to compute the
  * matrix for band l. |rotations| must contain the previously computed l-1
  * rotation matrices.
- *
  * This implementation comes from p. 5 (6346), Table 1 and 2 in [2] taking
  * into account the corrections from [2b].
- * @param {Array} matrix               N matrices of gainNodes, each with
- *                                     (2n+1)x(2n+1) elements,
- *                                     where n=1,2,...,N.
+ * @param {Number[]} matrix - N matrices of gainNodes, each with where
+ * n=1,2,...,N.
  * @param {Number} l
  */
 function computeBandRotation(matrix, l) {
@@ -225,40 +223,42 @@ function computeBandRotation(matrix, l) {
       if (Math.abs(uvwCoefficients[2]) > 0)
         uvwCoefficients[2] *= W(matrix, m, n, l);
 
-      setCenteredElement(matrix, l, m, n,
+      setCenteredElement(
+          matrix, l, m, n,
           uvwCoefficients[0] + uvwCoefficients[1] + uvwCoefficients[2]);
     }
   }
-};
+}
+
 
 /**
  * Compute the HOA rotation matrix after setting the transform matrix.
- * @param {Array} matrix               N matrices of gainNodes, each with
- *                                     (2n+1)x(2n+1) elements, where n=1,2,...,
- *                                     N.
+ * @param {Array} matrix - N matrices of gainNodes, each with (2n+1) x (2n+1)
+ * elements, where n=1,2,...,N.
  */
 function computeHOAMatrices(matrix) {
   // We start by computing the 2nd-order matrix from the 1st-order matrix.
   for (var i = 2; i <= matrix.length; i++)
     computeBandRotation(matrix, i);
-};
+}
+
 
 /**
- * @class Higher-order-ambisonic decoder based on gain node network.
- *        We expect the order of the channels to conform to ACN ordering.
- *        Below are the helper methods to compute SH rotation using recursion.
- *        The code uses maths described in the following papers:
- *        [1]  R. Green, "Spherical Harmonic Lighting: The Gritty Details",
- *             GDC 2003,
- *          http://www.research.scea.com/gdc2003/spherical-harmonic-lighting.pdf
- *        [2]  J. Ivanic and K. Ruedenberg, "Rotation Matrices for Real
- *             Spherical Harmonics. Direct Determination by Recursion", J. Phys.
- *             Chem., vol. 100, no. 15, pp. 6342-6347, 1996.
- *             http://pubs.acs.org/doi/pdf/10.1021/jp953350u
- *        [2b] Corrections to initial publication:
- *             http://pubs.acs.org/doi/pdf/10.1021/jp9833350
- * @param {AudioContext} context    Associated AudioContext.
- * @param {Number} ambisonicOrder   Ambisonic order.
+ * Higher-order-ambisonic decoder based on gain node network. We expect
+ * the order of the channels to conform to ACN ordering. Below are the helper
+ * methods to compute SH rotation using recursion. The code uses maths described
+ * in the following papers:
+ *  [1] R. Green, "Spherical Harmonic Lighting: The Gritty Details", GDC 2003,
+ *      http://www.research.scea.com/gdc2003/spherical-harmonic-lighting.pdf
+ *  [2] J. Ivanic and K. Ruedenberg, "Rotation Matrices for Real
+ *      Spherical Harmonics. Direct Determination by Recursion", J. Phys.
+ *      Chem., vol. 100, no. 15, pp. 6342-6347, 1996.
+ *      http://pubs.acs.org/doi/pdf/10.1021/jp953350u
+ *  [2b] Corrections to initial publication:
+ *       http://pubs.acs.org/doi/pdf/10.1021/jp9833350
+ * @constructor
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {Number} ambisonicOrder - Ambisonic order.
  */
 function HOARotator(context, ambisonicOrder) {
   this._context = context;
@@ -314,11 +314,12 @@ function HOARotator(context, ambisonicOrder) {
   // Input/Output proxy.
   this.input = this._splitter;
   this.output = this._merger;
-};
+}
+
 
 /**
- * Set 3x3 matrix for soundfield rotation.
- * @param {Float32Array} rotationMatrix3   A 3x3 rotation matrix.
+ * Updates the rotation matrix with 3x3 matrix.
+ * @param {Number[]} rotationMatrix3 - A 3x3 rotation matrix. (column-major)
  */
 HOARotator.prototype.setRotationMatrix3 = function(rotationMatrix3) {
   for (var i = 0; i < 9; ++i)
@@ -326,9 +327,10 @@ HOARotator.prototype.setRotationMatrix3 = function(rotationMatrix3) {
   computeHOAMatrices(this._gainNodeMatrix);
 };
 
+
 /**
- * Set 4x4 matrix for soundfield rotation.
- * @param {Float32Array} rotationMatrix4   A 4x4 rotation matrix.
+ * Updates the rotation matrix with 4x4 matrix.
+ * @param {Number[]} rotationMatrix4 - A 4x4 rotation matrix. (column-major)
  */
 HOARotator.prototype.setRotationMatrix4 = function(rotationMatrix4) {
   this._gainNodeMatrix[0][0].gain.value = rotationMatrix4[0];
@@ -343,23 +345,25 @@ HOARotator.prototype.setRotationMatrix4 = function(rotationMatrix4) {
   computeHOAMatrices(this._gainNodeMatrix);
 };
 
+
 /**
  * Returns the current 3x3 rotation matrix.
- * @return {Float32Array}                   A 3x3 rotation matrix.
+ * @return {Number[]} - A 3x3 rotation matrix. (column-major)
  */
 HOARotator.prototype.getRotationMatrix3 = function() {
-  var rotationMatrix = new Float32Array(9);
+  var rotationMatrix3 = new Float32Array(9);
   for (var i = 0; i < 9; ++i)
-    rotationMatrix[i] = this._gainNodeMatrix[0][i].gain.value;
-  return rotationMatrix;
+    rotationMatrix3[i] = this._gainNodeMatrix[0][i].gain.value;
+  return rotationMatrix3;
 };
+
 
 /**
  * Returns the current 4x4 rotation matrix.
- * @return {Float32Array}                   A 4x4 rotation matrix.
+ * @return {Number[]} - A 4x4 rotation matrix. (column-major)
  */
 HOARotator.prototype.getRotationMatrix4 = function() {
-  var rotationMatrix = new Float32Array(16);
+  var rotationMatrix4 = new Float32Array(16);
   rotationMatrix4[0] = this._gainNodeMatrix[0][0].gain.value;
   rotationMatrix4[1] = this._gainNodeMatrix[0][1].gain.value;
   rotationMatrix4[2] = this._gainNodeMatrix[0][2].gain.value;
@@ -369,8 +373,9 @@ HOARotator.prototype.getRotationMatrix4 = function() {
   rotationMatrix4[8] = this._gainNodeMatrix[0][6].gain.value;
   rotationMatrix4[9] = this._gainNodeMatrix[0][7].gain.value;
   rotationMatrix4[10] = this._gainNodeMatrix[0][8].gain.value;
-  return rotationMatrix;
+  return rotationMatrix4;
 };
+
 
 /**
  * Get the current ambisonic order.

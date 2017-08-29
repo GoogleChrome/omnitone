@@ -19,7 +19,6 @@
  * rendering. (e.g. SH-MaxRe HRTFs)
  */
 
-
 'use strict';
 
 
@@ -27,8 +26,8 @@
  * FOAConvolver. A collection of 2 stereo convolvers for 4-channel FOA stream.
  * @constructor
  * @param {BaseAudioContext} context The associated AudioContext.
- * @param {AudioBuffer[]} hrirBufferList - An array of AudioBuffers for 2 stereo
- * HRIR files. (4-channel)
+ * @param {AudioBuffer[]} [hrirBufferList] - An ordered-list of stereo
+ * AudioBuffers for convolution. (FOA: 2 AudioBuffers)
  */
 function FOAConvolver(context, hrirBufferList) {
   this._context = context;
@@ -99,7 +98,7 @@ FOAConvolver.prototype._buildAudioGraph = function() {
 
 
 /**
- * Assigns 2 HRIR AudioBuffers to 2 convolvers. Note that we use 2 stereo
+ * Assigns 2 HRIR AudioBuffers to 2 convolvers: Note that we use 2 stereo
  * convolutions for 4-channel direct convolution. Using mono convolver or
  * 4-channel convolver is not viable because mono convolution wastefully
  * produces the stereo outputs, and the 4-ch convolver does cross-channel

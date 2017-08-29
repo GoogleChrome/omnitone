@@ -13,157 +13,232 @@
  * limitations under the License.
  */
 
-'use strict';
 
 /**
- * @fileOverview Omnitone HOA decoder.
+ * @file Omnitone HOA decoder.
  */
 
-// Internal dependencies.
+'use strict';
+
 var AudioBufferManager = require('./audiobuffer-manager.js');
-var HOARotator = require('./hoa-rotator.js');
 var HOAConvolver = require('./hoa-convolver.js');
+var HOARotator = require('./hoa-rotator.js');
+var HRIRManager = require('./hrir-manager.js');
 var Utils = require('./utils.js');
-var SystemVersion = require('./version.js');
+
+
+/**
+ * @typedef {string} RenderingMode
+ */
+
+/**
+ * Rendering mode ENUM.
+ * @enum {RenderingMode}
+ */
+var RenderingMode = {
+  /** @type {string} Use ambisonic rendering. */
+  AMBISONIC: 'ambisonic',
+  /** @type {string} Bypass. No ambisonic rendering. */
+  BYPASS: 'bypass',
+  /** @type {string} Disable audio output. */
+  OFF: 'off'
+};
+
+
+// Currently SOA and TOA are only supported.
+var SupportedAmbisonicOrder = [2, 3];
+
 
 // HRIRs for optimized HOA rendering.
 // TODO(hongchan): change this with the absolute URL.
-var SH_MAXRE_HRIR_URLS =
-    ['resources/sh_hrir_o_3_ch0-ch7.wav', 'resources/sh_hrir_o_3_ch8-ch15.wav'];
+// var SH_MAXRE_HRIR_URLS =
+//     ['resources/sh_hrir_o_3_ch0-ch7.wav',
+//     'resources/sh_hrir_o_3_ch8-ch15.wav'];
 
 
 /**
- * @class Omnitone HOA renderer class. Uses the optimized convolution technique.
- * @param {AudioContext} context            Associated AudioContext.
- * @param {Object} options
- * @param {Array} options.HRIRUrl           Optional HRIR URLs in an array.
- * @param {String} options.renderingMode    Rendering mode.
- * @param {Number} options.ambisonicOrder   Ambisonic order (default is 3).
+ * Omnitone HOA renderer class. Uses the optimized convolution technique.
+ * @constructor
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {Object} config
+ * @param {Number} [config.ambisonicOrder=3] - Ambisonic order.
+ * @param {Array} [config.hrirPathList] - A list of paths to HRIR files. It
+ * overrides the internal HRIR list if given.
+ * @param {RenderingMode} [config.renderingMode='ambisonic'] - Rendering mode.
  */
-function HOARenderer(context, options) {
-  this._context = context;
+function HOARenderer(context, config) {
+  this._context = Utils.isBaseAudioContext(context) ?
+      context :
+      Utils.throw('FOARenderer: Invalid BaseAudioContext.');
 
-  this._HRIRUrls = SH_MAXRE_HRIR_URLS;
-  this._renderingMode = 'ambisonic';
-  this._ambisonicOrder = 3;
+  this._config = {};
 
-  if (options) {
-    if (options.HRIRUrl)
-      this._HRIRUrls = options.HRIRUrl;
-    if (options.renderingMode)
-      this._renderingMode = options.renderingMode;
-    if (options.ambisonicOrder)
-      this._ambisonicOrder = options.ambisonicOrder;
+  if (config.ambisonicOrder &&
+      SupportedAmbisonicOrder.includes(config.ambisonicOrder)) {
+    this._config.ambisonicOrder = config.ambisonicOrder;
+  } else {
+    this._config.ambisonicOrder = 3;
+    Utils.log(
+        'HOARenderer: Invalid ambisonic order. (got' + config.ambisonicOrder +
+        ') Fallbacks to 3rd-order ambisonic.');
   }
 
-  this._numberOfChannels =
-      (this._ambisonicOrder + 1) * (this._ambisonicOrder + 1);
+  this._config.numberOfChannels =
+      (this._config.ambisonicOrder + 1) * (this._config.ambisonicOrder + 1);
+  this._config.numberOfStereoChannels =
+      Math.ceil(this._config.numberOfChannels / 2);
 
-  this._isRendererReady = false;
+  if (config.hrirPathList) {
+    if (Array.isArray(config.hrirPathList) &&
+        config.hrirPathList.length === this._config.numberOfStereoChannels) {
+      this._config.pathList = config.hrirPathList;
+    } else {
+      Utils.throw(
+          'HOARenderer: Invalid HRIR URLs. It must be an array with ' +
+          this._config.numberOfStereoChannels + ' URLs to HRIR files.' +
+          ' (got ' + config.hrirPathList + ')');
+    }
+  } else {
+    // By default, the path list points to GitHub CDN with FOA files.
+    // TODO(hoch): update this to Gstatic server when it's available.
+    this._config.pathList =
+        HRIRManager.getPathList({ambisonicOrder: this._config.ambisonicOrder});
+  }
+
+
+  if (config.renderingMode &&
+      Object.values(RenderingMode).includes(config.renderingMode)) {
+    this._config.renderingMode = config.renderingMode;
+  } else {
+    this._config.renderingMode = RenderingMode.AMBISONIC;
+    Utils.log(
+        'HOARenderer: Invalid rendering mode order. (got' +
+        config.renderingMode + ') Fallbacks to the mode "ambisonic".');
+  }
+
+  // this._HRIRUrls = SH_MAXRE_HRIR_URLS;
+  // this._renderingMode = 'ambisonic';
+  // this._ambisonicOrder = 3;
+
+
+
+  // if (config) {
+  //   if (config.HRIRUrl)
+  //     this._HRIRUrls = options.HRIRUrl;
+  //   if (options.renderingMode)
+  //     this._renderingMode = options.renderingMode;
+  //   if (options.ambisonicOrder)
+  //     this._ambisonicOrder = options.ambisonicOrder;
+}
+
+// this._numberOfChannels =
+//     (this._ambisonicOrder + 1) * (this._ambisonicOrder + 1);
+
+this._buildAudioGraph();
+
+this._isRendererReady = false;
 }
 
 
 /**
- * Initialize and load the resources for the decode.
- * @return {Promise}
+ * Builds the internal audio graph.
+ * @private
  */
-HOARenderer.prototype.initialize = function() {
-  Utils.log('Version: ' + SystemVersion);
-  Utils.log(
-      'Initializing... (mode: ' + this._renderingMode +
-      ', order: ' + this._ambisonicOrder + ')');
-
-  return new Promise(this._initializeCallback.bind(this));
+HOARenderer.prototype._buildAudioGraph = function() {
+  this.input = this._context.createGain();
+  this.output = this._context.createGain();
+  this._bypass = this._context.createGain();
+  this._hoaRotator = new HOARotator(this._context, this._config.ambisonicOrder);
+  this._hoaConvolver =
+      new HOAConvolver(this._context, this._config.ambisonicOrder);
+  this.input.connect(this._hoaRotator.input);
+  this.input.connect(this._bypass);
+  this._hoaRotator.output.connect(this._hoaConvolver.input);
+  this._hoaConvolver.output.connect(this.output);
 };
 
 
 /**
  * Internal callback handler for |initialize| method.
- * @param {Function} resolve Promise resolution.
- * @param {Function} reject Promise rejection.
+ * @private
+ * @param {function} resolve - Resolution handler.
+ * @param {function} reject - Rejection handler.
  */
 HOARenderer.prototype._initializeCallback = function(resolve, reject) {
-  var hoaHRIRBuffer;
+  var bufferLoaderData = [];
+  for (var i = 0; i < this._config.pathList.length; ++i)
+    bufferLoaderData.push({name: i, url: this._config.pathList[i]});
 
-  // Constrcut a consolidated HOA HRIR (e.g. 16 channels for TOA).
-  // Handle multiple chunks of HRIR buffer data splitted by 8 channels each.
-  // This is because Chrome cannot decode the audio file >8 channels.
-  var audioBufferData = [];
-  this._HRIRUrls.forEach(function(key, index, urls) {
-    audioBufferData.push({name: key, url: urls[index]});
-  });
-
+  var hrirBufferList = [];
   new AudioBufferManager(
-      this._context, audioBufferData,
-      function(buffers) {
-        var accumulatedChannelCount = 0;
+      this._context, bufferLoaderData,
+      function(bufferMap) {
+        for (var i = 0; i < bufferLoaderData.length; ++i)
+          hrirBufferList.push(bufferMap.get(i));
+        this._hoaConvolver.setHRIRBufferList(hrirBufferList);
+        this.setRenderingMode(this._renderingMode);
+        this._isRendererReady = true;
+        Utils.log('HOARenderer: HRIRs loaded successfully. Ready.');
+        resolve();
+        // var accumulatedChannelCount = 0;
         // The iteration order of buffer in |buffers| might be flaky because it
         // is a Map. Thus, iterate based on the |audioBufferData| array instead
         // of the |buffers| map.
-        audioBufferData.forEach(function (data) {
-          var buffer = buffers.get(data.name);
+        // audioBufferData.forEach(function (data) {
+        //   var buffer = buffers.get(data.name);
 
-          // Create a K channel buffer to integrate individual IR buffers.
-          if (!hoaHRIRBuffer) {
-            hoaHRIRBuffer = this._context.createBuffer(
-                this._numberOfChannels, buffer.length, buffer.sampleRate);
-          }
+        //   // Create a K channel buffer to integrate individual IR buffers.
+        //   if (!hoaHRIRBuffer) {
+        //     hoaHRIRBuffer = this._context.createBuffer(
+        //         this._numberOfChannels, buffer.length, buffer.sampleRate);
+        //   }
 
-          for (var channel = 0; channel < buffer.numberOfChannels; ++channel) {
-            hoaHRIRBuffer.getChannelData(accumulatedChannelCount + channel)
-                .set(buffer.getChannelData(channel));
-          }
+        //   for (var channel = 0; channel < buffer.numberOfChannels; ++channel)
+        //   {
+        //     hoaHRIRBuffer.getChannelData(accumulatedChannelCount + channel)
+        //         .set(buffer.getChannelData(channel));
+        //   }
 
-          accumulatedChannelCount += buffer.numberOfChannels;
-        }.bind(this));
+        //   accumulatedChannelCount += buffer.numberOfChannels;
+        // }.bind(this));
 
-        if (accumulatedChannelCount === this._numberOfChannels) {
-          this._buildAudioGraph(hoaHRIRBuffer);
-          this._isRendererReady = true;
-          Utils.log('Rendering via SH-MaxRE convolution.');
-          resolve();
-        } else {
-          var errorMessage = 'Only ' + accumulatedChannelCount +
-              ' HRIR channels were loaded (expected ' + this._numberOfChannels +
-              '). The renderer will not function correctly.';
-          Utils.log(errorMessage);
-          reject(errorMessage);
-        }
+        // if (accumulatedChannelCount === this._numberOfChannels) {
+        // } else {
+        //   var errorMessage = 'Only ' + accumulatedChannelCount +
+        //       ' HRIR channels were loaded (expected ' +
+        //       this._numberOfChannels +
+        //       '). The renderer will not function correctly.';
+        //   Utils.log(errorMessage);
+        //   reject(errorMessage);
+        // }
       }.bind(this),
-      function(buffers) {
-        // TODO: Deiliver more descriptive error message.
-        var errorMessage = 'Initialization failed.';
-        Utils.log(errorMessage);
+      function(bufferMap) {
+        var errorMessage = 'HOARenderer: HRIR loading/decoding failed. (' +
+            Array.from(bufferMap) + ')';
+        Utils.throw(errorMessage);
         reject(errorMessage);
       });
 };
 
 
 /**
- * Internal method that builds the audio graph.
+ * Initializes and loads the resource for the renderer.
+ * @return {Promise}
  */
-HOARenderer.prototype._buildAudioGraph = function(hoaHRIRBuffer) {
-  this.input = this._context.createGain();
-  this.output = this._context.createGain();
-  this._bypass = this._context.createGain();
+HOARenderer.prototype.initialize = function() {
+  Utils.log(
+      'HOARenderer: Initializing... (mode: ' + this._config.renderingMode +
+      ', ambisonic order: ' + this._config.ambisonicOrder + ')');
 
-  this._hoaRotator = new HOARotator(this._context, this._ambisonicOrder);
-  this._hoaConvolver = new HOAConvolver(
-      this._context,
-      {IRBuffer: hoaHRIRBuffer, ambisonicOrder: this._ambisonicOrder});
-
-  this.input.connect(this._hoaRotator.input);
-  this.input.connect(this._bypass);
-  this._hoaRotator.output.connect(this._hoaConvolver.input);
-  this._hoaConvolver.output.connect(this.output);
-
-  this.setRenderingMode(this._renderingMode);
+  return new Promise(this._initializeCallback.bind(this), , function(error) {
+    Utils.throw('FOARenderer: Initialization failed. (' + error + ')');
+  });
 };
 
 
 /**
- * Set the rotation matrix for the sound field rotation.
- * @param {Array} rotationMatrix3           A 3x3 rotation matrix (col-major)
+ * Updates the rotation matrix with 3x3 matrix.
+ * @param {Number[]} rotationMatrix3 - A 3x3 rotation matrix. (column-major)
  */
 HOARenderer.prototype.setRotationMatrix3 = function(rotationMatrix3) {
   if (!this._isRendererReady)
@@ -174,10 +249,8 @@ HOARenderer.prototype.setRotationMatrix3 = function(rotationMatrix3) {
 
 
 /**
- * Update the rotation from a 4x4 matrix. This expects the model matrix of
- * Camera object. For example, Three.js offers |Object3D.matrixWorld| for this
- * purpose.
- * @param {Float32Array} rotationMatrix4    A 4x4 rotation matrix (col-major)
+ * Updates the rotation matrix with 4x4 matrix.
+ * @param {Number[]} rotationMatrix4 - A 4x4 rotation matrix. (column-major)
  */
 HOARenderer.prototype.setRotationMatrix4 = function(rotationMatrix4) {
   if (!this._isRendererReady)
@@ -189,47 +262,38 @@ HOARenderer.prototype.setRotationMatrix4 = function(rotationMatrix4) {
 
 /**
  * Set the decoding mode.
- * @param {String} mode               Decoding mode. When the mode is 'bypass'
- *                                    the decoder is disabled and bypass the
- *                                    input stream to the output. Setting the
- *                                    mode to 'ambisonic' activates the decoder.
- *                                    When the mode is 'off', all the
- *                                    processing is completely turned off saving
- *                                    the CPU power.
+ * @param {RenderingMode} renderingMode - Decoding mode.
+ *  - 'ambisonic': activates the ambisonic decoding/binaurl rendering.
+ *  - 'bypass': bypasses the input stream directly to the output. No ambisonic
+ *    decoding or encoding.
+ *  - 'off': all the processing off saving the CPU power.
  */
 HOARenderer.prototype.setRenderingMode = function(mode) {
-  if (mode === this._renderingMode)
+  if (mode === this._config.renderingMode)
     return;
-  switch (mode) {
-    // Bypass mode: The convolution path is disabled, disconnected (thus consume
-    // no CPU). Use bypass gain node to pass-through the input stream.
-    case 'bypass':
-      this._renderingMode = 'bypass';
-      this._hoaConvolver.disable();
-      this._bypass.connect(this.output);
-      break;
 
-    // Ambisonic mode: Use the convolution and shut down the bypass path.
-    case 'ambisonic':
-      this._renderingMode = 'ambisonic';
+  switch (mode) {
+    case RenderingMode.AMBISONIC:
       this._hoaConvolver.enable();
       this._bypass.disconnect();
       break;
-
-    // Off mode: Shut down all sound from the renderer.
-    case 'off':
-      this._renderingMode = 'off';
+    case RenderingMode.BYPASS:
+      this._hoaConvolver.disable();
+      this._bypass.connect(this.output);
+      break;
+    case RenderingMode.OFF:
       this._hoaConvolver.disable();
       this._bypass.disconnect();
       break;
-
     default:
-      // Unsupported mode. Ignore it.
-      Utils.log('Rendering mode "' + mode + '" is not supported.');
+      Utils.log(
+          'HOARenderer: Rendering mode "' + mode + '" is not ' +
+          'supported.');
       return;
   }
 
-  Utils.log('Rendering mode changed. (' + mode + ')');
+  this._config.renderingMode = mode;
+  Utils.log('HOARenderer: Rendering mode changed. (' + mode + ')');
 };
 
 

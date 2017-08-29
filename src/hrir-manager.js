@@ -50,8 +50,9 @@ var SourceURL = {
 /**
  * [getPathSet description]
  * @param {object} [setting] - Setting object.
- * @param {string} [source="github"] - The base location for the HRIR set.
- * @param {number} [ambisonicOrder=1] - Requested ambisonic order.
+ * @param {string} [setting.source="github"] - The base location for the HRIR
+ * set.
+ * @param {number} [setting.ambisonicOrder=1] - Requested ambisonic order.
  * @return {string[]} pathList - HRIR path set (2~8 URLs)
  */
 module.exports.getPathList = function(setting) {

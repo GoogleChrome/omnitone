@@ -19,7 +19,6 @@
  * ambisonic decoder and the optimized binaural renderer.
  */
 
-
 'use strict';
 
 var AudioBufferManager = require('./audiobuffer-manager.js');
@@ -72,13 +71,6 @@ function FOARenderer(context, config) {
     this._config.channelMap = FOARouter.CHANNEL_MAP.DEFAULT;
   }
 
-  if (config.renderingMode &&
-      Object.values(RenderingMode).includes(config.renderingMode)) {
-    this._config.renderingMode = config.renderingMode;
-  } else {
-    this._config.renderingMode = RenderingMode.AMBISONIC;
-  }
-
   if (config.hrirPathList) {
     if (Array.isArray(config.hrirPathList) &&
         config.hrirPathList.length === 2) {
@@ -93,6 +85,18 @@ function FOARenderer(context, config) {
     // TODO(hoch): update this to Gstatic server when it's available.
     this._config.pathList = HRIRManager.getPathList();
   }
+
+  if (config.renderingMode &&
+      Object.values(RenderingMode).includes(config.renderingMode)) {
+    this._config.renderingMode = config.renderingMode;
+  } else {
+    this._config.renderingMode = RenderingMode.AMBISONIC;
+    Utils.log(
+        'FOARenderer: Invalid rendering mode order. (got' +
+        config.renderingMode + ') Fallbacks to the mode "ambisonic".');
+  }
+
+  this._buildAudioGraph();
 
   this._tempMatrix4 = new Float32Array(16);
   this._isRendererReady = false;
@@ -129,18 +133,21 @@ FOARenderer.prototype._initializeCallback = function(resolve, reject) {
   for (var i = 0; i < this._config.pathList.length; ++i)
     bufferLoaderData.push({name: i, url: this._config.pathList[i]});
 
+  var hrirBufferList = [];
   new AudioBufferManager(
       this._context, bufferLoaderData,
-      function(buffers) {
-        this._buildAudioGraph();
-        this._foaConvolver.setHRIRBufferList([buffers.get(0), buffers.get(1)]);
+      function(bufferMap) {
+        for (var i = 0; i < bufferLoaderData.length; ++i)
+          hrirBufferList.push(bufferMap.get(i));
+        this._foaConvolver.setHRIRBufferList(hrirBufferList);
         this.setRenderingMode(this._config.renderingMode);
         this._isRendererReady = true;
         Utils.log('FOARenderer: HRIRs loaded successfully. Ready.');
         resolve();
       }.bind(this),
-      function(buffers) {
-        var errorMessage = 'FOARenderer: HRIR loading/decoding failed.';
+      function(bufferMap) {
+        var errorMessage = 'FOARenderer: HRIR loading/decoding failed. (' +
+            Array.from(bufferMap) + ')';
         Utils.throw(errorMessage);
         reject(errorMessage);
       });
@@ -157,14 +164,14 @@ FOARenderer.prototype.initialize = function() {
       ')');
 
   return new Promise(this._initializeCallback.bind(this), function(error) {
-    Utils.throw('FOARenderer: Initialization failed.');
+    Utils.throw('FOARenderer: Initialization failed. (' + error + ')');
   });
 };
 
 
 /**
  * Set the channel map.
- * @param {number[]} channelMap - Custom channel routing for FOA stream.
+ * @param {Number[]} channelMap - Custom channel routing for FOA stream.
  */
 FOARenderer.prototype.setChannelMap = function(channelMap) {
   if (!this._isRendererReady)
@@ -182,7 +189,7 @@ FOARenderer.prototype.setChannelMap = function(channelMap) {
 
 /**
  * Updates the rotation matrix with 3x3 matrix.
- * @param {number[]} rotationMatrix3 - A 3x3 rotation matrix. (column-major)
+ * @param {Number[]} rotationMatrix3 - A 3x3 rotation matrix. (column-major)
  */
 FOARenderer.prototype.setRotationMatrix3 = function(rotationMatrix3) {
   if (!this._isRendererReady)
@@ -194,7 +201,7 @@ FOARenderer.prototype.setRotationMatrix3 = function(rotationMatrix3) {
 
 /**
  * Updates the rotation matrix with 4x4 matrix.
- * @param {number[]} rotationMatrix4 - A 4x4 rotation matrix. (column-major)
+ * @param {Number[]} rotationMatrix4 - A 4x4 rotation matrix. (column-major)
  */
 FOARenderer.prototype.setRotationMatrix4 = function(rotationMatrix4) {
   if (!this._isRendererReady)
