@@ -22,8 +22,6 @@
 
 'use strict';
 
-var Utils = require('./utils.js');
-
 
 /**
  * FOAConvolver. A collection of 2 stereo convolvers for 4-channel FOA stream.
@@ -32,7 +30,7 @@ var Utils = require('./utils.js');
  * @param {AudioBuffer[]} hrirBufferList - An array of AudioBuffers for 2 stereo
  * HRIR files. (4-channel)
  */
-function FOAConvolver (context, hrirBufferList) {
+function FOAConvolver(context, hrirBufferList) {
   this._context = context;
 
   this._active = false;
@@ -52,7 +50,7 @@ function FOAConvolver (context, hrirBufferList) {
  *
  * @private
  */
-FOAConvolver.prototype._buildAudioGraph = function () {
+FOAConvolver.prototype._buildAudioGraph = function() {
   this._splitterWYZX = this._context.createChannelSplitter(4);
   this._mergerWY = this._context.createChannelMerger(2);
   this._mergerZX = this._context.createChannelMerger(2);
@@ -109,7 +107,7 @@ FOAConvolver.prototype._buildAudioGraph = function () {
  * @param {AudioBuffer[]} hrirBufferList - An array of stereo AudioBuffers for
  * convolvers.
  */
-FOAConvolver.prototype.setHRIRBufferList = function (hrirBufferList) {
+FOAConvolver.prototype.setHRIRBufferList = function(hrirBufferList) {
   // After these assignments, the channel data in the buffer is immutable in
   // FireFox. (i.e. neutered) So we should avoid re-assigning buffers, otherwise
   // an exception will be thrown.
@@ -126,7 +124,7 @@ FOAConvolver.prototype.setHRIRBufferList = function (hrirBufferList) {
  * Enable FOAConvolver instance. The audio graph will be activated and pulled by
  * the WebAudio engine. (i.e. consume CPU cycle)
  */
-FOAConvolver.prototype.enable = function () {
+FOAConvolver.prototype.enable = function() {
   this._mergerBinaural.connect(this._summingBus);
   this._active = true;
 };
@@ -136,7 +134,7 @@ FOAConvolver.prototype.enable = function () {
  * Disable FOAConvolver instance. The inner graph will be disconnected from the
  * audio destination, thus no CPU cycle will be consumed.
  */
-FOAConvolver.prototype.disable = function () {
+FOAConvolver.prototype.disable = function() {
   this._mergerBinaural.disconnect();
   this._active = false;
 };

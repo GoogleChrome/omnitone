@@ -14,10 +14,11 @@
  */
 
 /**
- * @fileOverview Omnitone library common utilities.
+ * @file Omnitone library common utilities.
  */
 
 'use strict';
+
 
 /**
  * Omnitone library logging function.
@@ -31,6 +32,7 @@ exports.log = function() {
     'color: #AAA'
   ]);
 };
+
 
 /**
  * Omnitone library error-throwing function.
@@ -133,7 +135,7 @@ exports.getNumberOfChannelsFromAmbisonicOrder = function(order) {
  * @param {Object} context A context object to be checked.
  * @return {Boolean}
  */
-exports.isBaseAudioContext = function (context) {
+exports.isBaseAudioContext = function(context) {
   return context instanceof BaseAudioContext;
 };
 
@@ -143,6 +145,6 @@ exports.isBaseAudioContext = function (context) {
  * @param {Object} audioBuffer An AudioBuffer object to be checked.
  * @return {Boolean}
  */
-exports.isAudioBuffer = function (audioBuffer) {
+exports.isAudioBuffer = function(audioBuffer) {
   return audioBuffer instanceof AudioBuffer;
 };

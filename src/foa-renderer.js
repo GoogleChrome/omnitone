@@ -28,7 +28,6 @@ var FOARotator = require('./foa-rotator.js');
 var FOARouter = require('./foa-router.js');
 var HRIRManager = require('./hrir-manager.js');
 var Utils = require('./utils.js');
-var Version = require('./version.js');
 
 
 /**
@@ -60,22 +59,21 @@ var RenderingMode = {
  * overrides the internal HRIR list if given.
  * @param {RenderingMode} [config.renderingMode='ambisonic'] - Rendering mode.
  */
-function FOARenderer (context, config) {
-  this._context = Utils.isAudioContext(context)
-      ? context
-      : Utils.throw('FOARenderer: Invalid BaseAudioContext.');
+function FOARenderer(context, config) {
+  this._context = Utils.isBaseAudioContext(context) ?
+      context :
+      Utils.throw('FOARenderer: Invalid BaseAudioContext.');
 
   this._config = {};
 
-  if (config.channelMap &&
-      Array.isArray(config.channelMap)) {
+  if (config.channelMap && Array.isArray(config.channelMap)) {
     this._config.channelMap = config.channelMap;
   } else {
     this._config.channelMap = FOARouter.CHANNEL_MAP.DEFAULT;
   }
 
   if (config.renderingMode &&
-      Object.values(RenderingMode).includes(config.renderingMode))) {
+      Object.values(RenderingMode).includes(config.renderingMode)) {
     this._config.renderingMode = config.renderingMode;
   } else {
     this._config.renderingMode = RenderingMode.AMBISONIC;
@@ -86,7 +84,8 @@ function FOARenderer (context, config) {
         config.hrirPathList.length === 2) {
       this._config.pathList = config.hrirPathList;
     } else {
-      Utils.throw('FOARenderer: Invalid HRIR URLs. It must be an array with ' +
+      Utils.throw(
+          'FOARenderer: Invalid HRIR URLs. It must be an array with ' +
           '2 URLs to HRIR files. (got ' + config.hrirPathList + ')');
     }
   } else {
@@ -108,7 +107,7 @@ FOARenderer.prototype._buildAudioGraph = function() {
   this.input = this._context.createGain();
   this.output = this._context.createGain();
   this._bypass = this._context.createGain();
-  this._foaRouter = new FOARouter(this._context, this._channelMap);
+  this._foaRouter = new FOARouter(this._context, this._config.channelMap);
   this._foaRotator = new FOARotator(this._context);
   this._foaConvolver = new FOAConvolver(this._context);
   this.input.connect(this._foaRouter.input);
@@ -125,24 +124,22 @@ FOARenderer.prototype._buildAudioGraph = function() {
  * @param {function} resolve - Resolution handler.
  * @param {function} reject - Rejection handler.
  */
-FOARenderer.prototype._initializeCallback = function (resolve, reject) {
+FOARenderer.prototype._initializeCallback = function(resolve, reject) {
   var bufferLoaderData = [];
   for (var i = 0; i < this._config.pathList.length; ++i)
-    bufferLoaderData.push({ name: i, url: this._config.pathList[i] });
+    bufferLoaderData.push({name: i, url: this._config.pathList[i]});
 
   new AudioBufferManager(
-      this._context,
-      bufferLoaderData,
-      function (buffers) {
+      this._context, bufferLoaderData,
+      function(buffers) {
         this._buildAudioGraph();
         this._foaConvolver.setHRIRBufferList([buffers.get(0), buffers.get(1)]);
-        this.setChannelMap(this._config.channelMap);
         this.setRenderingMode(this._config.renderingMode);
         this._isRendererReady = true;
         Utils.log('FOARenderer: HRIRs loaded successfully. Ready.');
         resolve();
       }.bind(this),
-      function (buffers) {
+      function(buffers) {
         var errorMessage = 'FOARenderer: HRIR loading/decoding failed.';
         Utils.throw(errorMessage);
         reject(errorMessage);
@@ -154,11 +151,12 @@ FOARenderer.prototype._initializeCallback = function (resolve, reject) {
  * Initializes and loads the resource for the renderer.
  * @return {Promise}
  */
-FOARenderer.prototype.initialize = function () {
-  Utils.log('Version: ' + Version + ' (SH-MaxRE convolution)');
-  Utils.log('Initializing... (mode: ' + this._config.renderingMode + ')');
+FOARenderer.prototype.initialize = function() {
+  Utils.log(
+      'FOARenderer: Initializing... (mode: ' + this._config.renderingMode +
+      ')');
 
-  return new Promise(this._initializeCallback.bind(this), function (error) {
+  return new Promise(this._initializeCallback.bind(this), function(error) {
     Utils.throw('FOARenderer: Initialization failed.');
   });
 };
@@ -168,12 +166,13 @@ FOARenderer.prototype.initialize = function () {
  * Set the channel map.
  * @param {number[]} channelMap - Custom channel routing for FOA stream.
  */
-FOARenderer.prototype.setChannelMap = function (channelMap) {
+FOARenderer.prototype.setChannelMap = function(channelMap) {
   if (!this._isRendererReady)
     return;
 
   if (channelMap.toString() !== this._config.channelMap.toString()) {
-    Utils.log('Remapping channels ([' + this._config.channelMap.toString() +
+    Utils.log(
+        'Remapping channels ([' + this._config.channelMap.toString() +
         '] -> [' + channelMap.toString() + ']).');
     this._config.channelMap = channelMap.slice();
     this._foaRouter.setChannelMap(this._config.channelMap);
@@ -185,7 +184,7 @@ FOARenderer.prototype.setChannelMap = function (channelMap) {
  * Updates the rotation matrix with 3x3 matrix.
  * @param {number[]} rotationMatrix3 - A 3x3 rotation matrix. (column-major)
  */
-FOARenderer.prototype.setRotationMatrix3 = function (rotationMatrix3) {
+FOARenderer.prototype.setRotationMatrix3 = function(rotationMatrix3) {
   if (!this._isRendererReady)
     return;
 
@@ -197,7 +196,7 @@ FOARenderer.prototype.setRotationMatrix3 = function (rotationMatrix3) {
  * Updates the rotation matrix with 4x4 matrix.
  * @param {number[]} rotationMatrix4 - A 4x4 rotation matrix. (column-major)
  */
-FOARenderer.prototype.setRotationMatrix4 = function (rotationMatrix4) {
+FOARenderer.prototype.setRotationMatrix4 = function(rotationMatrix4) {
   if (!this._isRendererReady)
     return;
 
@@ -231,7 +230,7 @@ FOARenderer.prototype.setRotationMatrixFromCamera = function(cameraMatrix) {
  *    decoding or encoding.
  *  - 'off': all the processing off saving the CPU power.
  */
-FOARenderer.prototype.setRenderingMode = function (mode) {
+FOARenderer.prototype.setRenderingMode = function(mode) {
   if (mode === this._config.renderingMode)
     return;
 
@@ -249,7 +248,8 @@ FOARenderer.prototype.setRenderingMode = function (mode) {
       this._bypass.disconnect();
       break;
     default:
-      Utils.log('FOARenderer: Rendering mode "' + mode + '" is not ' +
+      Utils.log(
+          'FOARenderer: Rendering mode "' + mode + '" is not ' +
           'supported.');
       return;
   }

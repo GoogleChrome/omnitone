@@ -14,28 +14,32 @@
  */
 
 /**
- * @fileOverview Omnitone library name space and common utilities.
+ * @file Omnitone library name space and user-facing APIs.
  */
+
 
 'use strict';
 
+var AudioBufferManager = require('./audiobuffer-manager.js');
+var FOAConvolver = require('./foa-convolver.js');
+var FOADecoder = require('./foa-decoder.js');
+var FOAPhaseMatchedFilter = require('./foa-phase-matched-filter.js');
+var FOARenderer = require('./foa-renderer.js');
+var FOARotator = require('./foa-rotator.js');
+var FOARouter = require('./foa-router.js');
+var FOAVirtualSpeaker = require('./foa-virtual-speaker.js');
+var HOAConvolver = require('./hoa-convolver.js');
+var HOARenderer = require('./hoa-renderer.js');
+var HOARotator = require('./hoa-rotator.js');
+var Utils = require('./utils.js');
+var Version = require('./version.js');
+
+
 /**
- * @class Omnitone main namespace.
+ * @class Omnitone namespace.
  */
 var Omnitone = {};
 
-// Internal dependencies.
-var AudioBufferManager = require('./audiobuffer-manager.js');
-var FOAConvolver = require('./foa-convolver.js');
-var FOARouter = require('./foa-router.js');
-var FOARotator = require('./foa-rotator.js');
-var FOAPhaseMatchedFilter = require('./foa-phase-matched-filter.js');
-var FOAVirtualSpeaker = require('./foa-virtual-speaker.js');
-var FOADecoder = require('./foa-decoder.js');
-var FOARenderer = require('./foa-renderer.js');
-var HOARotator = require('./hoa-rotator.js');
-var HOAConvolver = require('./hoa-convolver.js');
-var HOARenderer = require('./hoa-renderer.js');
 
 /**
  * Load audio buffers based on the speaker configuration map data.
@@ -161,6 +165,9 @@ Omnitone.createHOAConvolver = function(context, options) {
 Omnitone.createHOARenderer = function(context, options) {
   return new HOARenderer(context, options);
 };
+
+
+Utils.log('Omnitone: Version ' + Version);
 
 
 module.exports = Omnitone;
