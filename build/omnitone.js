@@ -103,18 +103,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	var AudioBufferManager = __webpack_require__(2);
-	var FOAConvolver = __webpack_require__(4);
-	var FOADecoder = __webpack_require__(5);
-	var FOAPhaseMatchedFilter = __webpack_require__(8);
-	var FOARenderer = __webpack_require__(12);
-	var FOARotator = __webpack_require__(7);
-	var FOARouter = __webpack_require__(6);
-	var FOAVirtualSpeaker = __webpack_require__(9);
-	var HOAConvolver = __webpack_require__(14);
-	var HOARenderer = __webpack_require__(15);
-	var HOARotator = __webpack_require__(16);
+	var BufferList = __webpack_require__(4);
+	var FOAConvolver = __webpack_require__(5);
+	var FOADecoder = __webpack_require__(6);
+	var FOAPhaseMatchedFilter = __webpack_require__(9);
+	var FOARenderer = __webpack_require__(13);
+	var FOARotator = __webpack_require__(8);
+	var FOARouter = __webpack_require__(7);
+	var FOAVirtualSpeaker = __webpack_require__(10);
+	var HOAConvolver = __webpack_require__(15);
+	var HOARenderer = __webpack_require__(16);
+	var HOARotator = __webpack_require__(17);
 	var Utils = __webpack_require__(3);
-	var Version = __webpack_require__(11);
+	var Version = __webpack_require__(12);
 
 
 	/**
@@ -136,6 +137,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	      resolve(buffers);
 	    }, reject);
 	  });
+	};
+
+
+	Omnitone.getBufferList = function (context, bufferData) {
+	  var bufferList = new BufferList(context, bufferData, { verbose: true });
+	  return bufferList.load();
 	};
 
 
@@ -562,6 +569,164 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 4 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * Copyright 2016 Google Inc. All Rights Reserved.
+	 * Licensed under the Apache License, Version 2.0 (the "License");
+	 * you may not use this file except in compliance with the License.
+	 * You may obtain a copy of the License at
+	 *
+	 *     http://www.apache.org/licenses/LICENSE-2.0
+	 *
+	 * Unless required by applicable law or agreed to in writing, software
+	 * distributed under the License is distributed on an "AS IS" BASIS,
+	 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	 * See the License for the specific language governing permissions and
+	 * limitations under the License.
+	 */
+
+	/**
+	 * @file Stream-lined AudioBuffer loader.
+	 */
+
+
+	'use strict';
+
+	var Utils = __webpack_require__(3);
+
+
+	/**
+	 * BufferList object mananges the async loading/decoding of multiple
+	 * AudioBuffers from multiple URLs.
+	 * @constructor
+	 * @param {BaseAudioContext} context - Associated BaseAudioContext.
+	 * @param {string[]} bufferData - An ordered list of URLs.
+	 * @param {Object} options - Options
+	 * @param {Boolean} options.verbose - Log verbosity. |true| prints the
+	 * individual message from each URL and AudioBuffer.
+	 */
+	function BufferList(context, bufferData, options) {
+	  this._context = Utils.isBaseAudioContext(context) ?
+	      context :
+	      Utils.throw('BufferList: Invalid BaseAudioContext.');
+
+	  this._bufferList = [];
+	  this._bufferData = bufferData.slice(0);
+	  this._numberOfTasks = this._bufferData.length;
+
+	  this._options = { verbose: false };
+	  if (options) {
+	    this._options = Boolean(options.verbose);
+	  }
+
+	  this._resolveHandler = null;
+	  this._rejectHandler = new Function();
+	}
+
+
+	/**
+	 * Starts AudioBuffer loading tasks.
+	 * @return {Promise<Array>} The promise resolves with an array of AudioBuffer.
+	 */
+	BufferList.prototype.load = function() {
+	  return new Promise(this._promiseGenerator.bind(this));
+	};
+
+
+	/**
+	 * Promise argument generator. Internally starts multiple async loading tasks.
+	 * @private
+	 * @param {function} resolve Promise resolver.
+	 * @param {function} reject Promise reject.
+	 */
+	BufferList.prototype._promiseGenerator = function(resolve, reject) {
+	  if (typeof resolve !== 'function')
+	    Utils.throw('BufferList: Invalid Promise resolver.');
+	  else
+	    this._resolveHandler = resolve;
+
+	  if (typeof reject === 'function')
+	    this._rejectHandler = reject;
+
+	  for (var i = 0; i < this._bufferData.length; ++i)
+	    this._launchAsyncLoadTask(i);
+	};
+
+
+	/**
+	 * Individual async loading task.
+	 * @private
+	 * @param {Number} taskId Task ID number from |BufferData|.
+	 */
+	BufferList.prototype._launchAsyncLoadTask = function(taskId) {
+	  var xhr = new XMLHttpRequest();
+	  xhr.open('GET', this._bufferData[taskId]);
+	  xhr.responseType = 'arraybuffer';
+
+	  var that = this;
+	  xhr.onload = function() {
+	    if (xhr.status === 200) {
+	      that._context.decodeAudioData(
+	          xhr.response,
+	          function(audioBuffer) {
+	            that._updateProgress(taskId, audioBuffer);
+	          },
+	          function(errorMessage) {
+	            that._updateProgress(taskId, null);
+	            var message = 'BufferList: decoding "' + that._bufferData[taskId] +
+	                '" failed. (' + errorMessage + ')';
+	            Utils.throw(message);
+	            that._rejectHandler(message);
+	          });
+	    } else {
+	      var message = 'BufferList: XHR error while loading "' +
+	          that._bufferData[taskId] + '(' + xhr.statusText + ')';
+	      Utils.throw(message);
+	      that._rejectHandler(message);
+	    }
+	  };
+
+	  xhr.onerror = function(event) {
+	    Utils.throw(
+	        'BufferList: XHR network failed on loading "' +
+	        that._bufferData[taskId] + '".');
+	    that._updateProgress(taskId, null);
+	    that._rejectHandler();
+	  };
+
+	  xhr.send();
+	};
+
+
+	/**
+	 * Updates the overall progress on loading tasks.
+	 * @param {Number} taskId Task ID number.
+	 * @param {AudioBuffer} audioBuffer Decoded AudioBuffer object.
+	 */
+	BufferList.prototype._updateProgress = function(taskId, audioBuffer) {
+	  this._bufferList[taskId] = audioBuffer;
+
+	  if (this._options.verbose) {
+	    Utils.log(
+	        'BufferList: "' + this._bufferData[taskId] + '" successfully' +
+	        'loaded.');
+	  }
+
+	  if (--this._numberOfTasks === 0) {
+	    Utils.log(
+	        'BufferList: ' + this._bufferData.length + ' files loaded ' +
+	        'successfully.');
+	    this._resolveHandler(this._bufferList);
+	  }
+	};
+
+
+	module.exports = BufferList;
+
+
+/***/ },
+/* 5 */
 /***/ function(module, exports) {
 
 	/**
@@ -709,7 +874,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 5 */
+/* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -735,13 +900,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	var AudioBufferManager = __webpack_require__(2);
-	var FOARouter = __webpack_require__(6);
-	var FOARotator = __webpack_require__(7);
-	var FOAPhaseMatchedFilter = __webpack_require__(8);
-	var FOAVirtualSpeaker = __webpack_require__(9);
-	var FOASpeakerData = __webpack_require__(10);
+	var FOARouter = __webpack_require__(7);
+	var FOARotator = __webpack_require__(8);
+	var FOAPhaseMatchedFilter = __webpack_require__(9);
+	var FOAVirtualSpeaker = __webpack_require__(10);
+	var FOASpeakerData = __webpack_require__(11);
 	var Utils = __webpack_require__(3);
-	var SystemVersion = __webpack_require__(11);
+	var SystemVersion = __webpack_require__(12);
 
 	// By default, Omnitone fetches IR from the spatial media repository.
 	var HRTFSET_URL = 'https://raw.githubusercontent.com/GoogleChrome/omnitone/master/build/resources/';
@@ -926,7 +1091,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 6 */
+/* 7 */
 /***/ function(module, exports) {
 
 	/**
@@ -1024,7 +1189,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 7 */
+/* 8 */
 /***/ function(module, exports) {
 
 	/**
@@ -1191,7 +1356,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 8 */
+/* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -1307,7 +1472,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 9 */
+/* 10 */
 /***/ function(module, exports) {
 
 	/**
@@ -1401,7 +1566,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 10 */
+/* 11 */
 /***/ function(module, exports) {
 
 	/**
@@ -1476,7 +1641,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 11 */
+/* 12 */
 /***/ function(module, exports) {
 
 	/**
@@ -1508,7 +1673,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 12 */
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -1534,11 +1699,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var AudioBufferManager = __webpack_require__(2);
-	var FOAConvolver = __webpack_require__(4);
-	var FOARotator = __webpack_require__(7);
-	var FOARouter = __webpack_require__(6);
-	var HRIRManager = __webpack_require__(13);
+	var BufferList = __webpack_require__(4);
+	var FOAConvolver = __webpack_require__(5);
+	var FOARotator = __webpack_require__(8);
+	var FOARouter = __webpack_require__(7);
+	var HRIRManager = __webpack_require__(14);
 	var Utils = __webpack_require__(3);
 
 
@@ -1576,12 +1741,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	      context :
 	      Utils.throw('FOARenderer: Invalid BaseAudioContext.');
 
-	  this._config = {};
+	  this._config = {
+	    channelMap: FOARouter.CHANNEL_MAP.DEFAULT,
+	    renderingMode: RenderingMode.AMBISONIC
+	  };
 
-	  if (config.channelMap && Array.isArray(config.channelMap)) {
-	    this._config.channelMap = config.channelMap;
-	  } else {
-	    this._config.channelMap = FOARouter.CHANNEL_MAP.DEFAULT;
+	  if (config.channelMap) {
+	    if (Array.isArray(config.channelMap) && config.channelMap.length === 4) {
+	      this._config.channelMap = config.channelMap;
+	    } else {
+	      Utils.throw(
+	          'FOARenderer: Invalid channel map. (got ' + config.channelMap +
+	          ')');
+	    }
 	  }
 
 	  if (config.hrirPathList) {
@@ -1599,14 +1771,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this._config.pathList = HRIRManager.getPathList();
 	  }
 
-	  if (config.renderingMode &&
-	      Object.values(RenderingMode).includes(config.renderingMode)) {
-	    this._config.renderingMode = config.renderingMode;
-	  } else {
-	    this._config.renderingMode = RenderingMode.AMBISONIC;
-	    Utils.log(
+	  if (config.renderingMode) {
+	    if (Object.values(RenderingMode).includes(config.renderingMode)) {
+	      this._config.renderingMode = config.renderingMode;
+	    } else {
+	      Utils.log(
 	        'FOARenderer: Invalid rendering mode order. (got' +
 	        config.renderingMode + ') Fallbacks to the mode "ambisonic".');
+	    }
 	  }
 
 	  this._buildAudioGraph();
@@ -1646,19 +1818,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	  for (var i = 0; i < this._config.pathList.length; ++i)
 	    bufferLoaderData.push({name: i, url: this._config.pathList[i]});
 
-	  var hrirBufferList = [];
-	  new AudioBufferManager(
-	      this._context, bufferLoaderData,
-	      function(bufferMap) {
-	        for (var i = 0; i < bufferLoaderData.length; ++i)
-	          hrirBufferList.push(bufferMap.get(i));
+	  var bufferList = new BufferList(this._context, this._config.pathList);
+	  bufferList.load().then(
+	      function(hrirBufferList) {
 	        this._foaConvolver.setHRIRBufferList(hrirBufferList);
 	        this.setRenderingMode(this._config.renderingMode);
 	        this._isRendererReady = true;
 	        Utils.log('FOARenderer: HRIRs loaded successfully. Ready.');
 	        resolve();
 	      }.bind(this),
-	      function(bufferMap) {
+	      function(errorMessage) {
 	        var errorMessage = 'FOARenderer: HRIR loading/decoding failed. (' +
 	            Array.from(bufferMap) + ')';
 	        Utils.throw(errorMessage);
@@ -1783,7 +1952,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 13 */
+/* 14 */
 /***/ function(module, exports) {
 
 	/**
@@ -1885,7 +2054,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 14 */
+/* 15 */
 /***/ function(module, exports) {
 
 	/**
@@ -2059,7 +2228,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 15 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -2084,10 +2253,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var AudioBufferManager = __webpack_require__(2);
-	var HOAConvolver = __webpack_require__(14);
-	var HOARotator = __webpack_require__(16);
-	var HRIRManager = __webpack_require__(13);
+	var BufferList = __webpack_require__(4);
+	var HOAConvolver = __webpack_require__(15);
+	var HOARotator = __webpack_require__(17);
+	var HRIRManager = __webpack_require__(14);
 	var Utils = __webpack_require__(3);
 
 
@@ -2126,18 +2295,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	function HOARenderer(context, config) {
 	  this._context = Utils.isBaseAudioContext(context) ?
 	      context :
-	      Utils.throw('FOARenderer: Invalid BaseAudioContext.');
+	      Utils.throw('HOARenderer: Invalid BaseAudioContext.');
 
-	  this._config = {};
+	  this._config = {
+	    ambisonicOrder: 3,
+	    renderingMode: RenderingMode.AMBISONIC
+	  };
 
-	  if (config.ambisonicOrder &&
-	      SupportedAmbisonicOrder.includes(config.ambisonicOrder)) {
-	    this._config.ambisonicOrder = config.ambisonicOrder;
-	  } else {
-	    this._config.ambisonicOrder = 3;
-	    Utils.log(
+	  if (config.ambisonicOrder) {
+	    if (SupportedAmbisonicOrder.includes(config.ambisonicOrder)) {
+	      this._config.ambisonicOrder = config.ambisonicOrder;
+	    } else {
+	      Utils.log(
 	        'HOARenderer: Invalid ambisonic order. (got ' + config.ambisonicOrder +
 	        ') Fallbacks to 3rd-order ambisonic.');
+	    }
 	  }
 
 	  this._config.numberOfChannels =
@@ -2156,18 +2328,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	          ' (got ' + config.hrirPathList + ')');
 	    }
 	  } else {
-	    // By default, the path list points to GitHub CDN with FOA files.
+	    // By default, the path list points to GitHub CDN with HOA files.
 	    // TODO(hoch): update this to Gstatic server when it's available.
 	    this._config.pathList =
 	        HRIRManager.getPathList({ambisonicOrder: this._config.ambisonicOrder});
 	  }
 
-
-	  if (config.renderingMode &&
-	      Object.values(RenderingMode).includes(config.renderingMode)) {
-	    this._config.renderingMode = config.renderingMode;
-	  } else {
-	    this._config.renderingMode = RenderingMode.AMBISONIC;
+	  if (config.renderingMode) {
+	    if (Object.values(RenderingMode).includes(config.renderingMode)) {
+	      this._config.renderingMode = config.renderingMode;
+	    } else {
+	      Utils.log(
+	          'HOARenderer: Invalid rendering mode. (got ' + config.renderingMode +
+	          ') Fallbacks to "ambisonic".');
+	    }
 	  }
 
 	  this._buildAudioGraph();
@@ -2205,19 +2379,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	  for (var i = 0; i < this._config.pathList.length; ++i)
 	    bufferLoaderData.push({name: i, url: this._config.pathList[i]});
 
-	  var hrirBufferList = [];
-	  new AudioBufferManager(
-	      this._context, bufferLoaderData,
-	      function(bufferMap) {
-	        for (var i = 0; i < bufferLoaderData.length; ++i)
-	          hrirBufferList.push(bufferMap.get(i));
+	  var bufferList = new BufferList(this._context, this._config.pathList);
+	  bufferList.load().then(
+	      function(hrirBufferList) {
 	        this._hoaConvolver.setHRIRBufferList(hrirBufferList);
 	        this.setRenderingMode(this._config.renderingMode);
 	        this._isRendererReady = true;
 	        Utils.log('HOARenderer: HRIRs loaded successfully. Ready.');
 	        resolve();
 	      }.bind(this),
-	      function(bufferMap) {
+	      function(errorMessage) {
 	        var errorMessage = 'HOARenderer: HRIR loading/decoding failed. (' +
 	            Array.from(bufferMap) + ')';
 	        Utils.throw(errorMessage);
@@ -2236,7 +2407,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      ', ambisonic order: ' + this._config.ambisonicOrder + ')');
 
 	  return new Promise(this._initializeCallback.bind(this), function(error) {
-	    Utils.throw('FOARenderer: Initialization failed. (' + error + ')');
+	    Utils.throw('HOARenderer: Initialization failed. (' + error + ')');
 	  });
 	};
 
@@ -2306,7 +2477,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 16 */
+/* 17 */
 /***/ function(module, exports) {
 
 	/**

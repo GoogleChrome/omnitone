@@ -20,7 +20,7 @@
 
 'use strict';
 
-var AudioBufferManager = require('./audiobuffer-manager.js');
+var BufferList = require('./buffer-list.js');
 var HOAConvolver = require('./hoa-convolver.js');
 var HOARotator = require('./hoa-rotator.js');
 var HRIRManager = require('./hrir-manager.js');
@@ -62,18 +62,21 @@ var SupportedAmbisonicOrder = [2, 3];
 function HOARenderer(context, config) {
   this._context = Utils.isBaseAudioContext(context) ?
       context :
-      Utils.throw('FOARenderer: Invalid BaseAudioContext.');
+      Utils.throw('HOARenderer: Invalid BaseAudioContext.');
 
-  this._config = {};
+  this._config = {
+    ambisonicOrder: 3,
+    renderingMode: RenderingMode.AMBISONIC
+  };
 
-  if (config.ambisonicOrder &&
-      SupportedAmbisonicOrder.includes(config.ambisonicOrder)) {
-    this._config.ambisonicOrder = config.ambisonicOrder;
-  } else {
-    this._config.ambisonicOrder = 3;
-    Utils.log(
+  if (config.ambisonicOrder) {
+    if (SupportedAmbisonicOrder.includes(config.ambisonicOrder)) {
+      this._config.ambisonicOrder = config.ambisonicOrder;
+    } else {
+      Utils.log(
         'HOARenderer: Invalid ambisonic order. (got ' + config.ambisonicOrder +
         ') Fallbacks to 3rd-order ambisonic.');
+    }
   }
 
   this._config.numberOfChannels =
@@ -92,18 +95,20 @@ function HOARenderer(context, config) {
           ' (got ' + config.hrirPathList + ')');
     }
   } else {
-    // By default, the path list points to GitHub CDN with FOA files.
+    // By default, the path list points to GitHub CDN with HOA files.
     // TODO(hoch): update this to Gstatic server when it's available.
     this._config.pathList =
         HRIRManager.getPathList({ambisonicOrder: this._config.ambisonicOrder});
   }
 
-
-  if (config.renderingMode &&
-      Object.values(RenderingMode).includes(config.renderingMode)) {
-    this._config.renderingMode = config.renderingMode;
-  } else {
-    this._config.renderingMode = RenderingMode.AMBISONIC;
+  if (config.renderingMode) {
+    if (Object.values(RenderingMode).includes(config.renderingMode)) {
+      this._config.renderingMode = config.renderingMode;
+    } else {
+      Utils.log(
+          'HOARenderer: Invalid rendering mode. (got ' + config.renderingMode +
+          ') Fallbacks to "ambisonic".');
+    }
   }
 
   this._buildAudioGraph();
@@ -141,19 +146,16 @@ HOARenderer.prototype._initializeCallback = function(resolve, reject) {
   for (var i = 0; i < this._config.pathList.length; ++i)
     bufferLoaderData.push({name: i, url: this._config.pathList[i]});
 
-  var hrirBufferList = [];
-  new AudioBufferManager(
-      this._context, bufferLoaderData,
-      function(bufferMap) {
-        for (var i = 0; i < bufferLoaderData.length; ++i)
-          hrirBufferList.push(bufferMap.get(i));
+  var bufferList = new BufferList(this._context, this._config.pathList);
+  bufferList.load().then(
+      function(hrirBufferList) {
         this._hoaConvolver.setHRIRBufferList(hrirBufferList);
         this.setRenderingMode(this._config.renderingMode);
         this._isRendererReady = true;
         Utils.log('HOARenderer: HRIRs loaded successfully. Ready.');
         resolve();
       }.bind(this),
-      function(bufferMap) {
+      function(errorMessage) {
         var errorMessage = 'HOARenderer: HRIR loading/decoding failed. (' +
             Array.from(bufferMap) + ')';
         Utils.throw(errorMessage);
@@ -172,7 +174,7 @@ HOARenderer.prototype.initialize = function() {
       ', ambisonic order: ' + this._config.ambisonicOrder + ')');
 
   return new Promise(this._initializeCallback.bind(this), function(error) {
-    Utils.throw('FOARenderer: Initialization failed. (' + error + ')');
+    Utils.throw('HOARenderer: Initialization failed. (' + error + ')');
   });
 };
 

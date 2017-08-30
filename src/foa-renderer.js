@@ -21,7 +21,7 @@
 
 'use strict';
 
-var AudioBufferManager = require('./audiobuffer-manager.js');
+var BufferList = require('./buffer-list.js');
 var FOAConvolver = require('./foa-convolver.js');
 var FOARotator = require('./foa-rotator.js');
 var FOARouter = require('./foa-router.js');
@@ -63,12 +63,19 @@ function FOARenderer(context, config) {
       context :
       Utils.throw('FOARenderer: Invalid BaseAudioContext.');
 
-  this._config = {};
+  this._config = {
+    channelMap: FOARouter.CHANNEL_MAP.DEFAULT,
+    renderingMode: RenderingMode.AMBISONIC
+  };
 
-  if (config.channelMap && Array.isArray(config.channelMap)) {
-    this._config.channelMap = config.channelMap;
-  } else {
-    this._config.channelMap = FOARouter.CHANNEL_MAP.DEFAULT;
+  if (config.channelMap) {
+    if (Array.isArray(config.channelMap) && config.channelMap.length === 4) {
+      this._config.channelMap = config.channelMap;
+    } else {
+      Utils.throw(
+          'FOARenderer: Invalid channel map. (got ' + config.channelMap +
+          ')');
+    }
   }
 
   if (config.hrirPathList) {
@@ -86,14 +93,14 @@ function FOARenderer(context, config) {
     this._config.pathList = HRIRManager.getPathList();
   }
 
-  if (config.renderingMode &&
-      Object.values(RenderingMode).includes(config.renderingMode)) {
-    this._config.renderingMode = config.renderingMode;
-  } else {
-    this._config.renderingMode = RenderingMode.AMBISONIC;
-    Utils.log(
+  if (config.renderingMode) {
+    if (Object.values(RenderingMode).includes(config.renderingMode)) {
+      this._config.renderingMode = config.renderingMode;
+    } else {
+      Utils.log(
         'FOARenderer: Invalid rendering mode order. (got' +
         config.renderingMode + ') Fallbacks to the mode "ambisonic".');
+    }
   }
 
   this._buildAudioGraph();
@@ -133,19 +140,16 @@ FOARenderer.prototype._initializeCallback = function(resolve, reject) {
   for (var i = 0; i < this._config.pathList.length; ++i)
     bufferLoaderData.push({name: i, url: this._config.pathList[i]});
 
-  var hrirBufferList = [];
-  new AudioBufferManager(
-      this._context, bufferLoaderData,
-      function(bufferMap) {
-        for (var i = 0; i < bufferLoaderData.length; ++i)
-          hrirBufferList.push(bufferMap.get(i));
+  var bufferList = new BufferList(this._context, this._config.pathList);
+  bufferList.load().then(
+      function(hrirBufferList) {
         this._foaConvolver.setHRIRBufferList(hrirBufferList);
         this.setRenderingMode(this._config.renderingMode);
         this._isRendererReady = true;
         Utils.log('FOARenderer: HRIRs loaded successfully. Ready.');
         resolve();
       }.bind(this),
-      function(bufferMap) {
+      function(errorMessage) {
         var errorMessage = 'FOARenderer: HRIR loading/decoding failed. (' +
             Array.from(bufferMap) + ')';
         Utils.throw(errorMessage);

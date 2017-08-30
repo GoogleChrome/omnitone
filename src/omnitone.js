@@ -21,6 +21,7 @@
 'use strict';
 
 var AudioBufferManager = require('./audiobuffer-manager.js');
+var BufferList = require('./buffer-list.js');
 var FOAConvolver = require('./foa-convolver.js');
 var FOADecoder = require('./foa-decoder.js');
 var FOAPhaseMatchedFilter = require('./foa-phase-matched-filter.js');
@@ -54,6 +55,12 @@ Omnitone.loadAudioBuffers = function(context, speakerData) {
       resolve(buffers);
     }, reject);
   });
+};
+
+
+Omnitone.getBufferList = function (context, bufferData) {
+  var bufferList = new BufferList(context, bufferData, { verbose: true });
+  return bufferList.load();
 };
 
 
