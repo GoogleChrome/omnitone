@@ -20,7 +20,6 @@
 
 'use strict';
 
-var AudioBufferManager = require('./audiobuffer-manager.js');
 var BufferList = require('./buffer-list.js');
 var FOAConvolver = require('./foa-convolver.js');
 var FOADecoder = require('./foa-decoder.js');
@@ -35,6 +34,9 @@ var HOARotator = require('./hoa-rotator.js');
 var Utils = require('./utils.js');
 var Version = require('./version.js');
 
+// DEPRECATED in V1, in favor of BufferList.
+var AudioBufferManager = require('./audiobuffer-manager.js');
+
 
 /**
  * @class Omnitone namespace.
@@ -43,11 +45,7 @@ var Omnitone = {};
 
 
 /**
- * Load audio buffers based on the speaker configuration map data.
- * @param {AudioContext} context      The associated AudioContext.
- * @param {Map} speakerData           The speaker configuration map data.
- *                                    { name, url, coef }
- * @return {Promise}
+ * DEPRECATED in V1. DO NOT USE.
  */
 Omnitone.loadAudioBuffers = function(context, speakerData) {
   return new Promise(function(resolve, reject) {
@@ -58,25 +56,36 @@ Omnitone.loadAudioBuffers = function(context, speakerData) {
 };
 
 
-Omnitone.getBufferList = function (context, bufferData) {
-  var bufferList = new BufferList(context, bufferData, { verbose: true });
+/**
+ * Performs the async loading/decoding of multiple AudioBuffers from multiple
+ * URLs.
+ * @param {BaseAudioContext} context - Associated BaseAudioContext.
+ * @param {string[]} bufferData - An ordered list of URLs.
+ * @return {Promise<AudioBuffer[]>} - The promise resolves with an array of
+ * AudioBuffer.
+ */
+Omnitone.getBufferList = function(context, bufferData) {
+  var bufferList = new BufferList(context, bufferData);
   return bufferList.load();
 };
 
 
 /**
- * Create an instance of FOA Convolver. For parameters, refer the definition of
- * Router class.
+ * Creates an instance of FOA Convolver.
+ * @see FOAConvolver
+ * @param {BaseAudioContext} context The associated AudioContext.
+ * @param {AudioBuffer[]} [hrirBufferList] - An ordered-list of stereo
  * @return {FOAConvolver}
  */
-Omnitone.createFOAConvolver = function(context, options) {
-  return new FOAConvolver(context, options);
+Omnitone.createFOAConvolver = function(context, hrirBufferList) {
+  return new FOAConvolver(context, hrirBufferList);
 };
 
 
 /**
- * Create an instance of FOA Router. For parameters, refer the definition of
- * Router class.
+ * Create an instance of FOA Router.
+ * @see FOARouter
+ * @param {AudioContext} context - Associated AudioContext.
  * @return {FOARouter}
  */
 Omnitone.createFOARouter = function(context, channelMap) {
@@ -85,8 +94,9 @@ Omnitone.createFOARouter = function(context, channelMap) {
 
 
 /**
- * Create an instance of FOA Rotator. For parameters, refer the definition of
- * Rotator class.
+ * Create an instance of FOA Rotator.
+ * @see FOARotator
+ * @param {AudioContext} context - Associated AudioContext.
  * @return {FOARotator}
  */
 Omnitone.createFOARotator = function(context) {
@@ -95,8 +105,9 @@ Omnitone.createFOARotator = function(context) {
 
 
 /**
- * Create an instance of FOAPhaseMatchedFilter. For parameters, refer the
- * definition of PhaseMatchedFilter class.
+ * Create an instance of FOAPhaseMatchedFilter.
+ * @see FOAPhaseMatchedFilter
+ * @param {AudioContext} context - Associated AudioContext.
  * @return {FOAPhaseMatchedFilter}
  */
 Omnitone.createFOAPhaseMatchedFilter = function(context) {
@@ -161,13 +172,13 @@ Omnitone.createHOARotator = function(context, ambisonicOrder) {
 /**
  * Creates HOAConvolver performs the multi-channel convolution for the optmized
  * binaural rendering.
-* @param {AudioContext} context - Associated AudioContext.
+ * @param {AudioContext} context - Associated AudioContext.
  * @param {Number} ambisonicOrder - Ambisonic order. (2 or 3)
  * @param {AudioBuffer[]} [hrirBufferList] - An ordered-list of stereo
  * AudioBuffers for convolution. (SOA: 5 AudioBuffers, TOA: 8 AudioBuffers)
  */
-Omnitone.createHOAConvolver =
-    function(context, ambisonicOrder, hrirBufferList) {
+Omnitone.createHOAConvolver = function(
+    context, ambisonicOrder, hrirBufferList) {
   return new HOAConvolver(context, ambisonicOrder, hrirBufferList);
 };
 

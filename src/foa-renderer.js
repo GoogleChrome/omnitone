@@ -64,7 +64,7 @@ function FOARenderer(context, config) {
       Utils.throw('FOARenderer: Invalid BaseAudioContext.');
 
   this._config = {
-    channelMap: FOARouter.CHANNEL_MAP.DEFAULT,
+    channelMap: FOARouter.ChannelMap.DEFAULT,
     renderingMode: RenderingMode.AMBISONIC
   };
 

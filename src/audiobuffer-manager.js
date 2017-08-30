@@ -14,7 +14,7 @@
  */
 
 /**
- * @fileOverview Audio buffer loading utility.
+ * @fileOverview DEPRECATED at V1. Audio buffer loading utility.
  */
 
 'use strict';
