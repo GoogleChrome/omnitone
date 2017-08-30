@@ -64,18 +64,15 @@ function HOARenderer(context, config) {
       context :
       Utils.throw('HOARenderer: Invalid BaseAudioContext.');
 
-  this._config = {
-    ambisonicOrder: 3,
-    renderingMode: RenderingMode.AMBISONIC
-  };
+  this._config = {ambisonicOrder: 3, renderingMode: RenderingMode.AMBISONIC};
 
   if (config.ambisonicOrder) {
     if (SupportedAmbisonicOrder.includes(config.ambisonicOrder)) {
       this._config.ambisonicOrder = config.ambisonicOrder;
     } else {
       Utils.log(
-        'HOARenderer: Invalid ambisonic order. (got ' + config.ambisonicOrder +
-        ') Fallbacks to 3rd-order ambisonic.');
+          'HOARenderer: Invalid ambisonic order. (got ' +
+          config.ambisonicOrder + ') Fallbacks to 3rd-order ambisonic.');
     }
   }
 

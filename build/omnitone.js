@@ -1751,8 +1751,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      this._config.channelMap = config.channelMap;
 	    } else {
 	      Utils.throw(
-	          'FOARenderer: Invalid channel map. (got ' + config.channelMap +
-	          ')');
+	          'FOARenderer: Invalid channel map. (got ' + config.channelMap + ')');
 	    }
 	  }
 
@@ -1776,8 +1775,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	      this._config.renderingMode = config.renderingMode;
 	    } else {
 	      Utils.log(
-	        'FOARenderer: Invalid rendering mode order. (got' +
-	        config.renderingMode + ') Fallbacks to the mode "ambisonic".');
+	          'FOARenderer: Invalid rendering mode order. (got' +
+	          config.renderingMode + ') Fallbacks to the mode "ambisonic".');
 	    }
 	  }
 
@@ -2297,18 +2296,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	      context :
 	      Utils.throw('HOARenderer: Invalid BaseAudioContext.');
 
-	  this._config = {
-	    ambisonicOrder: 3,
-	    renderingMode: RenderingMode.AMBISONIC
-	  };
+	  this._config = {ambisonicOrder: 3, renderingMode: RenderingMode.AMBISONIC};
 
 	  if (config.ambisonicOrder) {
 	    if (SupportedAmbisonicOrder.includes(config.ambisonicOrder)) {
 	      this._config.ambisonicOrder = config.ambisonicOrder;
 	    } else {
 	      Utils.log(
-	        'HOARenderer: Invalid ambisonic order. (got ' + config.ambisonicOrder +
-	        ') Fallbacks to 3rd-order ambisonic.');
+	          'HOARenderer: Invalid ambisonic order. (got ' +
+	          config.ambisonicOrder + ') Fallbacks to 3rd-order ambisonic.');
 	    }
 	  }
 

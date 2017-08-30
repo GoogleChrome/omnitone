@@ -73,8 +73,7 @@ function FOARenderer(context, config) {
       this._config.channelMap = config.channelMap;
     } else {
       Utils.throw(
-          'FOARenderer: Invalid channel map. (got ' + config.channelMap +
-          ')');
+          'FOARenderer: Invalid channel map. (got ' + config.channelMap + ')');
     }
   }
 
@@ -98,8 +97,8 @@ function FOARenderer(context, config) {
       this._config.renderingMode = config.renderingMode;
     } else {
       Utils.log(
-        'FOARenderer: Invalid rendering mode order. (got' +
-        config.renderingMode + ') Fallbacks to the mode "ambisonic".');
+          'FOARenderer: Invalid rendering mode order. (got' +
+          config.renderingMode + ') Fallbacks to the mode "ambisonic".');
     }
   }
 
