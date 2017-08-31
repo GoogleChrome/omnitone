@@ -21,7 +21,7 @@
  * a buffer of binaural rendering. Then compare it with the JS-calculated
  * result. Thresholding the comparison is necessary because
  */
-describe('FOAConvolver', function () {
+describe('FOAConvolver', function() {
   // This test is async, override timeout threshold to 5 sec.
   this.timeout(5000);
 
@@ -36,13 +36,20 @@ describe('FOAConvolver', function () {
   var foaImpulseBuffer;
   var foaSHMaxREBuffer;
 
+  var hrirBufferData = [
+    'base/build/resources/omnitone-foa-1.wav',
+    'base/build/resources/omnitone-foa-2.wav'
+  ];
+  var hrirBufferList;
+
+
   /**
    * Calculate the expected binaural rendering (based on SH-maxRE algorithm)
    * result from the impulse input and generate an AudioBus instance.
    * @param  {AudioBuffer} buffer     FOA SH-maxRE HRIR buffer.
    * @return {AudioBus}
    */
-  function generateExpectedBusFromFOAIRBuffer (buffer) {
+  function generateExpectedBusFromFOAIRBuffer(buffer) {
     var generatedBus = new AudioBus(2, buffer.length, buffer.sampleRate);
     var W = buffer.getChannelData(0);
     var Y = buffer.getChannelData(1);
@@ -50,7 +57,6 @@ describe('FOAConvolver', function () {
     var X = buffer.getChannelData(3);
     var L = generatedBus.getChannelData(0);
     var R = generatedBus.getChannelData(1);
-
     for (var i = 0; i < buffer.length; ++i) {
       L[i] = W[i] + Y[i] + Z[i] + X[i];
       R[i] = W[i] - Y[i] + Z[i] + X[i];
@@ -58,40 +64,35 @@ describe('FOAConvolver', function () {
     return generatedBus;
   }
 
-  beforeEach(function (done) {
+
+  beforeEach(function(done) {
     context = new OfflineAudioContext(4, renderLength, sampleRate);
     foaImpulseBuffer = createImpulseBuffer(context, 4, renderLength);
-
-    Omnitone.loadAudioBuffers(context, [{
-        name: 'SH-MaxRe',
-        url: 'base/build/resources/sh_hrir_o_1.wav'
-      }]).then(function (buffers) {
-        foaSHMaxREBuffer = buffers.get('SH-MaxRe');
-        done();
-      });
-  });
-
-  it('inject impulse buffer and verify convolution result.',
-      function (done) {
-        var impulseSource = context.createBufferSource();
-        var foaConvolver = Omnitone.createFOAConvolver(context, {
-          IR: foaSHMaxREBuffer
-        });
-
-        impulseSource.buffer = foaImpulseBuffer;
-
-        impulseSource.connect(foaConvolver.input);
-        foaConvolver.output.connect(context.destination);
-        impulseSource.start();
-
-        context.startRendering().then(function (renderedBuffer) {
-          var actualBus = new AudioBus(2, renderLength, sampleRate);
-          actualBus.copyFromAudioBuffer(renderedBuffer);
-          var expectedBus =
-              generateExpectedBusFromFOAIRBuffer(foaSHMaxREBuffer);
-          expect(actualBus.compareWith(expectedBus, THRESHOLD)).to.equal(true);
+    Omnitone.createBufferList(context, hrirBufferData)
+        .then(function(bufferList) {
+          hrirBufferList = bufferList;
+          foaSHMaxREBuffer =
+              Omnitone.mergeBufferListByChannel(context, bufferList);
           done();
         });
-      }
-  );
+  });
+
+
+  it('inject impulse buffer and verify convolution result.', function(done) {
+    var foaConvolver = Omnitone.createFOAConvolver(context, hrirBufferList);
+    var impulseSource = context.createBufferSource();
+    impulseSource.buffer = foaImpulseBuffer;
+
+    impulseSource.connect(foaConvolver.input);
+    foaConvolver.output.connect(context.destination);
+    impulseSource.start();
+
+    context.startRendering().then(function(renderedBuffer) {
+      var actualBus = new AudioBus(2, renderLength, sampleRate);
+      actualBus.copyFromAudioBuffer(renderedBuffer);
+      var expectedBus = generateExpectedBusFromFOAIRBuffer(foaSHMaxREBuffer);
+      expect(actualBus.compareWith(expectedBus, THRESHOLD)).to.equal(true);
+      done();
+    });
+  });
 });

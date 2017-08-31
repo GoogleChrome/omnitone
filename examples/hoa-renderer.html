@@ -96,13 +96,10 @@
           '../build/resources/omnitone-toa-8.wav'],
       };
 
-      var exampleSoundData = [{
-          name: 'part-a',
-          url: 'resources/3oa_example_ch0-ch7.wav'
-        }, {
-          name: 'part-b',
-          url: 'resources/3oa_example_ch8-ch15.wav'
-        }];
+      var exampleSoundPathList = [
+        'resources/3oa_example_ch0-ch7.wav',
+        'resources/3oa_example_ch8-ch15.wav'
+      ];
 
       function crossProduct(a, b) {
         return [
@@ -185,22 +182,6 @@
         inputGain.gain.value = Math.pow(10, parseFloat(eRangeGain.value) / 20);
       }
 
-      function loadTOASoundExample(buffers) {
-        // The sound data for TOA example is splitted into 2 parts because
-        // the current implementation Chrome cannot handle the audio file
-        // greater than 8 channels.
-        var partA = exampleSoundData[0].name;
-        var partB = exampleSoundData[1].name;
-        mergedTOABuffer = audioContext.createBuffer(
-            16, buffers.get(partA).length, buffers.get(partA).sampleRate);
-        for (var i = 0; i < 8; ++i) {
-          mergedTOABuffer.getChannelData(i).set(
-              buffers.get(partA).getChannelData(i));
-          mergedTOABuffer.getChannelData(i + 8).set(
-              buffers.get(partB).getChannelData(i));
-        }
-      }
-
       function onLoad() {
         eButtonPlayback = document.getElementById('eButtonPlayback');
         eRangeAzimuth = document.getElementById('eRangeAzimuth');
@@ -218,10 +199,11 @@
         hoaRenderer = Omnitone.createHOARenderer(audioContext, omnitoneConfig);
 
         Promise.all([
-          Omnitone.loadAudioBuffers(audioContext, exampleSoundData),
+          Omnitone.createBufferList(audioContext, exampleSoundPathList),
           hoaRenderer.initialize()
           ]).then((results) => {
-            loadTOASoundExample(results[0]);
+            mergedTOABuffer =
+                Omnitone.mergeBufferListByChannel(audioContext, results[0]);
             inputGain.connect(hoaRenderer.input);
             hoaRenderer.output.connect(audioContext.destination);
             eButtonPlayback.disabled = false;

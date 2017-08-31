@@ -27,7 +27,7 @@
  * @constructor
  * @param {BaseAudioContext} context The associated AudioContext.
  * @param {AudioBuffer[]} [hrirBufferList] - An ordered-list of stereo
- * AudioBuffers for convolution. (FOA: 2 AudioBuffers)
+ * AudioBuffers for convolution. (i.e. 2 stereo AudioBuffers for FOA)
  */
 function FOAConvolver(context, hrirBufferList) {
   this._context = context;

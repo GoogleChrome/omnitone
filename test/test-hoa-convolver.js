@@ -14,11 +14,12 @@
  */
 
 
-// Test HOAConvolver object as TOA(third-order ambisonic).
-//
-// Load HRIR (SH MaxRE, the new optimized IRs) and shoot an impulse to generate
-// a buffer of binaural rendering. Then compare it with the JS-calculated
-// result.
+/**
+ * Test HOAConvolver object as TOA(third-order ambisonic).
+ * Load HRIR (SH MaxRE, the new optimized IRs) and shoot an impulse to generate
+ * a buffer of binaural rendering. Then compare it with the JS-calculated
+ * result.
+ */
 describe('HOAConvolver (3rd order ambisonic)', function() {
   // This test is async, override timeout threshold to 5 sec.
   this.timeout(5000);
@@ -28,12 +29,25 @@ describe('HOAConvolver (3rd order ambisonic)', function() {
   var THRESHOLD = 2.9802322387695312e-8;
 
   // SH MaxRe HRIRs are 48Khz and 256 samples.
+  var context;
   var sampleRate = 48000;
   var renderLength = 256;
 
-  var context;
+  var ambisonicOrder = 3;
   var toaImpulseBuffer;
   var toaSHMaxREBuffer;
+
+  var hrirBufferData = [
+    'base/build/resources/omnitone-toa-1.wav',
+    'base/build/resources/omnitone-toa-2.wav',
+    'base/build/resources/omnitone-toa-3.wav',
+    'base/build/resources/omnitone-toa-4.wav',
+    'base/build/resources/omnitone-toa-5.wav',
+    'base/build/resources/omnitone-toa-6.wav',
+    'base/build/resources/omnitone-toa-7.wav',
+    'base/build/resources/omnitone-toa-8.wav'
+  ];
+  var hrirBufferList;
 
   /**
    * Generate the expected binaural rendering (based on SH-maxRE algorithm)
@@ -77,47 +91,25 @@ describe('HOAConvolver (3rd order ambisonic)', function() {
   }
 
   beforeEach(function(done) {
-    var ambisonicOrder = 3;
     var numberOfChannels = (ambisonicOrder + 1) * (ambisonicOrder + 1);
-
     context =
         new OfflineAudioContext(numberOfChannels, renderLength, sampleRate);
     toaImpulseBuffer =
         createImpulseBuffer(context, numberOfChannels, renderLength);
-    toaSHMaxREBuffer =
-        context.createBuffer(numberOfChannels, renderLength, sampleRate);
-
-    // Load 3rd order IR files (16 channels) to |toaSHMaxREBuffer|.
-    Omnitone
-        .loadAudioBuffers(
-            context,
-            [
-              {
-                name: 'SH-MaxRe-part1',
-                url: 'base/build/resources/sh_hrir_o_3_ch0-ch7.wav'
-              },
-              {
-                name: 'SH-MaxRe-part2',
-                url: 'base/build/resources/sh_hrir_o_3_ch8-ch15.wav'
-              }
-            ])
-        .then(function(buffers) {
-          for (var i = 0; i < 8; ++i) {
-            toaSHMaxREBuffer.copyToChannel(
-                buffers.get('SH-MaxRe-part1').getChannelData(i), i);
-            toaSHMaxREBuffer.copyToChannel(
-                buffers.get('SH-MaxRe-part2').getChannelData(i), i + 8);
-          }
-
+    Omnitone.createBufferList(context, hrirBufferData)
+        .then(function(bufferList) {
+          hrirBufferList = bufferList;
+          toaSHMaxREBuffer =
+              Omnitone.mergeBufferListByChannel(context, bufferList);
           done();
         });
   });
 
   it('inject impulse buffer and verify convolution result.', function(done) {
-    var impulseSource = context.createBufferSource();
     var hoaConvolver =
-        Omnitone.createHOAConvolver(context, {IRBuffer: toaSHMaxREBuffer});
+        Omnitone.createHOAConvolver(context, ambisonicOrder, hrirBufferList);
 
+    var impulseSource = context.createBufferSource();
     impulseSource.buffer = toaImpulseBuffer;
 
     impulseSource.connect(hoaConvolver.input);

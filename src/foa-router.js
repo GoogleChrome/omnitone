@@ -51,16 +51,11 @@ function FOARouter(context, channelMap) {
   this._splitter = this._context.createChannelSplitter(4);
   this._merger = this._context.createChannelMerger(4);
 
-  this._channelMap = channelMap || ChannelMap.DEFAULT;
-
-  this._splitter.connect(this._merger, 0, this._channelMap[0]);
-  this._splitter.connect(this._merger, 1, this._channelMap[1]);
-  this._splitter.connect(this._merger, 2, this._channelMap[2]);
-  this._splitter.connect(this._merger, 3, this._channelMap[3]);
-
   // input/output proxy.
   this.input = this._splitter;
   this.output = this._merger;
+
+  this.setChannelMap(channelMap || ChannelMap.DEFAULT);
 }
 
 
@@ -69,7 +64,7 @@ function FOARouter(context, channelMap) {
  * @param {Number[]} channelMap - A new channel map for FOA stream.
  */
 FOARouter.prototype.setChannelMap = function(channelMap) {
-  if (Array.isArray(channelMap))
+  if (!Array.isArray(channelMap))
     return;
 
   this._channelMap = channelMap;

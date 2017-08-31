@@ -121,18 +121,8 @@ exports.invertMatrix4 = function(out, a) {
 
 
 /**
- * Get a total number of channels for a given ambisonic order.
- * @param {Number} order Ambisonic order
- * @return {Number}
- */
-exports.getNumberOfChannelsFromAmbisonicOrder = function(order) {
-  return (order + 1) * (order + 1);
-};
-
-
-/**
  * Check if the given object is an instance of BaseAudioContext.
- * @param {Object} context A context object to be checked.
+ * @param {Object} context - A context object to be checked.
  * @return {Boolean}
  */
 exports.isBaseAudioContext = function(context) {
@@ -147,4 +137,85 @@ exports.isBaseAudioContext = function(context) {
  */
 exports.isAudioBuffer = function(audioBuffer) {
   return audioBuffer instanceof AudioBuffer;
+};
+
+
+/**
+ * Perform channel-wise merge on multiple AudioBuffers. The sample rate and
+ * the length of buffers to be merged must be identical.
+ * @param {BaseAudioContext} context - Associated BaseAudioContext.
+ * @param {AudioBuffer[]} bufferList - An array of AudioBuffers to be merged
+ * channel-wise.
+ * @return {AudioBuffer} - A single merged AudioBuffer.
+ */
+exports.mergeBufferListByChannel = function(context, bufferList) {
+  var bufferLength = bufferList[0].length;
+  var bufferNumberOfChannel = 0;
+  var bufferSampleRate = bufferList[0].sampleRate;
+
+  for (var i = 0; i < bufferList.length; ++i) {
+    if (bufferNumberOfChannel > 32) {
+      exports.throw('Utils.mergeBuffer: Number of channels cannot exceed 32.' +
+          '(got ' + bufferNumberOfChannel + ')');
+    }
+    if (bufferLength !== bufferList[i].length) {
+      exports.throw('Utils.mergeBuffer: AudioBuffer lengths are ' +
+          'inconsistent. (expected ' + bufferLength + ' but got ' +
+          bufferList[i].length + ')');
+    }
+    if (bufferSampleRate !== bufferList[i].sampleRate) {
+      exports.throw('Utils.mergeBuffer: AudioBuffer sample rates are ' +
+          'inconsistent. (expected ' + bufferSampleRate + ' but got ' +
+          bufferList[i].sampleRate + ')');
+    }
+    bufferNumberOfChannel += bufferList[i].numberOfChannels;
+  }
+
+  var buffer = context.createBuffer(bufferNumberOfChannel,
+                                    bufferLength,
+                                    bufferSampleRate);
+  var destinationChannelIndex = 0;
+  for (var i = 0; i < bufferList.length; ++i) {
+    for (var j = 0; j < bufferList[i].numberOfChannels; ++j) {
+      buffer.getChannelData(destinationChannelIndex++).set(
+          bufferList[i].getChannelData(j));
+    }
+  }
+
+  return buffer;
+};
+
+
+/**
+ * Perform channel-wise split by the given channel count. For example,
+ * 1 x AudioBuffer(8) -> splitBuffer(context, buffer, 2) -> 4 x AudioBuffer(2).
+ * @param {BaseAudioContext} context - Associated BaseAudioContext.
+ * @param {AudioBuffer} audioBuffer - An AudioBuffer to be splitted.
+ * @param {Number} splitBy - Number of channels to be splitted.
+ * @return {AudioBuffer[]} - An array of splitted AudioBuffers.
+ */
+exports.splitBufferbyChannel = function(context, audioBuffer, splitBy) {
+  if (audioBuffer.numberOfChannels <= splitBy) {
+    exports.throw('Utils.splitBuffer: Insufficient number of channels. (' +
+        audioBuffer.numberOfChannels + ' splitted by ' + splitBy + ')');
+  }
+
+  var bufflerList = [];
+  var sourceChannelIndex = 0;
+  var numberOfSplittedBuffer =
+      Math.ceil(audioBuffer.numberOfChannels / splitBy);
+  for (var i = 0; i < numberOfSplittedBuffer; ++i) {
+    var buffer = context.createBuffer(splitBy,
+                                      audioBuffer.length,
+                                      audioBuffer.sampleRate);
+    for (var j = 0; j < splitBy; ++j) {
+      if (sourceChannelIndex < audioBuffer.numberOfChannels) {
+        buffer.getChannelData(j).set(
+          audioBuffer.getChannelData(sourceChannelIndex++));
+      }
+    }
+    bufflerList.push(buffer);
+  }
+
+  return bufferList;
 };

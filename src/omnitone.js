@@ -64,10 +64,32 @@ Omnitone.loadAudioBuffers = function(context, speakerData) {
  * @return {Promise<AudioBuffer[]>} - The promise resolves with an array of
  * AudioBuffer.
  */
-Omnitone.getBufferList = function(context, bufferData) {
+Omnitone.createBufferList = function(context, bufferData) {
   var bufferList = new BufferList(context, bufferData);
   return bufferList.load();
 };
+
+
+/**
+ * Perform channel-wise merge on multiple AudioBuffers. The sample rate and
+ * the length of buffers to be merged must be identical.
+ * @param {BaseAudioContext} context - Associated BaseAudioContext.
+ * @param {AudioBuffer[]} bufferList - An array of AudioBuffers to be merged
+ * channel-wise.
+ * @return {AudioBuffer} - A single merged AudioBuffer.
+ */
+Omnitone.mergeBufferListByChannel = Utils.mergeBufferListByChannel;
+
+
+/**
+ * Perform channel-wise split by the given channel count. For example,
+ * 1 x AudioBuffer(8) -> splitBuffer(context, buffer, 2) -> 4 x AudioBuffer(2).
+ * @param {BaseAudioContext} context - Associated BaseAudioContext.
+ * @param {AudioBuffer} audioBuffer - An AudioBuffer to be splitted.
+ * @param {Number} splitBy - Number of channels to be splitted.
+ * @return {AudioBuffer[]} - An array of splitted AudioBuffers.
+ */
+Omnitone.splitBufferbyChannel = Utils.splitBufferbyChannel;
 
 
 /**
@@ -86,6 +108,7 @@ Omnitone.createFOAConvolver = function(context, hrirBufferList) {
  * Create an instance of FOA Router.
  * @see FOARouter
  * @param {AudioContext} context - Associated AudioContext.
+ * @param {Number[]} channelMap - Routing destination array.
  * @return {FOARouter}
  */
 Omnitone.createFOARouter = function(context, channelMap) {

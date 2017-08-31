@@ -102,10 +102,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var AudioBufferManager = __webpack_require__(2);
-	var BufferList = __webpack_require__(4);
-	var FOAConvolver = __webpack_require__(5);
-	var FOADecoder = __webpack_require__(6);
+	var BufferList = __webpack_require__(2);
+	var FOAConvolver = __webpack_require__(4);
+	var FOADecoder = __webpack_require__(5);
 	var FOAPhaseMatchedFilter = __webpack_require__(9);
 	var FOARenderer = __webpack_require__(13);
 	var FOARotator = __webpack_require__(8);
@@ -117,6 +116,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	var Utils = __webpack_require__(3);
 	var Version = __webpack_require__(12);
 
+	// DEPRECATED in V1, in favor of BufferList.
+	var AudioBufferManager = __webpack_require__(6);
+
 
 	/**
 	 * @class Omnitone namespace.
@@ -125,11 +127,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	/**
-	 * Load audio buffers based on the speaker configuration map data.
-	 * @param {AudioContext} context      The associated AudioContext.
-	 * @param {Map} speakerData           The speaker configuration map data.
-	 *                                    { name, url, coef }
-	 * @return {Promise}
+	 * DEPRECATED in V1. DO NOT USE.
 	 */
 	Omnitone.loadAudioBuffers = function(context, speakerData) {
 	  return new Promise(function(resolve, reject) {
@@ -140,25 +138,59 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 
-	Omnitone.getBufferList = function (context, bufferData) {
-	  var bufferList = new BufferList(context, bufferData, { verbose: true });
+	/**
+	 * Performs the async loading/decoding of multiple AudioBuffers from multiple
+	 * URLs.
+	 * @param {BaseAudioContext} context - Associated BaseAudioContext.
+	 * @param {string[]} bufferData - An ordered list of URLs.
+	 * @return {Promise<AudioBuffer[]>} - The promise resolves with an array of
+	 * AudioBuffer.
+	 */
+	Omnitone.createBufferList = function(context, bufferData) {
+	  var bufferList = new BufferList(context, bufferData);
 	  return bufferList.load();
 	};
 
 
 	/**
-	 * Create an instance of FOA Convolver. For parameters, refer the definition of
-	 * Router class.
+	 * Perform channel-wise merge on multiple AudioBuffers. The sample rate and
+	 * the length of buffers to be merged must be identical.
+	 * @param {BaseAudioContext} context - Associated BaseAudioContext.
+	 * @param {AudioBuffer[]} bufferList - An array of AudioBuffers to be merged
+	 * channel-wise.
+	 * @return {AudioBuffer} - A single merged AudioBuffer.
+	 */
+	Omnitone.mergeBufferListByChannel = Utils.mergeBufferListByChannel;
+
+
+	/**
+	 * Perform channel-wise split by the given channel count. For example,
+	 * 1 x AudioBuffer(8) -> splitBuffer(context, buffer, 2) -> 4 x AudioBuffer(2).
+	 * @param {BaseAudioContext} context - Associated BaseAudioContext.
+	 * @param {AudioBuffer} audioBuffer - An AudioBuffer to be splitted.
+	 * @param {Number} splitBy - Number of channels to be splitted.
+	 * @return {AudioBuffer[]} - An array of splitted AudioBuffers.
+	 */
+	Omnitone.splitBufferbyChannel = Utils.splitBufferbyChannel;
+
+
+	/**
+	 * Creates an instance of FOA Convolver.
+	 * @see FOAConvolver
+	 * @param {BaseAudioContext} context The associated AudioContext.
+	 * @param {AudioBuffer[]} [hrirBufferList] - An ordered-list of stereo
 	 * @return {FOAConvolver}
 	 */
-	Omnitone.createFOAConvolver = function(context, options) {
-	  return new FOAConvolver(context, options);
+	Omnitone.createFOAConvolver = function(context, hrirBufferList) {
+	  return new FOAConvolver(context, hrirBufferList);
 	};
 
 
 	/**
-	 * Create an instance of FOA Router. For parameters, refer the definition of
-	 * Router class.
+	 * Create an instance of FOA Router.
+	 * @see FOARouter
+	 * @param {AudioContext} context - Associated AudioContext.
+	 * @param {Number[]} channelMap - Routing destination array.
 	 * @return {FOARouter}
 	 */
 	Omnitone.createFOARouter = function(context, channelMap) {
@@ -167,8 +199,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	/**
-	 * Create an instance of FOA Rotator. For parameters, refer the definition of
-	 * Rotator class.
+	 * Create an instance of FOA Rotator.
+	 * @see FOARotator
+	 * @param {AudioContext} context - Associated AudioContext.
 	 * @return {FOARotator}
 	 */
 	Omnitone.createFOARotator = function(context) {
@@ -177,8 +210,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	/**
-	 * Create an instance of FOAPhaseMatchedFilter. For parameters, refer the
-	 * definition of PhaseMatchedFilter class.
+	 * Create an instance of FOAPhaseMatchedFilter.
+	 * @see FOAPhaseMatchedFilter
+	 * @param {AudioContext} context - Associated AudioContext.
 	 * @return {FOAPhaseMatchedFilter}
 	 */
 	Omnitone.createFOAPhaseMatchedFilter = function(context) {
@@ -243,13 +277,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 * Creates HOAConvolver performs the multi-channel convolution for the optmized
 	 * binaural rendering.
-	* @param {AudioContext} context - Associated AudioContext.
+	 * @param {AudioContext} context - Associated AudioContext.
 	 * @param {Number} ambisonicOrder - Ambisonic order. (2 or 3)
 	 * @param {AudioBuffer[]} [hrirBufferList] - An ordered-list of stereo
 	 * AudioBuffers for convolution. (SOA: 5 AudioBuffers, TOA: 8 AudioBuffers)
 	 */
-	Omnitone.createHOAConvolver =
-	    function(context, ambisonicOrder, hrirBufferList) {
+	Omnitone.createHOAConvolver = function(
+	    context, ambisonicOrder, hrirBufferList) {
 	  return new HOAConvolver(context, ambisonicOrder, hrirBufferList);
 	};
 
@@ -280,7 +314,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
-	 * Copyright 2016 Google Inc. All Rights Reserved.
+	 * Copyright 2017 Google Inc. All Rights Reserved.
 	 * Licensed under the Apache License, Version 2.0 (the "License");
 	 * you may not use this file except in compliance with the License.
 	 * You may obtain a copy of the License at
@@ -295,120 +329,143 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 
 	/**
-	 * @fileOverview Audio buffer loading utility.
+	 * @file Streamlined AudioBuffer loader.
 	 */
+
 
 	'use strict';
 
 	var Utils = __webpack_require__(3);
 
+
 	/**
-	 * Streamlined audio file loader supports Promise.
-	 * @param {Object} context          AudioContext
-	 * @param {Object} audioFileData    Audio file info as [{name, url}]
-	 * @param {Function} resolve        Resolution handler for promise.
-	 * @param {Function} reject         Rejection handler for promise.
-	 * @param {Function} progress       Progress event handler.
+	 * BufferList object mananges the async loading/decoding of multiple
+	 * AudioBuffers from multiple URLs.
+	 * @constructor
+	 * @param {BaseAudioContext} context - Associated BaseAudioContext.
+	 * @param {string[]} bufferData - An ordered list of URLs.
+	 * @param {Object} options - Options
+	 * @param {Boolean} options.verbose - Log verbosity. |true| prints the
+	 * individual message from each URL and AudioBuffer.
 	 */
-	function AudioBufferManager(context, audioFileData, resolve, reject, progress) {
-	  this._context = context;
+	function BufferList(context, bufferData, options) {
+	  this._context = Utils.isBaseAudioContext(context) ?
+	      context :
+	      Utils.throw('BufferList: Invalid BaseAudioContext.');
 
-	  this._buffers = new Map();
-	  this._loadingTasks = {};
+	  this._bufferList = [];
+	  this._bufferData = bufferData.slice(0);
+	  this._numberOfTasks = this._bufferData.length;
 
-	  this._resolve = resolve;
-	  this._reject = reject;
-	  this._progress = progress;
-
-	  // Iterating file loading.
-	  for (var i = 0; i < audioFileData.length; i++) {
-	    var fileInfo = audioFileData[i];
-
-	    // Check for duplicates filename and quit if it happens.
-	    if (this._loadingTasks.hasOwnProperty(fileInfo.name)) {
-	      Utils.log('Duplicated filename when loading: ' + fileInfo.name);
-	      return;
-	    }
-
-	    // Mark it as pending (0)
-	    this._loadingTasks[fileInfo.name] = 0;
-	    this._loadAudioFile(fileInfo);
+	  this._options = { verbose: false };
+	  if (options) {
+	    this._options = Boolean(options.verbose);
 	  }
+
+	  this._resolveHandler = null;
+	  this._rejectHandler = new Function();
 	}
 
-	AudioBufferManager.prototype._loadAudioFile = function (fileInfo) {
+
+	/**
+	 * Starts AudioBuffer loading tasks.
+	 * @return {Promise<AudioBuffer[]>} The promise resolves with an array of
+	 * AudioBuffer.
+	 */
+	BufferList.prototype.load = function() {
+	  return new Promise(this._promiseGenerator.bind(this));
+	};
+
+
+	/**
+	 * Promise argument generator. Internally starts multiple async loading tasks.
+	 * @private
+	 * @param {function} resolve Promise resolver.
+	 * @param {function} reject Promise reject.
+	 */
+	BufferList.prototype._promiseGenerator = function(resolve, reject) {
+	  if (typeof resolve !== 'function')
+	    Utils.throw('BufferList: Invalid Promise resolver.');
+	  else
+	    this._resolveHandler = resolve;
+
+	  if (typeof reject === 'function')
+	    this._rejectHandler = reject;
+
+	  for (var i = 0; i < this._bufferData.length; ++i)
+	    this._launchAsyncLoadTask(i);
+	};
+
+
+	/**
+	 * Individual async loading task.
+	 * @private
+	 * @param {Number} taskId Task ID number from |BufferData|.
+	 */
+	BufferList.prototype._launchAsyncLoadTask = function(taskId) {
 	  var xhr = new XMLHttpRequest();
-	  xhr.open('GET', fileInfo.url);
+	  xhr.open('GET', this._bufferData[taskId]);
 	  xhr.responseType = 'arraybuffer';
 
 	  var that = this;
-	  xhr.onload = function () {
+	  xhr.onload = function() {
 	    if (xhr.status === 200) {
-	      that._context.decodeAudioData(xhr.response,
-	        function (buffer) {
-	          // Utils.log('File loaded: ' + fileInfo.url);
-	          that._done(fileInfo.name, buffer);
-	        },
-	        function (message) {
-	          Utils.log('Decoding failure: '
-	            + fileInfo.url + ' (' + message + ')');
-	          that._done(fileInfo.name, null);
-	        });
+	      that._context.decodeAudioData(
+	          xhr.response,
+	          function(audioBuffer) {
+	            that._updateProgress(taskId, audioBuffer);
+	          },
+	          function(errorMessage) {
+	            that._updateProgress(taskId, null);
+	            var message = 'BufferList: decoding "' + that._bufferData[taskId] +
+	                '" failed. (' + errorMessage + ')';
+	            Utils.throw(message);
+	            that._rejectHandler(message);
+	          });
 	    } else {
-	      Utils.log('XHR Error: ' + fileInfo.url + ' (' + xhr.statusText 
-	        + ')');
-	      that._done(fileInfo.name, null);
+	      var message = 'BufferList: XHR error while loading "' +
+	          that._bufferData[taskId] + '(' + xhr.statusText + ')';
+	      Utils.throw(message);
+	      that._rejectHandler(message);
 	    }
 	  };
 
-	  // TODO: fetch local resources if XHR fails.
-	  xhr.onerror = function (event) {
-	    Utils.log('XHR Network failure: ' + fileInfo.url);
-	    that._done(fileInfo.name, null);
+	  xhr.onerror = function(event) {
+	    Utils.throw(
+	        'BufferList: XHR network failed on loading "' +
+	        that._bufferData[taskId] + '".');
+	    that._updateProgress(taskId, null);
+	    that._rejectHandler();
 	  };
 
 	  xhr.send();
 	};
 
-	AudioBufferManager.prototype._done = function (filename, buffer) {
-	  // Label the loading task.
-	  this._loadingTasks[filename] = buffer !== null ? 'loaded' : 'failed';
 
-	  // A failed task will be a null buffer.
-	  this._buffers.set(filename, buffer);
+	/**
+	 * Updates the overall progress on loading tasks.
+	 * @param {Number} taskId Task ID number.
+	 * @param {AudioBuffer} audioBuffer Decoded AudioBuffer object.
+	 */
+	BufferList.prototype._updateProgress = function(taskId, audioBuffer) {
+	  this._bufferList[taskId] = audioBuffer;
 
-	  this._updateProgress(filename);
-	};
-
-	AudioBufferManager.prototype._updateProgress = function (filename) {
-	  var numberOfFinishedTasks = 0, numberOfFailedTask = 0;
-	  var numberOfTasks = 0;
-
-	  for (var task in this._loadingTasks) {
-	    numberOfTasks++;
-	    if (this._loadingTasks[task] === 'loaded')
-	      numberOfFinishedTasks++;
-	    else if (this._loadingTasks[task] === 'failed')
-	      numberOfFailedTask++;
+	  if (this._options.verbose) {
+	    Utils.log(
+	        'BufferList: "' + this._bufferData[taskId] + '" successfully' +
+	        'loaded.');
 	  }
 
-	  if (typeof this._progress === 'function') {
-	    this._progress(filename, numberOfFinishedTasks, numberOfTasks);
-	    return;
-	  }
-
-	  if (numberOfFinishedTasks === numberOfTasks) {
-	    this._resolve(this._buffers);
-	    return;
-	  }
-
-	  if (numberOfFinishedTasks + numberOfFailedTask === numberOfTasks) {
-	    this._reject(this._buffers);
-	    return;
+	  if (--this._numberOfTasks === 0) {
+	    Utils.log(
+	        'BufferList: ' + this._bufferData.length + ' files loaded ' +
+	        'successfully.');
+	    this._resolveHandler(this._bufferList);
 	  }
 	};
 
-	module.exports = AudioBufferManager;
+
+	module.exports = BufferList;
 
 
 /***/ },
@@ -538,18 +595,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	/**
-	 * Get a total number of channels for a given ambisonic order.
-	 * @param {Number} order Ambisonic order
-	 * @return {Number}
-	 */
-	exports.getNumberOfChannelsFromAmbisonicOrder = function(order) {
-	  return (order + 1) * (order + 1);
-	};
-
-
-	/**
 	 * Check if the given object is an instance of BaseAudioContext.
-	 * @param {Object} context A context object to be checked.
+	 * @param {Object} context - A context object to be checked.
 	 * @return {Boolean}
 	 */
 	exports.isBaseAudioContext = function(context) {
@@ -567,166 +614,89 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 
+	/**
+	 * Perform channel-wise merge on multiple AudioBuffers. The sample rate and
+	 * the length of buffers to be merged must be identical.
+	 * @param {BaseAudioContext} context - Associated BaseAudioContext.
+	 * @param {AudioBuffer[]} bufferList - An array of AudioBuffers to be merged
+	 * channel-wise.
+	 * @return {AudioBuffer} - A single merged AudioBuffer.
+	 */
+	exports.mergeBufferListByChannel = function(context, bufferList) {
+	  var bufferLength = bufferList[0].length;
+	  var bufferNumberOfChannel = 0;
+	  var bufferSampleRate = bufferList[0].sampleRate;
+
+	  for (var i = 0; i < bufferList.length; ++i) {
+	    if (bufferNumberOfChannel > 32) {
+	      exports.throw('Utils.mergeBuffer: Number of channels cannot exceed 32.' +
+	          '(got ' + bufferNumberOfChannel + ')');
+	    }
+	    if (bufferLength !== bufferList[i].length) {
+	      exports.throw('Utils.mergeBuffer: AudioBuffer lengths are ' +
+	          'inconsistent. (expected ' + bufferLength + ' but got ' +
+	          bufferList[i].length + ')');
+	    }
+	    if (bufferSampleRate !== bufferList[i].sampleRate) {
+	      exports.throw('Utils.mergeBuffer: AudioBuffer sample rates are ' +
+	          'inconsistent. (expected ' + bufferSampleRate + ' but got ' +
+	          bufferList[i].sampleRate + ')');
+	    }
+	    bufferNumberOfChannel += bufferList[i].numberOfChannels;
+	  }
+
+	  var buffer = context.createBuffer(bufferNumberOfChannel,
+	                                    bufferLength,
+	                                    bufferSampleRate);
+	  var destinationChannelIndex = 0;
+	  for (var i = 0; i < bufferList.length; ++i) {
+	    for (var j = 0; j < bufferList[i].numberOfChannels; ++j) {
+	      buffer.getChannelData(destinationChannelIndex++).set(
+	          bufferList[i].getChannelData(j));
+	    }
+	  }
+
+	  return buffer;
+	};
+
+
+	/**
+	 * Perform channel-wise split by the given channel count. For example,
+	 * 1 x AudioBuffer(8) -> splitBuffer(context, buffer, 2) -> 4 x AudioBuffer(2).
+	 * @param {BaseAudioContext} context - Associated BaseAudioContext.
+	 * @param {AudioBuffer} audioBuffer - An AudioBuffer to be splitted.
+	 * @param {Number} splitBy - Number of channels to be splitted.
+	 * @return {AudioBuffer[]} - An array of splitted AudioBuffers.
+	 */
+	exports.splitBufferbyChannel = function(context, audioBuffer, splitBy) {
+	  if (audioBuffer.numberOfChannels <= splitBy) {
+	    exports.throw('Utils.splitBuffer: Insufficient number of channels. (' +
+	        audioBuffer.numberOfChannels + ' splitted by ' + splitBy + ')');
+	  }
+
+	  var bufflerList = [];
+	  var sourceChannelIndex = 0;
+	  var numberOfSplittedBuffer =
+	      Math.ceil(audioBuffer.numberOfChannels / splitBy);
+	  for (var i = 0; i < numberOfSplittedBuffer; ++i) {
+	    var buffer = context.createBuffer(splitBy,
+	                                      audioBuffer.length,
+	                                      audioBuffer.sampleRate);
+	    for (var j = 0; j < splitBy; ++j) {
+	      if (sourceChannelIndex < audioBuffer.numberOfChannels) {
+	        buffer.getChannelData(j).set(
+	          audioBuffer.getChannelData(sourceChannelIndex++));
+	      }
+	    }
+	    bufflerList.push(buffer);
+	  }
+
+	  return bufferList;
+	};
+
+
 /***/ },
 /* 4 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/**
-	 * Copyright 2016 Google Inc. All Rights Reserved.
-	 * Licensed under the Apache License, Version 2.0 (the "License");
-	 * you may not use this file except in compliance with the License.
-	 * You may obtain a copy of the License at
-	 *
-	 *     http://www.apache.org/licenses/LICENSE-2.0
-	 *
-	 * Unless required by applicable law or agreed to in writing, software
-	 * distributed under the License is distributed on an "AS IS" BASIS,
-	 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-	 * See the License for the specific language governing permissions and
-	 * limitations under the License.
-	 */
-
-	/**
-	 * @file Stream-lined AudioBuffer loader.
-	 */
-
-
-	'use strict';
-
-	var Utils = __webpack_require__(3);
-
-
-	/**
-	 * BufferList object mananges the async loading/decoding of multiple
-	 * AudioBuffers from multiple URLs.
-	 * @constructor
-	 * @param {BaseAudioContext} context - Associated BaseAudioContext.
-	 * @param {string[]} bufferData - An ordered list of URLs.
-	 * @param {Object} options - Options
-	 * @param {Boolean} options.verbose - Log verbosity. |true| prints the
-	 * individual message from each URL and AudioBuffer.
-	 */
-	function BufferList(context, bufferData, options) {
-	  this._context = Utils.isBaseAudioContext(context) ?
-	      context :
-	      Utils.throw('BufferList: Invalid BaseAudioContext.');
-
-	  this._bufferList = [];
-	  this._bufferData = bufferData.slice(0);
-	  this._numberOfTasks = this._bufferData.length;
-
-	  this._options = { verbose: false };
-	  if (options) {
-	    this._options = Boolean(options.verbose);
-	  }
-
-	  this._resolveHandler = null;
-	  this._rejectHandler = new Function();
-	}
-
-
-	/**
-	 * Starts AudioBuffer loading tasks.
-	 * @return {Promise<Array>} The promise resolves with an array of AudioBuffer.
-	 */
-	BufferList.prototype.load = function() {
-	  return new Promise(this._promiseGenerator.bind(this));
-	};
-
-
-	/**
-	 * Promise argument generator. Internally starts multiple async loading tasks.
-	 * @private
-	 * @param {function} resolve Promise resolver.
-	 * @param {function} reject Promise reject.
-	 */
-	BufferList.prototype._promiseGenerator = function(resolve, reject) {
-	  if (typeof resolve !== 'function')
-	    Utils.throw('BufferList: Invalid Promise resolver.');
-	  else
-	    this._resolveHandler = resolve;
-
-	  if (typeof reject === 'function')
-	    this._rejectHandler = reject;
-
-	  for (var i = 0; i < this._bufferData.length; ++i)
-	    this._launchAsyncLoadTask(i);
-	};
-
-
-	/**
-	 * Individual async loading task.
-	 * @private
-	 * @param {Number} taskId Task ID number from |BufferData|.
-	 */
-	BufferList.prototype._launchAsyncLoadTask = function(taskId) {
-	  var xhr = new XMLHttpRequest();
-	  xhr.open('GET', this._bufferData[taskId]);
-	  xhr.responseType = 'arraybuffer';
-
-	  var that = this;
-	  xhr.onload = function() {
-	    if (xhr.status === 200) {
-	      that._context.decodeAudioData(
-	          xhr.response,
-	          function(audioBuffer) {
-	            that._updateProgress(taskId, audioBuffer);
-	          },
-	          function(errorMessage) {
-	            that._updateProgress(taskId, null);
-	            var message = 'BufferList: decoding "' + that._bufferData[taskId] +
-	                '" failed. (' + errorMessage + ')';
-	            Utils.throw(message);
-	            that._rejectHandler(message);
-	          });
-	    } else {
-	      var message = 'BufferList: XHR error while loading "' +
-	          that._bufferData[taskId] + '(' + xhr.statusText + ')';
-	      Utils.throw(message);
-	      that._rejectHandler(message);
-	    }
-	  };
-
-	  xhr.onerror = function(event) {
-	    Utils.throw(
-	        'BufferList: XHR network failed on loading "' +
-	        that._bufferData[taskId] + '".');
-	    that._updateProgress(taskId, null);
-	    that._rejectHandler();
-	  };
-
-	  xhr.send();
-	};
-
-
-	/**
-	 * Updates the overall progress on loading tasks.
-	 * @param {Number} taskId Task ID number.
-	 * @param {AudioBuffer} audioBuffer Decoded AudioBuffer object.
-	 */
-	BufferList.prototype._updateProgress = function(taskId, audioBuffer) {
-	  this._bufferList[taskId] = audioBuffer;
-
-	  if (this._options.verbose) {
-	    Utils.log(
-	        'BufferList: "' + this._bufferData[taskId] + '" successfully' +
-	        'loaded.');
-	  }
-
-	  if (--this._numberOfTasks === 0) {
-	    Utils.log(
-	        'BufferList: ' + this._bufferData.length + ' files loaded ' +
-	        'successfully.');
-	    this._resolveHandler(this._bufferList);
-	  }
-	};
-
-
-	module.exports = BufferList;
-
-
-/***/ },
-/* 5 */
 /***/ function(module, exports) {
 
 	/**
@@ -758,7 +728,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @constructor
 	 * @param {BaseAudioContext} context The associated AudioContext.
 	 * @param {AudioBuffer[]} [hrirBufferList] - An ordered-list of stereo
-	 * AudioBuffers for convolution. (FOA: 2 AudioBuffers)
+	 * AudioBuffers for convolution. (i.e. 2 stereo AudioBuffers for FOA)
 	 */
 	function FOAConvolver(context, hrirBufferList) {
 	  this._context = context;
@@ -874,7 +844,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 6 */
+/* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -899,7 +869,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var AudioBufferManager = __webpack_require__(2);
+	var AudioBufferManager = __webpack_require__(6);
 	var FOARouter = __webpack_require__(7);
 	var FOARotator = __webpack_require__(8);
 	var FOAPhaseMatchedFilter = __webpack_require__(9);
@@ -1091,6 +1061,142 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
+/* 6 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * Copyright 2016 Google Inc. All Rights Reserved.
+	 * Licensed under the Apache License, Version 2.0 (the "License");
+	 * you may not use this file except in compliance with the License.
+	 * You may obtain a copy of the License at
+	 *
+	 *     http://www.apache.org/licenses/LICENSE-2.0
+	 *
+	 * Unless required by applicable law or agreed to in writing, software
+	 * distributed under the License is distributed on an "AS IS" BASIS,
+	 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	 * See the License for the specific language governing permissions and
+	 * limitations under the License.
+	 */
+
+	/**
+	 * @fileOverview DEPRECATED at V1. Audio buffer loading utility.
+	 */
+
+	'use strict';
+
+	var Utils = __webpack_require__(3);
+
+	/**
+	 * Streamlined audio file loader supports Promise.
+	 * @param {Object} context          AudioContext
+	 * @param {Object} audioFileData    Audio file info as [{name, url}]
+	 * @param {Function} resolve        Resolution handler for promise.
+	 * @param {Function} reject         Rejection handler for promise.
+	 * @param {Function} progress       Progress event handler.
+	 */
+	function AudioBufferManager(context, audioFileData, resolve, reject, progress) {
+	  this._context = context;
+
+	  this._buffers = new Map();
+	  this._loadingTasks = {};
+
+	  this._resolve = resolve;
+	  this._reject = reject;
+	  this._progress = progress;
+
+	  // Iterating file loading.
+	  for (var i = 0; i < audioFileData.length; i++) {
+	    var fileInfo = audioFileData[i];
+
+	    // Check for duplicates filename and quit if it happens.
+	    if (this._loadingTasks.hasOwnProperty(fileInfo.name)) {
+	      Utils.log('Duplicated filename when loading: ' + fileInfo.name);
+	      return;
+	    }
+
+	    // Mark it as pending (0)
+	    this._loadingTasks[fileInfo.name] = 0;
+	    this._loadAudioFile(fileInfo);
+	  }
+	}
+
+	AudioBufferManager.prototype._loadAudioFile = function (fileInfo) {
+	  var xhr = new XMLHttpRequest();
+	  xhr.open('GET', fileInfo.url);
+	  xhr.responseType = 'arraybuffer';
+
+	  var that = this;
+	  xhr.onload = function () {
+	    if (xhr.status === 200) {
+	      that._context.decodeAudioData(xhr.response,
+	        function (buffer) {
+	          // Utils.log('File loaded: ' + fileInfo.url);
+	          that._done(fileInfo.name, buffer);
+	        },
+	        function (message) {
+	          Utils.log('Decoding failure: '
+	            + fileInfo.url + ' (' + message + ')');
+	          that._done(fileInfo.name, null);
+	        });
+	    } else {
+	      Utils.log('XHR Error: ' + fileInfo.url + ' (' + xhr.statusText 
+	        + ')');
+	      that._done(fileInfo.name, null);
+	    }
+	  };
+
+	  // TODO: fetch local resources if XHR fails.
+	  xhr.onerror = function (event) {
+	    Utils.log('XHR Network failure: ' + fileInfo.url);
+	    that._done(fileInfo.name, null);
+	  };
+
+	  xhr.send();
+	};
+
+	AudioBufferManager.prototype._done = function (filename, buffer) {
+	  // Label the loading task.
+	  this._loadingTasks[filename] = buffer !== null ? 'loaded' : 'failed';
+
+	  // A failed task will be a null buffer.
+	  this._buffers.set(filename, buffer);
+
+	  this._updateProgress(filename);
+	};
+
+	AudioBufferManager.prototype._updateProgress = function (filename) {
+	  var numberOfFinishedTasks = 0, numberOfFailedTask = 0;
+	  var numberOfTasks = 0;
+
+	  for (var task in this._loadingTasks) {
+	    numberOfTasks++;
+	    if (this._loadingTasks[task] === 'loaded')
+	      numberOfFinishedTasks++;
+	    else if (this._loadingTasks[task] === 'failed')
+	      numberOfFailedTask++;
+	  }
+
+	  if (typeof this._progress === 'function') {
+	    this._progress(filename, numberOfFinishedTasks, numberOfTasks);
+	    return;
+	  }
+
+	  if (numberOfFinishedTasks === numberOfTasks) {
+	    this._resolve(this._buffers);
+	    return;
+	  }
+
+	  if (numberOfFinishedTasks + numberOfFailedTask === numberOfTasks) {
+	    this._reject(this._buffers);
+	    return;
+	  }
+	};
+
+	module.exports = AudioBufferManager;
+
+
+/***/ },
 /* 7 */
 /***/ function(module, exports) {
 
@@ -1109,62 +1215,58 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * limitations under the License.
 	 */
 
+	/**
+	 * @file An audio channel router to resolve different channel layouts between
+	 * browsers.
+	 */
+
 	'use strict';
 
-	/**
-	 * @fileOverview An audio channel re-router to resolve different channel layouts
-	 *               between various platforms.
-	 */
-
 
 	/**
-	 * Channel map dictionary for various mapping scheme.
-	 *
-	 * @type {Object}
+	 * @typedef {Number[]} ChannelMap
 	 */
-	var CHANNEL_MAP = {
-	  // ACN, default channel map. Works correctly on Chrome and FireFox. (FFMpeg)
+
+	/**
+	 * Channel map dictionary ENUM.
+	 * @enum {ChannelMap}
+	 */
+	var ChannelMap = {
+	  /** @type {Number[]} - ACN channel map for Chrome and FireFox. (FFMPEG) */
 	  DEFAULT: [0, 1, 2, 3],
-	  // Safari's decoder works differently on 4-channel stream.
-	  APPLE: [2, 0, 1, 3],
-	  // ACN -> FuMa conversion.
+	  /** @type {Number[]} - Safari's 4-channel map. */
+	  SAFARI: [2, 0, 1, 3],
+	  /** @type {Number[]} - ACN > FuMa conversion map. */
 	  FUMA: [0, 3, 1, 2]
 	};
 
 
 	/**
-	 * @class A simple channel re-router.
-	 * @param {AudioContext} context Associated AudioContext.
-	 * @param {Array} channelMap  Routing destination array.
-	 *                                    e.g.) Chrome: [0, 1, 2, 3],
-	 *                                    Apple(Safari): [2, 0, 1, 3]
+	 * Channel router for FOA stream.
+	 * @constructor
+	 * @param {AudioContext} context - Associated AudioContext.
+	 * @param {Number[]} channelMap - Routing destination array.
 	 */
-	function FOARouter (context, channelMap) {
+	function FOARouter(context, channelMap) {
 	  this._context = context;
 
 	  this._splitter = this._context.createChannelSplitter(4);
 	  this._merger = this._context.createChannelMerger(4);
 
-	  this._channelMap = channelMap || CHANNEL_MAP.DEFAULT;
-
-	  this._splitter.connect(this._merger, 0, this._channelMap[0]);
-	  this._splitter.connect(this._merger, 1, this._channelMap[1]);
-	  this._splitter.connect(this._merger, 2, this._channelMap[2]);
-	  this._splitter.connect(this._merger, 3, this._channelMap[3]);
-
 	  // input/output proxy.
 	  this.input = this._splitter;
 	  this.output = this._merger;
+
+	  this.setChannelMap(channelMap || ChannelMap.DEFAULT);
 	}
 
 
 	/**
-	 * Set a channel map array.
-	 *
-	 * @param {Array} channelMap A custom channel map for FOA stream.
+	 * Sets channel map.
+	 * @param {Number[]} channelMap - A new channel map for FOA stream.
 	 */
-	FOARouter.prototype.setChannelMap = function (channelMap) {
-	  if (!channelMap)
+	FOARouter.prototype.setChannelMap = function(channelMap) {
+	  if (!Array.isArray(channelMap))
 	    return;
 
 	  this._channelMap = channelMap;
@@ -1173,16 +1275,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	  this._splitter.connect(this._merger, 1, this._channelMap[1]);
 	  this._splitter.connect(this._merger, 2, this._channelMap[2]);
 	  this._splitter.connect(this._merger, 3, this._channelMap[3]);
-	}
+	};
 
 
 	/**
-	 * Static channel map dictionary.
-	 *
+	 * Static channel map ENUM.
 	 * @static
-	 * @type {Object}
+	 * @type {ChannelMap}
 	 */
-	FOARouter.CHANNEL_MAP = CHANNEL_MAP;
+	FOARouter.ChannelMap = ChannelMap;
 
 
 	module.exports = FOARouter;
@@ -1699,8 +1800,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var BufferList = __webpack_require__(4);
-	var FOAConvolver = __webpack_require__(5);
+	var BufferList = __webpack_require__(2);
+	var FOAConvolver = __webpack_require__(4);
 	var FOARotator = __webpack_require__(8);
 	var FOARouter = __webpack_require__(7);
 	var HRIRManager = __webpack_require__(14);
@@ -1742,7 +1843,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      Utils.throw('FOARenderer: Invalid BaseAudioContext.');
 
 	  this._config = {
-	    channelMap: FOARouter.CHANNEL_MAP.DEFAULT,
+	    channelMap: FOARouter.ChannelMap.DEFAULT,
 	    renderingMode: RenderingMode.AMBISONIC
 	  };
 
@@ -2252,7 +2353,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var BufferList = __webpack_require__(4);
+	var BufferList = __webpack_require__(2);
 	var HOAConvolver = __webpack_require__(15);
 	var HOARotator = __webpack_require__(17);
 	var HRIRManager = __webpack_require__(14);

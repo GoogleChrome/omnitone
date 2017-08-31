@@ -14,38 +14,49 @@
 -->
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <title>Example: FOARenderer (Optimized)</title>
-  <script src="audiocontext-shim.js"></script>
-  <script src="../build/omnitone.min.js"></script>
-  <link rel="stylesheet" href="example.css">
-</head>
-<body>
-  <h1>Example: FOARenderer (Optimized)</h1>
-  <p><code>FOARenderer</code> is an optimized ambisonic renderer based on the
-    integrated convolution (SH-MaxRe HRIR). Although this renderer does not
-    offer a complete configurable signal path, it outperforms
-    <code>FOADecoder</code> by 100%.</p>
-  <p>See <a href="https://github.com/GoogleChrome/omnitone#foarenderer">more
-    info </a> on <code>FOARenderer</code>.</p>
-
-  <div id="secSource">
-    <p>NOTE: Use headphones for the full-sphere surround sound.</p>
-    <h2>Select the sound source to play.</h2>
-    <select id="eSelectSource" name="dropdownSource" disabled>
-      <option value="speech" selected="selected">Speech</option>
-      <option value="warbird">Airplanes</option>
-    </select>
-    <button id="eButtonPlayback" disabled>Play</button>
-  </div>
-
-  <div id="secRenderingMode">
-    <span class="label">Rendering Mode</span>
-    <button id="eButtonBypass" disabled>Ambisonic</button>
-  </div>
-
-  <script>
+  <head>
+    <meta charset="utf-8">
+    <title>
+      Example: FOARenderer (Optimized)
+    </title>
+    <script src="audiocontext-shim.js"></script>
+    <script src="../build/omnitone.min.js"></script>
+    <link rel="stylesheet" href="example.css">
+  </head>
+  <body>
+    <h1>
+      Example: FOARenderer (Optimized)
+    </h1>
+    <p>
+      <code>FOARenderer</code> is an optimized ambisonic renderer based on the
+      integrated convolution (SH-MaxRe HRIR). Although this renderer does not
+      offer a complete configurable signal path, it outperforms
+      <code>FOADecoder</code> by 100%.
+    </p>
+    <p>
+      See <a href="https://github.com/GoogleChrome/omnitone#foarenderer">more
+      info</a> on <code>FOARenderer</code>.
+    </p>
+    <div id="secSource">
+      <p>
+        NOTE: Use headphones for the full-sphere surround sound.
+      </p>
+      <h2>
+        Select the sound source to play.
+      </h2><select id="eSelectSource" name="dropdownSource" disabled>
+        <option value="speech" selected="selected">
+          Speech
+        </option>
+        <option value="warbird">
+          Airplanes
+        </option>
+      </select> <button id="eButtonPlayback" disabled>Play</button>
+    </div>
+    <div id="secRenderingMode">
+      <span class="label">Rendering Mode</span> <button id="eButtonBypass"
+      disabled>Ambisonic</button>
+    </div>
+    <script>
     var foaRenderer;
     var audioSources = {
       'speech': 'resources/4ch_B_FuMaNorm_FuMaOrd_speech.wav',
@@ -115,6 +126,6 @@
     };
 
     window.addEventListener('load', onLoad);
-  </script>
-</body>
+    </script>
+  </body>
 </html>

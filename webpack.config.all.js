@@ -27,7 +27,13 @@ module.exports = {
     new webpack.optimize.UglifyJsPlugin(),
     new CopyWebpackPlugin([{
       from: './src/resources',
-      to: 'resources'
+      to: 'resources',
+      ignore: [
+        'sh_*',
+        'README.md',
+        'LICENSE',
+        'cube.config'
+      ]
     }])
   ]
 };

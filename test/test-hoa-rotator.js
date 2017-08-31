@@ -400,6 +400,7 @@ describe('HOARotator', function() {
        });
   }
 
+
   beforeEach(function() {
     context =
         new OfflineAudioContext(numberOfChannels, renderLength, sampleRate);

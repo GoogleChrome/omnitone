@@ -14,7 +14,7 @@
  */
 
 
-describe('FOARouter', function () {
+describe('FOARouter', function() {
 
   var sampleRate = 48000;
   var renderLength = 0.1 * sampleRate;
@@ -22,73 +22,70 @@ describe('FOARouter', function () {
   var testBuffer;
 
   // A common task for router tests. Create OAC for rendering.
-  beforeEach(function (done) {
+  beforeEach(function(done) {
     context = new OfflineAudioContext(4, renderLength, sampleRate);
     testBuffer = createConstantBuffer(context, [0, 1, 2, 3], renderLength);
     done();
   });
 
 
-  it('#constructor: passing a channel map array to the constructor.', 
-      function (done) {
-        // Use constructor to set the channel map.
-        var router = Omnitone.createFOARouter(context, [1, 2, 0, 3]);
-        var source = context.createBufferSource();
-        source.buffer = testBuffer;
+  it('#constructor: passing a channel map array to the constructor.',
+     function(done) {
+       // Use constructor to set the channel map.
+       var router = Omnitone.createFOARouter(context, [1, 2, 0, 3]);
+       var source = context.createBufferSource();
+       source.buffer = testBuffer;
 
-        source.connect(router.input);
-        router.output.connect(context.destination);
-        source.start();
+       source.connect(router.input);
+       router.output.connect(context.destination);
+       source.start();
 
-        // With the router configuration above, this is what must be rendered.
-        //   Channel #0: value [0] => (to channel #1) => value [2]
-        //   Channel #1: value [1] => (to channel #2) => value [0]
-        //   Channel #2: value [2] => (to channel #0) => value [1]
-        //   Channel #3: value [3] => (to channel #3) => value [3]
-        var expectedValues = [2, 0, 1, 3];
-        var passed = false;
-        context.startRendering().then(function (renderedBuffer) {
-          for (c = 0; c < renderedBuffer.numberOfChannels; c++) {
-            passed = isConstantValueOf(
-              renderedBuffer.getChannelData(c), expectedValues[c]);
-            expect(passed).to.equal(true);
-          }
-          done();
-        });
+       // With the router configuration above, this is what must be rendered.
+       //   Channel #0: value [0] => (to channel #1) => value [2]
+       //   Channel #1: value [1] => (to channel #2) => value [0]
+       //   Channel #2: value [2] => (to channel #0) => value [1]
+       //   Channel #3: value [3] => (to channel #3) => value [3]
+       var expectedValues = [2, 0, 1, 3];
+       var passed = false;
+       context.startRendering().then(function(renderedBuffer) {
+         for (c = 0; c < renderedBuffer.numberOfChannels; c++) {
+           passed = isConstantValueOf(
+               renderedBuffer.getChannelData(c), expectedValues[c]);
+           expect(passed).to.equal(true);
+         }
+         done();
+       });
+     });
+
+
+  it('#setChannelMap: change the channel map.', function(done) {
+    var router = Omnitone.createFOARouter(context);
+    var source = context.createBufferSource();
+    source.buffer = testBuffer;
+
+    source.connect(router.input);
+    router.output.connect(context.destination);
+    source.start();
+
+    // Use setChannleMap() method.
+    router.setChannelMap([0, 3, 1, 2]);
+
+    // With the router configuration above, this is what must be rendered.
+    //   Channel #0: value [0] => (to channel #0) => value [0]
+    //   Channel #1: value [1] => (to channel #3) => value [2]
+    //   Channel #2: value [2] => (to channel #1) => value [3]
+    //   Channel #3: value [3] => (to channel #2) => value [1]
+    var expectedValues = [0, 2, 3, 1];
+    var passed = false;
+    context.startRendering().then(function(renderedBuffer) {
+      for (c = 0; c < renderedBuffer.numberOfChannels; c++) {
+        passed = isConstantValueOf(
+            renderedBuffer.getChannelData(c), expectedValues[c]);
+        expect(passed).to.equal(true);
       }
-  );
-
-
-  it('#setChannelMap: change the channel map.', 
-      function (done) {
-        var router = Omnitone.createFOARouter(context);
-        var source = context.createBufferSource();
-        source.buffer = testBuffer;
-
-        source.connect(router.input);
-        router.output.connect(context.destination);
-        source.start();
-
-        // Use setChannleMap() method.
-        router.setChannelMap([0, 3, 1, 2]);
-
-        // With the router configuration above, this is what must be rendered.
-        //   Channel #0: value [0] => (to channel #0) => value [0]
-        //   Channel #1: value [1] => (to channel #3) => value [2]
-        //   Channel #2: value [2] => (to channel #1) => value [3]
-        //   Channel #3: value [3] => (to channel #2) => value [1]
-        var expectedValues = [0, 2, 3, 1];
-        var passed = false;
-        context.startRendering().then(function (renderedBuffer) {
-          for (c = 0; c < renderedBuffer.numberOfChannels; c++) {
-            passed = isConstantValueOf(
-              renderedBuffer.getChannelData(c), expectedValues[c]);
-            expect(passed).to.equal(true);
-          }
-          done();
-        });
-      }
-  );
+      done();
+    });
+  });
 
 
 });
