@@ -323,7 +323,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      Omnitone.BrowserInfo.name + ' ' + Omnitone.BrowserInfo.version + ')');
 	  if (Omnitone.BrowserInfo.name.toLowerCase() === 'safari') {
 	    Polyfill.patchSafari();
-	    Utils.log(Omnitone.BrowserInfo.name + ' detected. Appliying the patch.');
+	    Utils.log(Omnitone.BrowserInfo.name + ' detected. Appliying polyfill...');
 	  }
 	})();
 
