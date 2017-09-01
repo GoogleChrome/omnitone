@@ -349,7 +349,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * individual message from each URL and AudioBuffer.
 	 */
 	function BufferList(context, bufferData, options) {
-	  this._context = Utils.isBaseAudioContext(context) ?
+	  this._context = Utils.isAudioContext(context) ?
 	      context :
 	      Utils.throw('BufferList: Invalid BaseAudioContext.');
 
@@ -596,11 +596,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	/**
 	 * Check if the given object is an instance of BaseAudioContext.
-	 * @param {Object} context - A context object to be checked.
+	 * @param {AudioContext} context - A context object to be checked.
 	 * @return {Boolean}
 	 */
-	exports.isBaseAudioContext = function(context) {
-	  return context instanceof BaseAudioContext;
+	exports.isAudioContext = function(context) {
+	  // TODO(hoch): Update this when BaseAudioContext is available for all
+	  // browsers.
+	  return context instanceof AudioContext ||
+	    context instanceof OfflineAudioContext;
 	};
 
 
@@ -1838,7 +1841,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @param {RenderingMode} [config.renderingMode='ambisonic'] - Rendering mode.
 	 */
 	function FOARenderer(context, config) {
-	  this._context = Utils.isBaseAudioContext(context) ?
+	  this._context = Utils.isAudioContext(context) ?
 	      context :
 	      Utils.throw('FOARenderer: Invalid BaseAudioContext.');
 
@@ -2393,7 +2396,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @param {RenderingMode} [config.renderingMode='ambisonic'] - Rendering mode.
 	 */
 	function HOARenderer(context, config) {
-	  this._context = Utils.isBaseAudioContext(context) ?
+	  this._context = Utils.isAudioContext(context) ?
 	      context :
 	      Utils.throw('HOARenderer: Invalid BaseAudioContext.');
 

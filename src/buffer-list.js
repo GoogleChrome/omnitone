@@ -34,7 +34,7 @@ var Utils = require('./utils.js');
  * individual message from each URL and AudioBuffer.
  */
 function BufferList(context, bufferData, options) {
-  this._context = Utils.isBaseAudioContext(context) ?
+  this._context = Utils.isAudioContext(context) ?
       context :
       Utils.throw('BufferList: Invalid BaseAudioContext.');
 

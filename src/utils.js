@@ -122,11 +122,14 @@ exports.invertMatrix4 = function(out, a) {
 
 /**
  * Check if the given object is an instance of BaseAudioContext.
- * @param {Object} context - A context object to be checked.
+ * @param {AudioContext} context - A context object to be checked.
  * @return {Boolean}
  */
-exports.isBaseAudioContext = function(context) {
-  return context instanceof BaseAudioContext;
+exports.isAudioContext = function(context) {
+  // TODO(hoch): Update this when BaseAudioContext is available for all
+  // browsers.
+  return context instanceof AudioContext ||
+    context instanceof OfflineAudioContext;
 };
 
 

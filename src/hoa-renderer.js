@@ -60,7 +60,7 @@ var SupportedAmbisonicOrder = [2, 3];
  * @param {RenderingMode} [config.renderingMode='ambisonic'] - Rendering mode.
  */
 function HOARenderer(context, config) {
-  this._context = Utils.isBaseAudioContext(context) ?
+  this._context = Utils.isAudioContext(context) ?
       context :
       Utils.throw('HOARenderer: Invalid BaseAudioContext.');
 

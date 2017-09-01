@@ -59,7 +59,7 @@ var RenderingMode = {
  * @param {RenderingMode} [config.renderingMode='ambisonic'] - Rendering mode.
  */
 function FOARenderer(context, config) {
-  this._context = Utils.isBaseAudioContext(context) ?
+  this._context = Utils.isAudioContext(context) ?
       context :
       Utils.throw('FOARenderer: Invalid BaseAudioContext.');
 
