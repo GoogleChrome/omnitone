@@ -17,8 +17,6 @@
  * @file Omnitone library common utilities.
  */
 
-'use strict';
-
 
 /**
  * Omnitone library logging function.

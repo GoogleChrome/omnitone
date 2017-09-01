@@ -19,7 +19,6 @@
     <title>
       Example: FOARenderer (Optimized)
     </title>
-    <script src="audiocontext-shim.js"></script>
     <script src="../build/omnitone.min.js"></script>
     <link rel="stylesheet" href="example.css">
   </head>
@@ -40,10 +39,7 @@
     <div id="secSource">
       <p>
         NOTE: Use headphones for the full-sphere surround sound.
-      </p>
-      <h2>
-        Select the sound source to play.
-      </h2><select id="eSelectSource" name="dropdownSource" disabled>
+      </p><select id="eSelectSource" name="dropdownSource" disabled>
         <option value="speech" selected="selected">
           Speech
         </option>
@@ -53,8 +49,14 @@
       </select> <button id="eButtonPlayback" disabled>Play</button>
     </div>
     <div id="secRenderingMode">
-      <span class="label">Rendering Mode</span> <button id="eButtonBypass"
+      <span class="label">Rendering mode</span> <button id="eButtonBypass"
       disabled>Ambisonic</button>
+    </div>
+    <div id="footer">
+      <p>
+        Found something broken? <a href=
+        "https://github.com/GoogleChrome/omnitone/issues">File an issue.</a>
+      </p>
     </div>
     <script>
     var foaRenderer;
@@ -75,11 +77,11 @@
       audioElement.src = audioSources['speech'];
 
       foaRenderer = Omnitone.createFOARenderer(audioContext, {
-        // The example audio is in the FuMa ordering (W,X,Y,Z). So remap the
-        // channels to the ACN format.
         hrirPathList: [
           '../build/resources/omnitone-foa-1.wav',
           '../build/resources/omnitone-foa-2.wav'],
+        // The example audio is in the FuMa ordering (W,X,Y,Z). So remap the
+        // channels to the ACN format.
         channelMap: [0, 3, 1, 2]
       });
 

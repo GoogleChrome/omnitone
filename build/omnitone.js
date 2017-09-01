@@ -106,15 +106,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	var FOAConvolver = __webpack_require__(4);
 	var FOADecoder = __webpack_require__(5);
 	var FOAPhaseMatchedFilter = __webpack_require__(9);
-	var FOARenderer = __webpack_require__(13);
+	var FOARenderer = __webpack_require__(12);
 	var FOARotator = __webpack_require__(8);
 	var FOARouter = __webpack_require__(7);
 	var FOAVirtualSpeaker = __webpack_require__(10);
-	var HOAConvolver = __webpack_require__(15);
-	var HOARenderer = __webpack_require__(16);
-	var HOARotator = __webpack_require__(17);
+	var HOAConvolver = __webpack_require__(14);
+	var HOARenderer = __webpack_require__(15);
+	var HOARotator = __webpack_require__(16);
+	var Polyfill = __webpack_require__(17);
 	var Utils = __webpack_require__(3);
-	var Version = __webpack_require__(12);
+	var Version = __webpack_require__(18);
 
 	// DEPRECATED in V1, in favor of BufferList.
 	var AudioBufferManager = __webpack_require__(6);
@@ -127,7 +128,16 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	/**
-	 * DEPRECATED in V1. DO NOT USE.
+	 * An object contains the detected browser name and version.
+	 * @type {Object} info
+	 * @type {string} info.name - Browser name.
+	 * @type {string} info.version - Browser version.
+	 */
+	Omnitone.BrowserInfo = Polyfill.getBrowserInfo();
+
+
+	/**
+	 * DEPRECATED in V1. DO. NOT. USE.
 	 */
 	Omnitone.loadAudioBuffers = function(context, speakerData) {
 	  return new Promise(function(resolve, reject) {
@@ -231,18 +241,18 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	/**
-	 * Create a singleton FOADecoder instance.
-	 * @param {AudioContext} context      Associated AudioContext.
-	 * @param {DOMElement} videoElement   Video or Audio DOM element to be streamed.
-	 * @param {Object} options            Options for FOA decoder.
-	 * @param {String} options.baseResourceUrl    Base URL for resources.
-	 *                                            (HRTF IR files)
-	 * @param {Number} options.postGain           Post-decoding gain compensation.
-	 *                                            (Default = 26.0)
-	 * @param {Array} options.routingDestination  Custom channel layout.
+	 * DEPRECATED. Create a FOADecoder instance.
+	 * @param {AudioContext} context - Associated AudioContext.
+	 * @param {DOMElement} videoElement - Video or Audio DOM element to be streamed.
+	 * @param {Object} options - Options for FOA decoder.
+	 * @param {String} options.baseResourceUrl - Base URL for resources.
+	 * (base path for HRIR files)
+	 * @param {Number} [options.postGain=26.0] - Post-decoding gain compensation.
+	 * @param {Array} [options.routingDestination]  Custom channel layout.
 	 * @return {FOADecoder}
 	 */
 	Omnitone.createFOADecoder = function(context, videoElement, options) {
+	  Utils.log('WARNING: FOADecoder is deprecated in favor of FOARenderer.');
 	  return new FOADecoder(context, videoElement, options);
 	};
 
@@ -303,7 +313,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 
-	Utils.log('Omnitone: Version ' + Version);
+	/**
+	 * Handler Preload Tasks.
+	 * - Detects the browser information.
+	 * - Prints out the version number.
+	 */
+	(function() {
+	  Utils.log('Version ' + Version + ' (running on ' +
+	      Omnitone.BrowserInfo.name + ' ' + Omnitone.BrowserInfo.version + ')');
+	  if (Omnitone.BrowserInfo.name.toLowerCase() === 'safari') {
+	    Polyfill.patchSafari();
+	    Utils.log(Omnitone.BrowserInfo.name + ' detected. Appliying the patch.');
+	  }
+	})();
 
 
 	module.exports = Omnitone;
@@ -490,8 +512,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 * @file Omnitone library common utilities.
 	 */
-
-	'use strict';
 
 
 	/**
@@ -879,7 +899,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	var FOAVirtualSpeaker = __webpack_require__(10);
 	var FOASpeakerData = __webpack_require__(11);
 	var Utils = __webpack_require__(3);
-	var SystemVersion = __webpack_require__(12);
 
 	// By default, Omnitone fetches IR from the spatial media repository.
 	var HRTFSET_URL = 'https://raw.githubusercontent.com/GoogleChrome/omnitone/master/build/resources/';
@@ -906,7 +925,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  this._postGainDB = POST_GAIN_DB;
 	  this._HRTFSetUrl = HRTFSET_URL;
-	  this._channelMap = FOARouter.CHANNEL_MAP.DEFAULT; // ACN
+	  this._channelMap = FOARouter.ChannelMap.DEFAULT; // ACN
 
 	  if (options) {
 	    if (options.postGainDB)
@@ -937,12 +956,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @return {Promise}
 	 */
 	FOADecoder.prototype.initialize = function () {
-	  Utils.log('Version: ' + SystemVersion);
 	  Utils.log('Initializing... (mode: ' + this._decodingMode + ')');
 
 	  // Rerouting channels if necessary.
 	  var channelMapString = this._channelMap.toString();
-	  var defaultChannelMapString = FOARouter.CHANNEL_MAP.DEFAULT.toString();
+	  var defaultChannelMapString = FOARouter.ChannelMap.DEFAULT.toString();
 	  if (channelMapString !== defaultChannelMapString) {
 	    Utils.log('Remapping channels ([' + defaultChannelMapString + '] -> ['
 	      + channelMapString + '])');
@@ -1746,38 +1764,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ },
 /* 12 */
-/***/ function(module, exports) {
-
-	/**
-	 * Copyright 2016 Google Inc. All Rights Reserved.
-	 * Licensed under the Apache License, Version 2.0 (the "License");
-	 * you may not use this file except in compliance with the License.
-	 * You may obtain a copy of the License at
-	 *
-	 *     http://www.apache.org/licenses/LICENSE-2.0
-	 *
-	 * Unless required by applicable law or agreed to in writing, software
-	 * distributed under the License is distributed on an "AS IS" BASIS,
-	 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-	 * See the License for the specific language governing permissions and
-	 * limitations under the License.
-	 */
-
-	/**
-	 * @fileOverview Omnitone version.
-	 */
-
-	'use strict';
-
-	/**
-	 * Omnitone library version
-	 * @type {String}
-	 */
-	module.exports = '0.9.6';
-
-
-/***/ },
-/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -1807,7 +1793,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var FOAConvolver = __webpack_require__(4);
 	var FOARotator = __webpack_require__(8);
 	var FOARouter = __webpack_require__(7);
-	var HRIRManager = __webpack_require__(14);
+	var HRIRManager = __webpack_require__(13);
 	var Utils = __webpack_require__(3);
 
 
@@ -2055,7 +2041,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 14 */
+/* 13 */
 /***/ function(module, exports) {
 
 	/**
@@ -2157,7 +2143,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 15 */
+/* 14 */
 /***/ function(module, exports) {
 
 	/**
@@ -2331,7 +2317,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 16 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -2357,9 +2343,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 	var BufferList = __webpack_require__(2);
-	var HOAConvolver = __webpack_require__(15);
-	var HOARotator = __webpack_require__(17);
-	var HRIRManager = __webpack_require__(14);
+	var HOAConvolver = __webpack_require__(14);
+	var HOARotator = __webpack_require__(16);
+	var HRIRManager = __webpack_require__(13);
 	var Utils = __webpack_require__(3);
 
 
@@ -2577,7 +2563,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 17 */
+/* 16 */
 /***/ function(module, exports) {
 
 	/**
@@ -2969,6 +2955,106 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	module.exports = HOARotator;
+
+
+/***/ },
+/* 17 */
+/***/ function(module, exports) {
+
+	/**
+	 * Copyright 2017 Google Inc. All Rights Reserved.
+	 * Licensed under the Apache License, Version 2.0 (the "License");
+	 * you may not use this file except in compliance with the License.
+	 * You may obtain a copy of the License at
+	 *
+	 *     http://www.apache.org/licenses/LICENSE-2.0
+	 *
+	 * Unless required by applicable law or agreed to in writing, software
+	 * distributed under the License is distributed on an "AS IS" BASIS,
+	 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	 * See the License for the specific language governing permissions and
+	 * limitations under the License.
+	 */
+
+	/**
+	 * @file Cross-browser support polyfill for Omnitone library.
+	 */
+
+	'use strict';
+
+
+	/**
+	 * Detects browser type and version.
+	 * @return {string[]} - An array contains the detected browser name and version.
+	 */
+	exports.getBrowserInfo = function() {
+	  var ua = navigator.userAgent;
+	  var M = ua.match(
+	      /(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*([\d\.]+)/i) ||
+	      [];
+	  var tem;
+	  if (/trident/i.test(M[1])) {
+	    tem = /\brv[ :]+(\d+)/g.exec(ua) || [];
+	    return {name:'IE', version: (tem[1] || '')};
+	  }
+	  if (M[1] === 'Chrome') {
+	    tem = ua.match(/\bOPR|Edge\/(\d+)/)
+	    if(tem != null) {
+	      return {name: 'Opera', version: tem[1]};
+	    }
+	  }
+	  M = M[2] ? [M[1], M[2]] : [navigator.appName, navigator.appVersion, '-?'];
+	  if((tem = ua.match(/version\/([\d.]+)/i)) != null) {
+	    M.splice(1, 1, tem[1]);
+	  }
+	  return {
+	    name: M[0],
+	    version: M[1]
+	  };
+	};
+
+
+	/**
+	 * Patches AudioContext if the prefixed API is found.
+	 */
+	exports.patchSafari = function() {
+	  if (window.webkitAudioContext && window.webkitOfflineAudioContext) {
+	    window.AudioContext = window.webkitAudioContext;
+	    window.OfflineAudioContext = window.webkitOfflineAudioContext;
+	  }
+	};
+
+
+/***/ },
+/* 18 */
+/***/ function(module, exports) {
+
+	/**
+	 * Copyright 2016 Google Inc. All Rights Reserved.
+	 * Licensed under the Apache License, Version 2.0 (the "License");
+	 * you may not use this file except in compliance with the License.
+	 * You may obtain a copy of the License at
+	 *
+	 *     http://www.apache.org/licenses/LICENSE-2.0
+	 *
+	 * Unless required by applicable law or agreed to in writing, software
+	 * distributed under the License is distributed on an "AS IS" BASIS,
+	 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	 * See the License for the specific language governing permissions and
+	 * limitations under the License.
+	 */
+
+	/**
+	 * @fileOverview Omnitone version.
+	 */
+
+	'use strict';
+
+	/**
+	 * Omnitone library version
+	 * @type {String}
+	 */
+	module.exports = '0.9.6';
 
 
 /***/ }

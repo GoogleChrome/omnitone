@@ -31,6 +31,7 @@ var FOAVirtualSpeaker = require('./foa-virtual-speaker.js');
 var HOAConvolver = require('./hoa-convolver.js');
 var HOARenderer = require('./hoa-renderer.js');
 var HOARotator = require('./hoa-rotator.js');
+var Polyfill = require('./polyfill.js');
 var Utils = require('./utils.js');
 var Version = require('./version.js');
 
@@ -45,7 +46,16 @@ var Omnitone = {};
 
 
 /**
- * DEPRECATED in V1. DO NOT USE.
+ * An object contains the detected browser name and version.
+ * @type {Object} info
+ * @type {string} info.name - Browser name.
+ * @type {string} info.version - Browser version.
+ */
+Omnitone.BrowserInfo = Polyfill.getBrowserInfo();
+
+
+/**
+ * DEPRECATED in V1. DO. NOT. USE.
  */
 Omnitone.loadAudioBuffers = function(context, speakerData) {
   return new Promise(function(resolve, reject) {
@@ -149,18 +159,18 @@ Omnitone.createFOAVirtualSpeaker = function(context, options) {
 
 
 /**
- * Create a singleton FOADecoder instance.
- * @param {AudioContext} context      Associated AudioContext.
- * @param {DOMElement} videoElement   Video or Audio DOM element to be streamed.
- * @param {Object} options            Options for FOA decoder.
- * @param {String} options.baseResourceUrl    Base URL for resources.
- *                                            (HRTF IR files)
- * @param {Number} options.postGain           Post-decoding gain compensation.
- *                                            (Default = 26.0)
- * @param {Array} options.routingDestination  Custom channel layout.
+ * DEPRECATED. Create a FOADecoder instance.
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {DOMElement} videoElement - Video or Audio DOM element to be streamed.
+ * @param {Object} options - Options for FOA decoder.
+ * @param {String} options.baseResourceUrl - Base URL for resources.
+ * (base path for HRIR files)
+ * @param {Number} [options.postGain=26.0] - Post-decoding gain compensation.
+ * @param {Array} [options.routingDestination]  Custom channel layout.
  * @return {FOADecoder}
  */
 Omnitone.createFOADecoder = function(context, videoElement, options) {
+  Utils.log('WARNING: FOADecoder is deprecated in favor of FOARenderer.');
   return new FOADecoder(context, videoElement, options);
 };
 
@@ -221,7 +231,19 @@ Omnitone.createHOARenderer = function(context, config) {
 };
 
 
-Utils.log('Omnitone: Version ' + Version);
+/**
+ * Handler Preload Tasks.
+ * - Detects the browser information.
+ * - Prints out the version number.
+ */
+(function() {
+  Utils.log('Version ' + Version + ' (running on ' +
+      Omnitone.BrowserInfo.name + ' ' + Omnitone.BrowserInfo.version + ')');
+  if (Omnitone.BrowserInfo.name.toLowerCase() === 'safari') {
+    Polyfill.patchSafari();
+    Utils.log(Omnitone.BrowserInfo.name + ' detected. Appliying polyfill...');
+  }
+})();
 
 
 module.exports = Omnitone;

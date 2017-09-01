@@ -45,16 +45,17 @@ p>code {
 }
 
 button {
-    font-size: 24px;
+    font-size: 16px;
 
     width: 140px;
-    height: 40px;
+    height: 32px;
 }
 
 select {
-    font-size: 24px;
+    font-size: 16px;
 
     width: 140px;
+    height: 32px;
 }
 
 dt {
@@ -72,7 +73,12 @@ dd>input[type=range] {
 
 .label {
     display: inline-block;
+    text-align: center;
 
     width: 140px;
     height: 40px;
+}
+
+#footer {
+    margin-top: 60px;
 }
