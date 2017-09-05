@@ -54,9 +54,7 @@ var Omnitone = {};
 Omnitone.BrowserInfo = Polyfill.getBrowserInfo();
 
 
-/**
- * DEPRECATED in V1. DO. NOT. USE.
- */
+// DEPRECATED in V1. DO. NOT. USE.
 Omnitone.loadAudioBuffers = function(context, speakerData) {
   return new Promise(function(resolve, reject) {
     new AudioBufferManager(context, speakerData, function(buffers) {
