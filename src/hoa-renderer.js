@@ -15,16 +15,14 @@
 
 
 /**
- * @file Omnitone FOARenderer. This is user-facing API for the first-order
- * ambisonic decoder and the optimized binaural renderer.
+ * @file Omnitone HOA decoder.
  */
 
 'use strict';
 
 var BufferList = require('./buffer-list.js');
-var FOAConvolver = require('./foa-convolver.js');
-var FOARotator = require('./foa-rotator.js');
-var FOARouter = require('./foa-router.js');
+var HOAConvolver = require('./hoa-convolver.js');
+var HOARotator = require('./hoa-rotator.js');
 var HRIRManager = require('./hrir-manager.js');
 var Utils = require('./utils.js');
 
@@ -47,49 +45,57 @@ var RenderingMode = {
 };
 
 
+// Currently SOA and TOA are only supported.
+var SupportedAmbisonicOrder = [2, 3];
+
+
 /**
- * Omnitone FOA renderer class. Uses the optimized convolution technique.
+ * Omnitone HOA renderer class. Uses the optimized convolution technique.
  * @constructor
  * @param {AudioContext} context - Associated AudioContext.
  * @param {Object} config
- * @param {Array} [config.channelMap] - Custom channel routing map. Useful for
- * handling the inconsistency in browser's multichannel audio decoding.
+ * @param {Number} [config.ambisonicOrder=3] - Ambisonic order.
  * @param {Array} [config.hrirPathList] - A list of paths to HRIR files. It
  * overrides the internal HRIR list if given.
  * @param {RenderingMode} [config.renderingMode='ambisonic'] - Rendering mode.
  */
-function FOARenderer(context, config) {
+function HOARenderer(context, config) {
   this._context = Utils.isAudioContext(context) ?
       context :
-      Utils.throw('FOARenderer: Invalid BaseAudioContext.');
+      Utils.throw('HOARenderer: Invalid BaseAudioContext.');
 
-  this._config = {
-    channelMap: FOARouter.ChannelMap.DEFAULT,
-    renderingMode: RenderingMode.AMBISONIC
-  };
+  this._config = {ambisonicOrder: 3, renderingMode: RenderingMode.AMBISONIC};
 
-  if (config.channelMap) {
-    if (Array.isArray(config.channelMap) && config.channelMap.length === 4) {
-      this._config.channelMap = config.channelMap;
+  if (config.ambisonicOrder) {
+    if (SupportedAmbisonicOrder.includes(config.ambisonicOrder)) {
+      this._config.ambisonicOrder = config.ambisonicOrder;
     } else {
-      Utils.throw(
-          'FOARenderer: Invalid channel map. (got ' + config.channelMap + ')');
+      Utils.log(
+          'HOARenderer: Invalid ambisonic order. (got ' +
+          config.ambisonicOrder + ') Fallbacks to 3rd-order ambisonic.');
     }
   }
 
+  this._config.numberOfChannels =
+      (this._config.ambisonicOrder + 1) * (this._config.ambisonicOrder + 1);
+  this._config.numberOfStereoChannels =
+      Math.ceil(this._config.numberOfChannels / 2);
+
   if (config.hrirPathList) {
     if (Array.isArray(config.hrirPathList) &&
-        config.hrirPathList.length === 2) {
+        config.hrirPathList.length === this._config.numberOfStereoChannels) {
       this._config.pathList = config.hrirPathList;
     } else {
       Utils.throw(
-          'FOARenderer: Invalid HRIR URLs. It must be an array with ' +
-          '2 URLs to HRIR files. (got ' + config.hrirPathList + ')');
+          'HOARenderer: Invalid HRIR URLs. It must be an array with ' +
+          this._config.numberOfStereoChannels + ' URLs to HRIR files.' +
+          ' (got ' + config.hrirPathList + ')');
     }
   } else {
-    // By default, the path list points to GitHub CDN with FOA files.
+    // By default, the path list points to GitHub CDN with HOA files.
     // TODO(hoch): update this to Gstatic server when it's available.
-    this._config.pathList = HRIRManager.getPathList();
+    this._config.pathList =
+        HRIRManager.getPathList({ambisonicOrder: this._config.ambisonicOrder});
   }
 
   if (config.renderingMode) {
@@ -97,14 +103,13 @@ function FOARenderer(context, config) {
       this._config.renderingMode = config.renderingMode;
     } else {
       Utils.log(
-          'FOARenderer: Invalid rendering mode order. (got' +
-          config.renderingMode + ') Fallbacks to the mode "ambisonic".');
+          'HOARenderer: Invalid rendering mode. (got ' + config.renderingMode +
+          ') Fallbacks to "ambisonic".');
     }
   }
 
   this._buildAudioGraph();
 
-  this._tempMatrix4 = new Float32Array(16);
   this._isRendererReady = false;
 }
 
@@ -113,18 +118,17 @@ function FOARenderer(context, config) {
  * Builds the internal audio graph.
  * @private
  */
-FOARenderer.prototype._buildAudioGraph = function() {
+HOARenderer.prototype._buildAudioGraph = function() {
   this.input = this._context.createGain();
   this.output = this._context.createGain();
   this._bypass = this._context.createGain();
-  this._foaRouter = new FOARouter(this._context, this._config.channelMap);
-  this._foaRotator = new FOARotator(this._context);
-  this._foaConvolver = new FOAConvolver(this._context);
-  this.input.connect(this._foaRouter.input);
+  this._hoaRotator = new HOARotator(this._context, this._config.ambisonicOrder);
+  this._hoaConvolver =
+      new HOAConvolver(this._context, this._config.ambisonicOrder);
+  this.input.connect(this._hoaRotator.input);
   this.input.connect(this._bypass);
-  this._foaRouter.output.connect(this._foaRotator.input);
-  this._foaRotator.output.connect(this._foaConvolver.input);
-  this._foaConvolver.output.connect(this.output);
+  this._hoaRotator.output.connect(this._hoaConvolver.input);
+  this._hoaConvolver.output.connect(this.output);
 };
 
 
@@ -134,7 +138,7 @@ FOARenderer.prototype._buildAudioGraph = function() {
  * @param {function} resolve - Resolution handler.
  * @param {function} reject - Rejection handler.
  */
-FOARenderer.prototype._initializeCallback = function(resolve, reject) {
+HOARenderer.prototype._initializeCallback = function(resolve, reject) {
   var bufferLoaderData = [];
   for (var i = 0; i < this._config.pathList.length; ++i)
     bufferLoaderData.push({name: i, url: this._config.pathList[i]});
@@ -142,14 +146,14 @@ FOARenderer.prototype._initializeCallback = function(resolve, reject) {
   var bufferList = new BufferList(this._context, this._config.pathList);
   bufferList.load().then(
       function(hrirBufferList) {
-        this._foaConvolver.setHRIRBufferList(hrirBufferList);
+        this._hoaConvolver.setHRIRBufferList(hrirBufferList);
         this.setRenderingMode(this._config.renderingMode);
         this._isRendererReady = true;
-        Utils.log('FOARenderer: HRIRs loaded successfully. Ready.');
+        Utils.log('HOARenderer: HRIRs loaded successfully. Ready.');
         resolve();
       }.bind(this),
       function(errorMessage) {
-        var errorMessage = 'FOARenderer: HRIR loading/decoding failed. (' +
+        var errorMessage = 'HOARenderer: HRIR loading/decoding failed. (' +
             Array.from(bufferMap) + ')';
         Utils.throw(errorMessage);
         reject(errorMessage);
@@ -161,32 +165,14 @@ FOARenderer.prototype._initializeCallback = function(resolve, reject) {
  * Initializes and loads the resource for the renderer.
  * @return {Promise}
  */
-FOARenderer.prototype.initialize = function() {
+HOARenderer.prototype.initialize = function() {
   Utils.log(
-      'FOARenderer: Initializing... (mode: ' + this._config.renderingMode +
-      ')');
+      'HOARenderer: Initializing... (mode: ' + this._config.renderingMode +
+      ', ambisonic order: ' + this._config.ambisonicOrder + ')');
 
   return new Promise(this._initializeCallback.bind(this), function(error) {
-    Utils.throw('FOARenderer: Initialization failed. (' + error + ')');
+    Utils.throw('HOARenderer: Initialization failed. (' + error + ')');
   });
-};
-
-
-/**
- * Set the channel map.
- * @param {Number[]} channelMap - Custom channel routing for FOA stream.
- */
-FOARenderer.prototype.setChannelMap = function(channelMap) {
-  if (!this._isRendererReady)
-    return;
-
-  if (channelMap.toString() !== this._config.channelMap.toString()) {
-    Utils.log(
-        'Remapping channels ([' + this._config.channelMap.toString() +
-        '] -> [' + channelMap.toString() + ']).');
-    this._config.channelMap = channelMap.slice();
-    this._foaRouter.setChannelMap(this._config.channelMap);
-  }
 };
 
 
@@ -194,11 +180,11 @@ FOARenderer.prototype.setChannelMap = function(channelMap) {
  * Updates the rotation matrix with 3x3 matrix.
  * @param {Number[]} rotationMatrix3 - A 3x3 rotation matrix. (column-major)
  */
-FOARenderer.prototype.setRotationMatrix3 = function(rotationMatrix3) {
+HOARenderer.prototype.setRotationMatrix3 = function(rotationMatrix3) {
   if (!this._isRendererReady)
     return;
 
-  this._foaRotator.setRotationMatrix3(rotationMatrix3);
+  this._hoaRotator.setRotationMatrix3(rotationMatrix3);
 };
 
 
@@ -206,29 +192,11 @@ FOARenderer.prototype.setRotationMatrix3 = function(rotationMatrix3) {
  * Updates the rotation matrix with 4x4 matrix.
  * @param {Number[]} rotationMatrix4 - A 4x4 rotation matrix. (column-major)
  */
-FOARenderer.prototype.setRotationMatrix4 = function(rotationMatrix4) {
+HOARenderer.prototype.setRotationMatrix4 = function(rotationMatrix4) {
   if (!this._isRendererReady)
     return;
 
-  this._foaRotator.setRotationMatrix4(rotationMatrix4);
-};
-
-
-/**
- * Set the rotation matrix from a Three.js camera object. Depreated in V1, and
- * this exists only for the backward compatiblity. Instead, use
- * |setRotatationMatrix4()| with Three.js |camera.worldMatrix.elements|.
- * @deprecated
- * @param {Object} cameraMatrix - Matrix4 from Three.js |camera.matrix|.
- */
-FOARenderer.prototype.setRotationMatrixFromCamera = function(cameraMatrix) {
-  if (!this._isRendererReady)
-    return;
-
-  // Extract the inner array elements and inverse. (The actual view rotation is
-  // the opposite of the camera movement.)
-  Utils.invertMatrix4(this._tempMatrix4, cameraMatrix.elements);
-  this._foaRotator.setRotationMatrix4(this._tempMatrix4);
+  this._hoaRotator.setRotationMatrix4(rotationMatrix4);
 };
 
 
@@ -240,33 +208,33 @@ FOARenderer.prototype.setRotationMatrixFromCamera = function(cameraMatrix) {
  *    decoding or encoding.
  *  - 'off': all the processing off saving the CPU power.
  */
-FOARenderer.prototype.setRenderingMode = function(mode) {
+HOARenderer.prototype.setRenderingMode = function(mode) {
   if (mode === this._config.renderingMode)
     return;
 
   switch (mode) {
     case RenderingMode.AMBISONIC:
-      this._foaConvolver.enable();
+      this._hoaConvolver.enable();
       this._bypass.disconnect();
       break;
     case RenderingMode.BYPASS:
-      this._foaConvolver.disable();
+      this._hoaConvolver.disable();
       this._bypass.connect(this.output);
       break;
     case RenderingMode.OFF:
-      this._foaConvolver.disable();
+      this._hoaConvolver.disable();
       this._bypass.disconnect();
       break;
     default:
       Utils.log(
-          'FOARenderer: Rendering mode "' + mode + '" is not ' +
+          'HOARenderer: Rendering mode "' + mode + '" is not ' +
           'supported.');
       return;
   }
 
   this._config.renderingMode = mode;
-  Utils.log('FOARenderer: Rendering mode changed. (' + mode + ')');
+  Utils.log('HOARenderer: Rendering mode changed. (' + mode + ')');
 };
 
 
-module.exports = FOARenderer;
+module.exports = HOARenderer;

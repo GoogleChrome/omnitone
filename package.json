@@ -1,6 +1,6 @@
 {
   "name": "omnitone",
-  "version": "0.2.2",
+  "version": "1.0.0",
   "description": "Spatial Audio Decoder in Web Audio API",
   "main": "build/omnitone.js",
   "keywords": [
@@ -13,6 +13,7 @@
   "devDependencies": {
     "chai": "^3.5.0",
     "copy-webpack-plugin": "^3.0.1",
+    "jsdoc": "^3.5.4",
     "karma": "^1.6.0",
     "karma-chai": "^0.1.0",
     "karma-chrome-launcher": "^2.0.0",
@@ -23,9 +24,11 @@
   },
   "scripts": {
     "build": "webpack --progress --color",
-    "watch": "webpack --progress --color --watch",
     "build-all": "webpack --progress --color && webpack --config webpack.config.all.js --progress --color",
-    "test": "node_modules/karma/bin/karma start"
+    "build-omnitone-hrir": "./build-hrir.sh",
+    "build-doc": "node_modules/.bin/jsdoc src/omnitone.js -d doc/",
+    "test": "node_modules/karma/bin/karma start",
+    "watch": "webpack --progress --color --watch"
   },
   "homepage": "https://github.com/GoogleChrome/omnitone",
   "bugs": {

@@ -13,19 +13,19 @@
  * limitations under the License.
  */
 
+/**
+ * @file Sound field rotator for first-order-ambisonics decoding.
+ */
+
 'use strict';
 
 
 /**
- * @fileOverview Sound field rotator for first-order-ambisonics decoding.
+ * First-order-ambisonic decoder based on gain node network.
+ * @constructor
+ * @param {AudioContext} context - Associated AudioContext.
  */
-
-
-/**
- * @class First-order-ambisonic decoder based on gain node network.
- * @param {AudioContext} context    Associated AudioContext.
- */
-function FOARotator (context) {
+function FOARotator(context) {
   this._context = context;
 
   this._splitter = this._context.createChannelSplitter(4);
@@ -46,10 +46,10 @@ function FOARotator (context) {
   this._outX = this._context.createGain();
   this._merger = this._context.createChannelMerger(4);
 
-    // ACN channel ordering: [1, 2, 3] => [-Y, Z, -X]
-  this._splitter.connect(this._inY, 1); // Y (from channel 1)
-  this._splitter.connect(this._inZ, 2); // Z (from channel 2)
-  this._splitter.connect(this._inX, 3); // X (from channel 3)
+  // ACN channel ordering: [1, 2, 3] => [-Y, Z, -X]
+  this._splitter.connect(this._inY, 1);  // Y (from channel 1)
+  this._splitter.connect(this._inZ, 2);  // Z (from channel 2)
+  this._splitter.connect(this._inX, 3);  // X (from channel 3)
   this._inY.gain.value = -1;
   this._inX.gain.value = -1;
 
@@ -77,14 +77,14 @@ function FOARotator (context) {
   this._m8.connect(this._outX);
 
   // Transform 3: world space to audio space.
-  this._splitter.connect(this._merger, 0, 0); // W -> W (to channel 0)
-  this._outY.connect(this._merger, 0, 1); // Y (to channel 1)
-  this._outZ.connect(this._merger, 0, 2); // Z (to channel 2)
-  this._outX.connect(this._merger, 0, 3); // X (to channel 3)
+  this._splitter.connect(this._merger, 0, 0);  // W -> W (to channel 0)
+  this._outY.connect(this._merger, 0, 1);      // Y (to channel 1)
+  this._outZ.connect(this._merger, 0, 2);      // Z (to channel 2)
+  this._outX.connect(this._merger, 0, 3);      // X (to channel 3)
   this._outY.gain.value = -1;
   this._outX.gain.value = -1;
 
-  this.setRotationMatrix(new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]));
+  this.setRotationMatrix3(new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]));
 
   // input/output proxy.
   this.input = this._splitter;
@@ -93,27 +93,27 @@ function FOARotator (context) {
 
 
 /**
- * Set 3x3 matrix for soundfield rotation. (gl-matrix.js style)
- * @param {Array} rotationMatrix    A 3x3 matrix of soundfield rotation. The
- *                                  matrix is in the row-major representation.
+ * Updates the rotation matrix with 3x3 matrix.
+ * @param {Number[]} rotationMatrix3 - A 3x3 rotation matrix. (column-major)
  */
-FOARotator.prototype.setRotationMatrix = function (rotationMatrix) {
-  this._m0.gain.value = rotationMatrix[0];
-  this._m1.gain.value = rotationMatrix[1];
-  this._m2.gain.value = rotationMatrix[2];
-  this._m3.gain.value = rotationMatrix[3];
-  this._m4.gain.value = rotationMatrix[4];
-  this._m5.gain.value = rotationMatrix[5];
-  this._m6.gain.value = rotationMatrix[6];
-  this._m7.gain.value = rotationMatrix[7];
-  this._m8.gain.value = rotationMatrix[8];
+FOARotator.prototype.setRotationMatrix3 = function(rotationMatrix3) {
+  this._m0.gain.value = rotationMatrix3[0];
+  this._m1.gain.value = rotationMatrix3[1];
+  this._m2.gain.value = rotationMatrix3[2];
+  this._m3.gain.value = rotationMatrix3[3];
+  this._m4.gain.value = rotationMatrix3[4];
+  this._m5.gain.value = rotationMatrix3[5];
+  this._m6.gain.value = rotationMatrix3[6];
+  this._m7.gain.value = rotationMatrix3[7];
+  this._m8.gain.value = rotationMatrix3[8];
 };
 
+
 /**
- * Set 4x4 matrix for soundfield rotation. (Three.js style)
- * @param {Array} rotationMatrix4   A 4x4 matrix of soundfield rotation.
+ * Updates the rotation matrix with 4x4 matrix.
+ * @param {Number[]} rotationMatrix4 - A 4x4 rotation matrix. (column-major)
  */
-FOARotator.prototype.setRotationMatrix4 = function (rotationMatrix4) {
+FOARotator.prototype.setRotationMatrix4 = function(rotationMatrix4) {
   this._m0.gain.value = rotationMatrix4[0];
   this._m1.gain.value = rotationMatrix4[1];
   this._m2.gain.value = rotationMatrix4[2];
@@ -125,17 +125,36 @@ FOARotator.prototype.setRotationMatrix4 = function (rotationMatrix4) {
   this._m8.gain.value = rotationMatrix4[10];
 };
 
+
 /**
- * Returns the current rotation matrix.
- * @return {Array}                  A 3x3 matrix of soundfield rotation. The
- *                                  matrix is in the row-major representation.
+ * Returns the current 3x3 rotation matrix.
+ * @return {Number[]} - A 3x3 rotation matrix. (column-major)
  */
-FOARotator.prototype.getRotationMatrix = function () {
+FOARotator.prototype.getRotationMatrix3 = function() {
   return [
     this._m0.gain.value, this._m1.gain.value, this._m2.gain.value,
     this._m3.gain.value, this._m4.gain.value, this._m5.gain.value,
     this._m6.gain.value, this._m7.gain.value, this._m8.gain.value
   ];
+};
+
+
+/**
+ * Returns the current 4x4 rotation matrix.
+ * @return {Number[]} - A 4x4 rotation matrix. (column-major)
+ */
+FOARotator.prototype.getRotationMatrix4 = function() {
+  var rotationMatrix4 = new Float32Array(16);
+  rotationMatrix4[0] = this._m0.gain.value;
+  rotationMatrix4[1] = this._m1.gain.value;
+  rotationMatrix4[2] = this._m2.gain.value;
+  rotationMatrix4[4] = this._m3.gain.value;
+  rotationMatrix4[5] = this._m4.gain.value;
+  rotationMatrix4[6] = this._m5.gain.value;
+  rotationMatrix4[8] = this._m6.gain.value;
+  rotationMatrix4[9] = this._m7.gain.value;
+  rotationMatrix4[10] = this._m8.gain.value;
+  return rotationMatrix4;
 };
 
 

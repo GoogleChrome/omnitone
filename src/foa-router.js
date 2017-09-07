@@ -13,62 +13,58 @@
  * limitations under the License.
  */
 
+/**
+ * @file An audio channel router to resolve different channel layouts between
+ * browsers.
+ */
+
 'use strict';
 
-/**
- * @fileOverview An audio channel re-router to resolve different channel layouts
- *               between various platforms.
- */
-
 
 /**
- * Channel map dictionary for various mapping scheme.
- *
- * @type {Object}
+ * @typedef {Number[]} ChannelMap
  */
-var CHANNEL_MAP = {
-  // ACN, default channel map. Works correctly on Chrome and FireFox. (FFMpeg)
+
+/**
+ * Channel map dictionary ENUM.
+ * @enum {ChannelMap}
+ */
+var ChannelMap = {
+  /** @type {Number[]} - ACN channel map for Chrome and FireFox. (FFMPEG) */
   DEFAULT: [0, 1, 2, 3],
-  // Safari's decoder works differently on 4-channel stream.
-  APPLE: [2, 0, 1, 3],
-  // ACN -> FuMa conversion.
+  /** @type {Number[]} - Safari's 4-channel map for AAC codec. */
+  SAFARI: [2, 0, 1, 3],
+  /** @type {Number[]} - ACN > FuMa conversion map. */
   FUMA: [0, 3, 1, 2]
 };
 
 
 /**
- * @class A simple channel re-router.
- * @param {AudioContext} context Associated AudioContext.
- * @param {Array} channelMap  Routing destination array.
- *                                    e.g.) Chrome: [0, 1, 2, 3],
- *                                    Apple(Safari): [2, 0, 1, 3]
+ * Channel router for FOA stream.
+ * @constructor
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {Number[]} channelMap - Routing destination array.
  */
-function FOARouter (context, channelMap) {
+function FOARouter(context, channelMap) {
   this._context = context;
 
   this._splitter = this._context.createChannelSplitter(4);
   this._merger = this._context.createChannelMerger(4);
 
-  this._channelMap = channelMap || CHANNEL_MAP.DEFAULT;
-
-  this._splitter.connect(this._merger, 0, this._channelMap[0]);
-  this._splitter.connect(this._merger, 1, this._channelMap[1]);
-  this._splitter.connect(this._merger, 2, this._channelMap[2]);
-  this._splitter.connect(this._merger, 3, this._channelMap[3]);
-
   // input/output proxy.
   this.input = this._splitter;
   this.output = this._merger;
+
+  this.setChannelMap(channelMap || ChannelMap.DEFAULT);
 }
 
 
 /**
- * Set a channel map array.
- *
- * @param {Array} channelMap A custom channel map for FOA stream.
+ * Sets channel map.
+ * @param {Number[]} channelMap - A new channel map for FOA stream.
  */
-FOARouter.prototype.setChannelMap = function (channelMap) {
-  if (!channelMap)
+FOARouter.prototype.setChannelMap = function(channelMap) {
+  if (!Array.isArray(channelMap))
     return;
 
   this._channelMap = channelMap;
@@ -77,16 +73,15 @@ FOARouter.prototype.setChannelMap = function (channelMap) {
   this._splitter.connect(this._merger, 1, this._channelMap[1]);
   this._splitter.connect(this._merger, 2, this._channelMap[2]);
   this._splitter.connect(this._merger, 3, this._channelMap[3]);
-}
+};
 
 
 /**
- * Static channel map dictionary.
- *
+ * Static channel map ENUM.
  * @static
- * @type {Object}
+ * @type {ChannelMap}
  */
-FOARouter.CHANNEL_MAP = CHANNEL_MAP;
+FOARouter.ChannelMap = ChannelMap;
 
 
 module.exports = FOARouter;

@@ -27,7 +27,6 @@ var FOAPhaseMatchedFilter = require('./foa-phase-matched-filter.js');
 var FOAVirtualSpeaker = require('./foa-virtual-speaker.js');
 var FOASpeakerData = require('./foa-speaker-data.js');
 var Utils = require('./utils.js');
-var SystemVersion = require('./version.js');
 
 // By default, Omnitone fetches IR from the spatial media repository.
 var HRTFSET_URL = 'https://raw.githubusercontent.com/GoogleChrome/omnitone/master/build/resources/';
@@ -54,7 +53,7 @@ function FOADecoder (context, videoElement, options) {
 
   this._postGainDB = POST_GAIN_DB;
   this._HRTFSetUrl = HRTFSET_URL;
-  this._channelMap = FOARouter.CHANNEL_MAP.DEFAULT; // ACN
+  this._channelMap = FOARouter.ChannelMap.DEFAULT; // ACN
 
   if (options) {
     if (options.postGainDB)
@@ -85,12 +84,11 @@ function FOADecoder (context, videoElement, options) {
  * @return {Promise}
  */
 FOADecoder.prototype.initialize = function () {
-  Utils.log('Version: ' + SystemVersion);
   Utils.log('Initializing... (mode: ' + this._decodingMode + ')');
 
   // Rerouting channels if necessary.
   var channelMapString = this._channelMap.toString();
-  var defaultChannelMapString = FOARouter.CHANNEL_MAP.DEFAULT.toString();
+  var defaultChannelMapString = FOARouter.ChannelMap.DEFAULT.toString();
   if (channelMapString !== defaultChannelMapString) {
     Utils.log('Remapping channels ([' + defaultChannelMapString + '] -> ['
       + channelMapString + '])');

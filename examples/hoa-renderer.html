@@ -1,0 +1,223 @@
+<!--
+  Copyright 2017 Google Inc. All Rights Reserved.
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>
+      Example: HOARenderer
+    </title>
+    <script src="../build/omnitone.min.js"></script>
+    <link rel="stylesheet" href="example.css">
+  </head>
+  <body>
+    <h1>
+      Example: HOARenderer
+    </h1>
+    <p>
+      <code>HOARenderer</code> is an optimized higher-order ambisonic renderer
+      based on the integrated convolution (SH-MaxRe HRIR). This renderer
+      supports arbitrary order ambisonic rendering, provided the user supplies
+      the appropriate SH-MaxRe HRIRs.
+    </p>
+    <div id="secSource">
+      <p>
+        NOTE: Use headphones for the full-sphere surround sound.
+      </p>
+      <h2>
+        Orient the head by selecting the horizontal and vertical controls.
+      </h2>
+      <dl>
+        <dt>
+          Azimuth = <span id="eLabelAzimuth">0</span>
+        </dt>
+        <dd>
+          <input oninput="rotateScene(this);" id="eRangeAzimuth" type="range"
+          min="-180" max="180" value="0" step="1">
+        </dd>
+        <dt>
+          Elevation = <span id="eLabelElevation">0</span>
+        </dt>
+        <dd>
+          <input oninput="rotateScene(this);" id="eRangeElevation" type="range"
+          min="-90" max="90" value="0" step="1">
+        </dd>
+        <dt>
+          Gain (dB) = <span id="eLabelGain">0</span>
+        </dt>
+        <dd>
+          <input oninput="adjustGain(this);" id="eRangeGain" type="range" min=
+          "-60" max="24" value="0" step="1">
+        </dd>
+      </dl><button id="eButtonPlayback" disabled>Play</button>
+    </div>
+    <div id="footer">
+      <p>
+        Found something broken? <a href=
+        "https://github.com/GoogleChrome/omnitone/issues">File an issue.</a>
+      </p>
+    </div>
+    <script>
+    (function () {
+
+      'use strict';
+
+      var exampleInitialized = false;
+
+      var audioContext;
+      var hoaRenderer;
+      var currentBufferSource;
+      var inputGain;
+      var mergedTOABuffer;
+      var rotationMatrix3 = new Float32Array(9);
+
+      var eButtonPlayback;
+      var eRangeAzimuth;
+      var eRangeElevation;
+      var eRangeGain;
+
+      var omnitoneConfig = {
+        ambisonicOrder: 3,
+        hrirPathList: [
+          '../build/resources/omnitone-toa-1.wav',
+          '../build/resources/omnitone-toa-2.wav',
+          '../build/resources/omnitone-toa-3.wav',
+          '../build/resources/omnitone-toa-4.wav',
+          '../build/resources/omnitone-toa-5.wav',
+          '../build/resources/omnitone-toa-6.wav',
+          '../build/resources/omnitone-toa-7.wav',
+          '../build/resources/omnitone-toa-8.wav'],
+      };
+
+      var exampleSoundPathList = [
+        'resources/3oa_example_ch0-ch7.wav',
+        'resources/3oa_example_ch8-ch15.wav'
+      ];
+
+      function crossProduct(a, b) {
+        return [
+          a[1] * b[2] - a[2] * b[1],
+          a[2] * b[0] - a[0] * b[2],
+          a[0] * b[1] - a[1] * b[0]
+        ];
+      }
+
+       function normalize(a) {
+         var n = Math.sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
+         a[0] /= n;
+         a[1] /= n;
+         a[2] /= n;
+         return a;
+       }
+
+      function onDirectionChange() {
+        if (!exampleInitialized)
+          return;
+
+        var azimuthValue =
+            parseFloat(document.getElementById('eRangeAzimuth').value);
+        var elevationValue =
+            parseFloat(document.getElementById('eRangeElevation').value);
+        document.getElementById('eLabelAzimuth').textContent = azimuthValue;
+        document.getElementById('eLabelElevation').textContent = elevationValue;
+
+        // Standard OpenGL-style "View" Matrix calculation.
+        var theta = azimuthValue / 180 * Math.PI;
+        var phi = elevationValue / 180 * Math.PI;
+        var forward = [
+          Math.sin(theta) * Math.cos(phi),
+          Math.sin(phi),
+          Math.cos(theta) * Math.cos(phi)
+        ];
+        var upInitial = [0, 1, 0];
+        var right = normalize(crossProduct(forward, upInitial));
+        var up = normalize(crossProduct(right, forward));
+
+        rotationMatrix3[0] = right[0];
+        rotationMatrix3[1] = right[1];
+        rotationMatrix3[2] = right[2];
+        rotationMatrix3[3] = up[0];
+        rotationMatrix3[4] = up[1];
+        rotationMatrix3[5] = up[2];
+        rotationMatrix3[6] = forward[0];
+        rotationMatrix3[7] = forward[1];
+        rotationMatrix3[8] = forward[2];
+
+        hoaRenderer.setRotationMatrix3(rotationMatrix3);
+      }
+
+      function onToggleButton(event) {
+        if (!exampleInitialized)
+          return;
+
+        switch (event.target.textContent) {
+          case 'Play':
+            currentBufferSource = audioContext.createBufferSource();
+            currentBufferSource.buffer = mergedTOABuffer;
+            currentBufferSource.loop = true;
+            currentBufferSource.connect(inputGain);
+            currentBufferSource.start();
+            event.target.textContent = 'Stop';
+            break;
+          case 'Stop':
+            currentBufferSource.stop();
+            currentBufferSource.disconnect();
+            event.target.textContent = 'Play';
+            break;
+        }
+      }
+
+      function onGainSliderChange() {
+        if (!exampleInitialized)
+          return;
+
+        document.getElementById('eLabelGain').textContent = eRangeGain.value;
+        inputGain.gain.value = Math.pow(10, parseFloat(eRangeGain.value) / 20);
+      }
+
+      function onLoad() {
+        eButtonPlayback = document.getElementById('eButtonPlayback');
+        eRangeAzimuth = document.getElementById('eRangeAzimuth');
+        eRangeElevation = document.getElementById('eRangeElevation');
+        eRangeGain = document.getElementById('eRangeGain');
+
+        eButtonPlayback.onclick = onToggleButton;
+        eButtonPlayback.disabled = true;
+        eRangeGain.oninput = onGainSliderChange;
+        eRangeAzimuth.oninput = onDirectionChange;
+        eRangeElevation.oninput = onDirectionChange;
+
+        audioContext = new AudioContext();
+        inputGain = audioContext.createGain();
+        hoaRenderer = Omnitone.createHOARenderer(audioContext, omnitoneConfig);
+
+        Promise.all([
+          Omnitone.createBufferList(audioContext, exampleSoundPathList),
+          hoaRenderer.initialize()
+          ]).then((results) => {
+            mergedTOABuffer =
+                Omnitone.mergeBufferListByChannel(audioContext, results[0]);
+            inputGain.connect(hoaRenderer.input);
+            hoaRenderer.output.connect(audioContext.destination);
+            eButtonPlayback.disabled = false;
+            exampleInitialized = true;
+          });
+      }
+
+      window.addEventListener('load', onLoad);
+    })();
+    </script>
+  </body>
+</html>

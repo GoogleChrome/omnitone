@@ -8,3 +8,4 @@ pvt/
 database.rules.json
 firebase.json
 ./index.html
+twistd.pid

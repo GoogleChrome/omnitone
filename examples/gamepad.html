@@ -14,49 +14,78 @@
 -->
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <title>Example: Head tracking via Gamepad</title>
-  <script src="audiocontext-shim.js"></script>
-  <script src="../build/omnitone.min.js"></script>
-  <link rel="stylesheet" href="example.css">
-</head>
-<body>
-  <h1>Example: Head tracking via Gamepad</h1>
-  <p>Connect a game pad to control the rotation of sound field.</p>
-  <p>More info on GamepadAPI can be found at
-    <a href="https://developer.mozilla.org/en-US/docs/Web/API/Gamepad_API/Using_the_Gamepad_API" target="_blank">
-    MDN</a> or <a href="https://www.html5rocks.com/en/tutorials/doodles/gamepad/">
-    HTML5Rocks</a>.</p>
-
-  <div id="secSource">
-    <p>NOTE: Use headphones for the full-sphere surround sound.</p>
-    <button id="eButtonPlayback" disabled>Play</button>
-    <h2>Select the sound source to play.</h2>
-    <select id="eSelectSource" name="dropdownSource" disabled>
-      <option value="speech" selected="selected">Speech</option>
-      <option value="warbird">Airplanes</option>
-    </select>
-  </div>
-
-  <div id="secRotation">
-    <h2>Use game pad or select a direction to rotate.</h2>
-    <p>Select a direction to simulate the rotation.</p>
-    <select id="eSelectDirection" name="dropdownDirection" disabled
-            style="width: 260px;">
-      <option value="front" selected>Front</option>
-      <option value="rear">Rear</option>
-      <option value="left">Left</option>
-      <option value="right">Right</option>
-      <option value="up">Up</option>
-      <option value="down">Down</option>
-      <option value="rightShoulder">Head on right shoulder</option>
-      <option value="leftShoulder">Head on left shoulder</option>
-    </select>
-    <div id="eDivDirection"></div>
-  </div>
-
-  <script>
+  <head>
+    <meta charset="utf-8">
+    <title>
+      Example: Head tracking via Gamepad
+    </title>
+    <script src="../build/omnitone.min.js"></script>
+    <link rel="stylesheet" href="example.css">
+  </head>
+  <body>
+    <h1>
+      Example: Head tracking via Gamepad
+    </h1>
+    <p>
+      Connect a game pad to control the rotation of sound field.
+    </p>
+    <p>
+      More info on GamepadAPI can be found at <a href=
+      "https://developer.mozilla.org/en-US/docs/Web/API/Gamepad_API/Using_the_Gamepad_API"
+      target="_blank">MDN</a> or <a href=
+      "https://www.html5rocks.com/en/tutorials/doodles/gamepad/">HTML5Rocks</a>.
+    </p>
+    <div id="secSource">
+      <p>
+        NOTE: Use headphones for the full-sphere surround sound.
+      </p><button id="eButtonPlayback" disabled>Play</button>
+      <h2>
+        Select the sound source to play.
+      </h2><select id="eSelectSource" name="dropdownSource" disabled>
+        <option value="speech" selected="selected">
+          Speech
+        </option>
+        <option value="warbird">
+          Airplanes
+        </option>
+      </select>
+    </div>
+    <div id="secRotation">
+      <h2>
+        Use game pad or select a direction to rotate.
+      </h2>
+      <p>
+        Select a direction to simulate the rotation.
+      </p><select id="eSelectDirection" name="dropdownDirection" disabled
+      style="width: 260px;">
+        <option value="front" selected>
+          Front
+        </option>
+        <option value="rear">
+          Rear
+        </option>
+        <option value="left">
+          Left
+        </option>
+        <option value="right">
+          Right
+        </option>
+        <option value="up">
+          Up
+        </option>
+        <option value="down">
+          Down
+        </option>
+        <option value="rightShoulder">
+          Head on right shoulder
+        </option>
+        <option value="leftShoulder">
+          Head on left shoulder
+        </option>
+      </select>
+      <div id="eDivDirection"></div>
+    </div>
+    <script>
     var decoder;
     var audioSources = {
       'speech': 'resources/4ch_B_FuMaNorm_FuMaOrd_speech.wav',
@@ -200,6 +229,6 @@
 
 
     window.addEventListener('load', onLoad);
-  </script>
-</body>
+    </script>
+  </body>
 </html>

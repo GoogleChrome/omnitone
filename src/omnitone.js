@@ -14,112 +14,247 @@
  */
 
 /**
- * @fileOverview Omnitone library name space and common utilities.
+ * @file Omnitone library name space and user-facing APIs.
  */
+
 
 'use strict';
 
+var BufferList = require('./buffer-list.js');
+var FOAConvolver = require('./foa-convolver.js');
+var FOADecoder = require('./foa-decoder.js');
+var FOAPhaseMatchedFilter = require('./foa-phase-matched-filter.js');
+var FOARenderer = require('./foa-renderer.js');
+var FOARotator = require('./foa-rotator.js');
+var FOARouter = require('./foa-router.js');
+var FOAVirtualSpeaker = require('./foa-virtual-speaker.js');
+var HOAConvolver = require('./hoa-convolver.js');
+var HOARenderer = require('./hoa-renderer.js');
+var HOARotator = require('./hoa-rotator.js');
+var Polyfill = require('./polyfill.js');
+var Utils = require('./utils.js');
+var Version = require('./version.js');
+
+// DEPRECATED in V1, in favor of BufferList.
+var AudioBufferManager = require('./audiobuffer-manager.js');
+
+
 /**
- * @class Omnitone main namespace.
+ * Omnitone namespace.
+ * @namespace
  */
 var Omnitone = {};
 
-// Internal dependencies.
-var AudioBufferManager = require('./audiobuffer-manager.js');
-var FOAConvolver = require('./foa-convolver.js');
-var FOARouter = require('./foa-router.js');
-var FOARotator = require('./foa-rotator.js');
-var FOAPhaseMatchedFilter = require('./foa-phase-matched-filter.js');
-var FOAVirtualSpeaker = require('./foa-virtual-speaker.js');
-var FOADecoder = require('./foa-decoder.js');
-var FOARenderer = require('./foa-renderer.js');
 
 /**
- * Load audio buffers based on the speaker configuration map data.
- * @param {AudioContext} context      The associated AudioContext.
- * @param {Map} speakerData           The speaker configuration map data.
- *                                    { name, url, coef }
- * @return {Promise}
+ * @typedef {Object} BrowserInfo
+ * @property {string} name - Browser name.
+ * @property {string} version - Browser version.
  */
-Omnitone.loadAudioBuffers = function (context, speakerData) {
-  return new Promise(function (resolve, reject) {
-    new AudioBufferManager(context, speakerData, function (buffers) {
+
+/**
+ * An object contains the detected browser name and version.
+ * @memberOf Omnitone
+ * @static {BrowserInfo}
+ */
+Omnitone.browserInfo = Polyfill.getBrowserInfo();
+
+
+// DEPRECATED in V1. DO. NOT. USE.
+Omnitone.loadAudioBuffers = function(context, speakerData) {
+  return new Promise(function(resolve, reject) {
+    new AudioBufferManager(context, speakerData, function(buffers) {
       resolve(buffers);
     }, reject);
   });
 };
 
-/**
- * Create an instance of FOA Convolver. For parameters, refer the definition of
- * Router class.
- * @return {Object}
- */
-Omnitone.createFOAConvolver = function (context, options) {
-  return new FOAConvolver(context, options);
-};
 
 /**
- * Create an instance of FOA Router. For parameters, refer the definition of
- * Router class.
- * @return {Object}
+ * Performs the async loading/decoding of multiple AudioBuffers from multiple
+ * URLs.
+ * @param {BaseAudioContext} context - Associated BaseAudioContext.
+ * @param {string[]} bufferData - An ordered list of URLs.
+ * @return {Promise<AudioBuffer[]>} - The promise resolves with an array of
+ * AudioBuffer.
  */
-Omnitone.createFOARouter = function (context, channelMap) {
+Omnitone.createBufferList = function(context, bufferData) {
+  var bufferList = new BufferList(context, bufferData);
+  return bufferList.load();
+};
+
+
+/**
+ * Perform channel-wise merge on multiple AudioBuffers. The sample rate and
+ * the length of buffers to be merged must be identical.
+ * @static
+ * @function
+ * @param {BaseAudioContext} context - Associated BaseAudioContext.
+ * @param {AudioBuffer[]} bufferList - An array of AudioBuffers to be merged
+ * channel-wise.
+ * @return {AudioBuffer} - A single merged AudioBuffer.
+ */
+Omnitone.mergeBufferListByChannel = Utils.mergeBufferListByChannel;
+
+
+/**
+ * Perform channel-wise split by the given channel count. For example,
+ * 1 x AudioBuffer(8) -> splitBuffer(context, buffer, 2) -> 4 x AudioBuffer(2).
+ * @static
+ * @function
+ * @param {BaseAudioContext} context - Associated BaseAudioContext.
+ * @param {AudioBuffer} audioBuffer - An AudioBuffer to be splitted.
+ * @param {Number} splitBy - Number of channels to be splitted.
+ * @return {AudioBuffer[]} - An array of splitted AudioBuffers.
+ */
+Omnitone.splitBufferbyChannel = Utils.splitBufferbyChannel;
+
+
+/**
+ * Creates an instance of FOA Convolver.
+ * @see FOAConvolver
+ * @param {BaseAudioContext} context The associated AudioContext.
+ * @param {AudioBuffer[]} [hrirBufferList] - An ordered-list of stereo
+ * @return {FOAConvolver}
+ */
+Omnitone.createFOAConvolver = function(context, hrirBufferList) {
+  return new FOAConvolver(context, hrirBufferList);
+};
+
+
+/**
+ * Create an instance of FOA Router.
+ * @see FOARouter
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {Number[]} channelMap - Routing destination array.
+ * @return {FOARouter}
+ */
+Omnitone.createFOARouter = function(context, channelMap) {
   return new FOARouter(context, channelMap);
 };
 
+
 /**
- * Create an instance of FOA Rotator. For parameters, refer the definition of
- * Rotator class.
- * @return {Object}
+ * Create an instance of FOA Rotator.
+ * @see FOARotator
+ * @param {AudioContext} context - Associated AudioContext.
+ * @return {FOARotator}
  */
-Omnitone.createFOARotator = function (context) {
+Omnitone.createFOARotator = function(context) {
   return new FOARotator(context);
 };
 
+
 /**
- * Create an instance of FOAPhaseMatchedFilter. For parameters, refer the
- * definition of PhaseMatchedFilter class.
+ * Create an instance of FOAPhaseMatchedFilter.
+ * @ignore
+ * @see FOAPhaseMatchedFilter
+ * @param {AudioContext} context - Associated AudioContext.
  * @return {FOAPhaseMatchedFilter}
  */
-Omnitone.createFOAPhaseMatchedFilter = function (context) {
+Omnitone.createFOAPhaseMatchedFilter = function(context) {
   return new FOAPhaseMatchedFilter(context);
 };
+
 
 /**
  * Create an instance of FOAVirtualSpeaker. For parameters, refer the
  * definition of VirtualSpeaker class.
+ * @ignore
  * @return {FOAVirtualSpeaker}
  */
-Omnitone.createFOAVirtualSpeaker = function (context, options) {
+Omnitone.createFOAVirtualSpeaker = function(context, options) {
   return new FOAVirtualSpeaker(context, options);
 };
 
+
 /**
- * Create a singleton FOADecoder instance.
- * @param {AudioContext} context      Associated AudioContext.
- * @param {DOMElement} videoElement   Video or Audio DOM element to be streamed.
- * @param {Object} options            Options for FOA decoder.
- * @param {String} options.baseResourceUrl    Base URL for resources.
- *                                            (HRTF IR files)
- * @param {Number} options.postGain           Post-decoding gain compensation.
- *                                            (Default = 26.0)
- * @param {Array} options.routingDestination  Custom channel layout.
+ * DEPRECATED. Use FOARenderer instance.
+ * @see FOARenderer
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {DOMElement} videoElement - Video or Audio DOM element to be streamed.
+ * @param {Object} options - Options for FOA decoder.
+ * @param {String} options.baseResourceUrl - Base URL for resources.
+ * (base path for HRIR files)
+ * @param {Number} [options.postGain=26.0] - Post-decoding gain compensation.
+ * @param {Array} [options.routingDestination]  Custom channel layout.
  * @return {FOADecoder}
  */
-Omnitone.createFOADecoder = function (context, videoElement, options) {
+Omnitone.createFOADecoder = function(context, videoElement, options) {
+  Utils.log('WARNING: FOADecoder is deprecated in favor of FOARenderer.');
   return new FOADecoder(context, videoElement, options);
 };
 
+
 /**
- * Create a singleton FOARenderer instance.
- * @param {AudioContext} context      Associated AudioContext.
- * @param {Object} options            Options.
- * @param {String} options.HRIRUrl    Optional HRIR URL.
- * @param {Number} options.postGainDB Optional post-decoding gain in dB.
- * @param {Array} options.channelMap  Optional custom channel map.
+ * Create a FOARenderer, the first-order ambisonic decoder and the optimized
+ * binaural renderer.
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {Object} config
+ * @param {Array} [config.channelMap] - Custom channel routing map. Useful for
+ * handling the inconsistency in browser's multichannel audio decoding.
+ * @param {Array} [config.hrirPathList] - A list of paths to HRIR files. It
+ * overrides the internal HRIR list if given.
+ * @param {RenderingMode} [config.renderingMode='ambisonic'] - Rendering mode.
+ * @return {FOARenderer}
  */
-Omnitone.createFOARenderer = function (context, options) {
-  return new FOARenderer(context, options);
+Omnitone.createFOARenderer = function(context, config) {
+  return new FOARenderer(context, config);
 };
+
+
+/**
+ * Creates HOARotator for higher-order ambisonics rotation.
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {Number} ambisonicOrder - Ambisonic order.
+ */
+Omnitone.createHOARotator = function(context, ambisonicOrder) {
+  return new HOARotator(context, ambisonicOrder);
+};
+
+
+/**
+ * Creates HOAConvolver performs the multi-channel convolution for the optmized
+ * binaural rendering.
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {Number} ambisonicOrder - Ambisonic order. (2 or 3)
+ * @param {AudioBuffer[]} [hrirBufferList] - An ordered-list of stereo
+ * AudioBuffers for convolution. (SOA: 5 AudioBuffers, TOA: 8 AudioBuffers)
+ */
+Omnitone.createHOAConvolver = function(
+    context, ambisonicOrder, hrirBufferList) {
+  return new HOAConvolver(context, ambisonicOrder, hrirBufferList);
+};
+
+
+/**
+ * Creates HOARenderer for higher-order ambisonic decoding and the optimized
+ * binaural rendering.
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {Object} config
+ * @param {Number} [config.ambisonicOrder=3] - Ambisonic order.
+ * @param {Array} [config.hrirPathList] - A list of paths to HRIR files. It
+ * overrides the internal HRIR list if given.
+ * @param {RenderingMode} [config.renderingMode='ambisonic'] - Rendering mode.
+ */
+Omnitone.createHOARenderer = function(context, config) {
+  return new HOARenderer(context, config);
+};
+
+
+
+// Handler Preload Tasks.
+// - Detects the browser information.
+// - Prints out the version number.
+(function() {
+  Utils.log('Version ' + Version + ' (running ' +
+      Omnitone.browserInfo.name + ' ' + Omnitone.browserInfo.version +
+      ' on ' + Omnitone.browserInfo.platform +')');
+  if (Omnitone.browserInfo.name.toLowerCase() === 'safari') {
+    Polyfill.patchSafari();
+    Utils.log(Omnitone.browserInfo.name + ' detected. Appliying polyfill...');
+  }
+})();
+
 
 module.exports = Omnitone;

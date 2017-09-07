@@ -14,35 +14,50 @@
 -->
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <title>Example: FOADecoder (Legacy)</title>
-  <script src="audiocontext-shim.js"></script>
-  <script src="../build/omnitone.min.js"></script>
-  <link rel="stylesheet" href="example.css">
-</head>
-<body>
-  <h1>Example: FOADecoder (Legacy)</h1>
-  <p><code>FOADecoder</code> is a fully-configurable spatial audio renderer.
-    (ambisonic decoding and binaural rendering) Consider using
-    <code>FOARenderer</code> for the optimum performance, but
-    <code>FOADecoder</code> is still recommended for the use case that requires
-    a customized signal chain for audio spatialization since you can change and
-    rearrange all the building blocks inside.</p>
-  <p>See <a href="https://github.com/GoogleChrome/omnitone#foadecoder">more info
-    </a> on <code>FOADecoder</code>.</p>
-
-  <div id="secSource">
-    <p>NOTE: Use headphones for the full-sphere surround sound.</p>
-    <h2>Select the sound source to play.</h2>
-    <select id="eSelectSource" name="dropdownSource" disabled>
-      <option value="speech" selected="selected">Speech</option>
-      <option value="warbird">Airplanes</option>
-    </select>
-    <button id="eButtonPlayback" disabled>Play</button>
-  </div>
-
-  <script>
+  <head>
+    <meta charset="utf-8">
+    <title>
+      Example: FOADecoder (Deprecated)
+    </title>
+    <script src="../build/omnitone.min.js"></script>
+    <link rel="stylesheet" href="example.css">
+  </head>
+  <body>
+    <h1>
+      Example: FOADecoder - DEPRECATED
+    </h1>
+    <p>
+      NOTE: <code>FOADecoder</code> is deprecated and replaced with
+      <code>FOARenderer.</code>
+    </p>
+    <p>
+      <code>FOADecoder</code> is a fully-configurable spatial audio renderer.
+      (ambisonic decoding and binaural rendering) Consider using
+      <code>FOARenderer</code> for the optimum performance, but
+      <code>FOADecoder</code> is still recommended for the use case that
+      requires a customized signal chain for audio spatialization since you can
+      change and rearrange all the building blocks inside.
+    </p>
+    <p>
+      See <a href="https://github.com/GoogleChrome/omnitone#foadecoder">more
+      info</a> on <code>FOADecoder</code>.
+    </p>
+    <div id="secSource">
+      <p>
+        NOTE: Use headphones for the full-sphere surround sound.
+      </p>
+      <h2>
+        Select the sound source to play.
+      </h2><select id="eSelectSource" name="dropdownSource" disabled>
+        <option value="speech" selected="selected">
+          Speech
+        </option>
+        <option value="warbird">
+          Airplanes
+        </option>
+      </select> <button id="eButtonPlayback" disabled>Play</button>
+    </div>
+    <script>
     var decoder;
     var audioSources = {
       'speech': 'resources/4ch_B_FuMaNorm_FuMaOrd_speech.wav',
@@ -93,6 +108,6 @@
     };
 
     window.addEventListener('load', onLoad);
-  </script>
-</body>
+    </script>
+  </body>
 </html>

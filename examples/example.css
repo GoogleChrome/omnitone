@@ -1,57 +1,84 @@
 body {
-  font-family: sans-serif;
-  width: 796px;
-  margin: 96px auto;
+    font-family: sans-serif;
+
+    width: 796px;
+    margin: 96px auto;
 }
 
 h1 {
-  margin: 40px 0;
+    margin: 40px 0;
 }
 
 h2 {
-  margin: 30px 0;
+    margin: 30px 0;
 }
 
 div {
-  margin: 5px 0;
+    margin: 5px 0;
 }
 
 a {
-  color: #2196F3;
-  font-weight: bold;
-  text-decoration: none;
+    font-weight: bold;
+
+    text-decoration: none;
+
+    color: #2196f3;
 }
 
 ul {
-  line-height: 30px;
-  margin: 0;
-  padding: 0 0 0 25px;
+    line-height: 30px;
+
+    margin: 0;
+    padding: 0 0 0 25px;
 }
 
 p {
-  line-height: 22px;
-  font-size: 16px;
+    font-size: 16px;
+    line-height: 22px;
 }
 
-p > code {
-  color: #009688;
-  font-weight: 600;
-  font-family: monospace;
+p>code {
+    font-family: monospace;
+    font-weight: 600;
+
+    color: #009688;
 }
 
 button {
-  width: 140px;
-  height: 40px;
-  font-size: 24px;
+    font-size: 16px;
+
+    width: 140px;
+    height: 32px;
 }
 
 select {
-  width: 140px;
-  font-size: 24px;
+    font-size: 16px;
+
+    width: 140px;
+    height: 32px;
+}
+
+dt {
+    padding: 5px 0 5px 0;
+}
+
+dd {
+    margin-left: 0;
+    padding: 5px 0 5px 0;
+}
+
+dd>input[type=range] {
+    width: 320px;
 }
 
 .label {
-  display: inline-block;
-  width: 140px;
-  height: 40px;
+    display: inline-block;
+    text-align: center;
+
+    width: 140px;
+    height: 40px;
+}
+
+#footer {
+    margin-top: 60px;
 }
