@@ -122,23 +122,27 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	/**
-	 * @class Omnitone namespace.
+	 * Omnitone namespace.
+	 * @namespace
 	 */
 	var Omnitone = {};
 
 
 	/**
-	 * An object contains the detected browser name and version.
-	 * @type {Object} info
-	 * @type {string} info.name - Browser name.
-	 * @type {string} info.version - Browser version.
+	 * @typedef {Object} BrowserInfo
+	 * @property {string} name - Browser name.
+	 * @property {string} version - Browser version.
 	 */
-	Omnitone.BrowserInfo = Polyfill.getBrowserInfo();
-
 
 	/**
-	 * DEPRECATED in V1. DO. NOT. USE.
+	 * An object contains the detected browser name and version.
+	 * @memberOf Omnitone
+	 * @static {BrowserInfo}
 	 */
+	Omnitone.browserInfo = Polyfill.getBrowserInfo();
+
+
+	// DEPRECATED in V1. DO. NOT. USE.
 	Omnitone.loadAudioBuffers = function(context, speakerData) {
 	  return new Promise(function(resolve, reject) {
 	    new AudioBufferManager(context, speakerData, function(buffers) {
@@ -165,6 +169,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 * Perform channel-wise merge on multiple AudioBuffers. The sample rate and
 	 * the length of buffers to be merged must be identical.
+	 * @static
+	 * @function
 	 * @param {BaseAudioContext} context - Associated BaseAudioContext.
 	 * @param {AudioBuffer[]} bufferList - An array of AudioBuffers to be merged
 	 * channel-wise.
@@ -176,6 +182,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 * Perform channel-wise split by the given channel count. For example,
 	 * 1 x AudioBuffer(8) -> splitBuffer(context, buffer, 2) -> 4 x AudioBuffer(2).
+	 * @static
+	 * @function
 	 * @param {BaseAudioContext} context - Associated BaseAudioContext.
 	 * @param {AudioBuffer} audioBuffer - An AudioBuffer to be splitted.
 	 * @param {Number} splitBy - Number of channels to be splitted.
@@ -221,6 +229,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	/**
 	 * Create an instance of FOAPhaseMatchedFilter.
+	 * @ignore
 	 * @see FOAPhaseMatchedFilter
 	 * @param {AudioContext} context - Associated AudioContext.
 	 * @return {FOAPhaseMatchedFilter}
@@ -233,6 +242,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 * Create an instance of FOAVirtualSpeaker. For parameters, refer the
 	 * definition of VirtualSpeaker class.
+	 * @ignore
 	 * @return {FOAVirtualSpeaker}
 	 */
 	Omnitone.createFOAVirtualSpeaker = function(context, options) {
@@ -241,7 +251,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	/**
-	 * DEPRECATED. Create a FOADecoder instance.
+	 * DEPRECATED. Use FOARenderer instance.
+	 * @see FOARenderer
 	 * @param {AudioContext} context - Associated AudioContext.
 	 * @param {DOMElement} videoElement - Video or Audio DOM element to be streamed.
 	 * @param {Object} options - Options for FOA decoder.
@@ -313,17 +324,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 
-	/**
-	 * Handler Preload Tasks.
-	 * - Detects the browser information.
-	 * - Prints out the version number.
-	 */
+
+	// Handler Preload Tasks.
+	// - Detects the browser information.
+	// - Prints out the version number.
 	(function() {
-	  Utils.log('Version ' + Version + ' (running on ' +
-	      Omnitone.BrowserInfo.name + ' ' + Omnitone.BrowserInfo.version + ')');
-	  if (Omnitone.BrowserInfo.name.toLowerCase() === 'safari') {
+	  Utils.log('Version ' + Version + ' (running ' +
+	      Omnitone.browserInfo.name + ' ' + Omnitone.browserInfo.version +
+	      ' on ' + Omnitone.browserInfo.platform +')');
+	  if (Omnitone.browserInfo.name.toLowerCase() === 'safari') {
 	    Polyfill.patchSafari();
-	    Utils.log(Omnitone.BrowserInfo.name + ' detected. Appliying polyfill...');
+	    Utils.log(Omnitone.browserInfo.name + ' detected. Appliying polyfill...');
 	  }
 	})();
 
@@ -1255,7 +1266,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var ChannelMap = {
 	  /** @type {Number[]} - ACN channel map for Chrome and FireFox. (FFMPEG) */
 	  DEFAULT: [0, 1, 2, 3],
-	  /** @type {Number[]} - Safari's 4-channel map. */
+	  /** @type {Number[]} - Safari's 4-channel map for AAC codec. */
 	  SAFARI: [2, 0, 1, 3],
 	  /** @type {Number[]} - ACN > FuMa conversion map. */
 	  FUMA: [0, 3, 1, 2]
@@ -3007,9 +3018,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	  if((tem = ua.match(/version\/([\d.]+)/i)) != null) {
 	    M.splice(1, 1, tem[1]);
 	  }
+	  var platform = ua.match(/android|ipad|iphone/i);
+	  if (!platform)
+	    platform = ua.match(/cros|linux|mac os x|windows/i);
 	  return {
 	    name: M[0],
-	    version: M[1]
+	    version: M[1],
+	    platform: platform
 	  };
 	};
 

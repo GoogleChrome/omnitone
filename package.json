@@ -1,6 +1,6 @@
 {
   "name": "omnitone",
-  "version": "0.9.6",
+  "version": "1.0.0",
   "description": "Spatial Audio Decoder in Web Audio API",
   "main": "build/omnitone.js",
   "keywords": [
@@ -26,6 +26,7 @@
     "build": "webpack --progress --color",
     "build-all": "webpack --progress --color && webpack --config webpack.config.all.js --progress --color",
     "build-omnitone-hrir": "./build-hrir.sh",
+    "build-doc": "node_modules/.bin/jsdoc src/omnitone.js -d doc/",
     "test": "node_modules/karma/bin/karma start",
     "watch": "webpack --progress --color --watch"
   },

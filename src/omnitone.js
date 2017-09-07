@@ -40,18 +40,24 @@ var AudioBufferManager = require('./audiobuffer-manager.js');
 
 
 /**
- * @class Omnitone namespace.
+ * Omnitone namespace.
+ * @namespace
  */
 var Omnitone = {};
 
 
 /**
- * An object contains the detected browser name and version.
- * @type {Object} info
- * @type {string} info.name - Browser name.
- * @type {string} info.version - Browser version.
+ * @typedef {Object} BrowserInfo
+ * @property {string} name - Browser name.
+ * @property {string} version - Browser version.
  */
-Omnitone.BrowserInfo = Polyfill.getBrowserInfo();
+
+/**
+ * An object contains the detected browser name and version.
+ * @memberOf Omnitone
+ * @static {BrowserInfo}
+ */
+Omnitone.browserInfo = Polyfill.getBrowserInfo();
 
 
 // DEPRECATED in V1. DO. NOT. USE.
@@ -81,6 +87,8 @@ Omnitone.createBufferList = function(context, bufferData) {
 /**
  * Perform channel-wise merge on multiple AudioBuffers. The sample rate and
  * the length of buffers to be merged must be identical.
+ * @static
+ * @function
  * @param {BaseAudioContext} context - Associated BaseAudioContext.
  * @param {AudioBuffer[]} bufferList - An array of AudioBuffers to be merged
  * channel-wise.
@@ -92,6 +100,8 @@ Omnitone.mergeBufferListByChannel = Utils.mergeBufferListByChannel;
 /**
  * Perform channel-wise split by the given channel count. For example,
  * 1 x AudioBuffer(8) -> splitBuffer(context, buffer, 2) -> 4 x AudioBuffer(2).
+ * @static
+ * @function
  * @param {BaseAudioContext} context - Associated BaseAudioContext.
  * @param {AudioBuffer} audioBuffer - An AudioBuffer to be splitted.
  * @param {Number} splitBy - Number of channels to be splitted.
@@ -137,6 +147,7 @@ Omnitone.createFOARotator = function(context) {
 
 /**
  * Create an instance of FOAPhaseMatchedFilter.
+ * @ignore
  * @see FOAPhaseMatchedFilter
  * @param {AudioContext} context - Associated AudioContext.
  * @return {FOAPhaseMatchedFilter}
@@ -149,6 +160,7 @@ Omnitone.createFOAPhaseMatchedFilter = function(context) {
 /**
  * Create an instance of FOAVirtualSpeaker. For parameters, refer the
  * definition of VirtualSpeaker class.
+ * @ignore
  * @return {FOAVirtualSpeaker}
  */
 Omnitone.createFOAVirtualSpeaker = function(context, options) {
@@ -157,7 +169,8 @@ Omnitone.createFOAVirtualSpeaker = function(context, options) {
 
 
 /**
- * DEPRECATED. Create a FOADecoder instance.
+ * DEPRECATED. Use FOARenderer instance.
+ * @see FOARenderer
  * @param {AudioContext} context - Associated AudioContext.
  * @param {DOMElement} videoElement - Video or Audio DOM element to be streamed.
  * @param {Object} options - Options for FOA decoder.
@@ -229,17 +242,17 @@ Omnitone.createHOARenderer = function(context, config) {
 };
 
 
-/**
- * Handler Preload Tasks.
- * - Detects the browser information.
- * - Prints out the version number.
- */
+
+// Handler Preload Tasks.
+// - Detects the browser information.
+// - Prints out the version number.
 (function() {
-  Utils.log('Version ' + Version + ' (running on ' +
-      Omnitone.BrowserInfo.name + ' ' + Omnitone.BrowserInfo.version + ')');
-  if (Omnitone.BrowserInfo.name.toLowerCase() === 'safari') {
+  Utils.log('Version ' + Version + ' (running ' +
+      Omnitone.browserInfo.name + ' ' + Omnitone.browserInfo.version +
+      ' on ' + Omnitone.browserInfo.platform +')');
+  if (Omnitone.browserInfo.name.toLowerCase() === 'safari') {
     Polyfill.patchSafari();
-    Utils.log(Omnitone.BrowserInfo.name + ' detected. Appliying polyfill...');
+    Utils.log(Omnitone.browserInfo.name + ' detected. Appliying polyfill...');
   }
 })();
 

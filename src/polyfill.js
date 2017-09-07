@@ -44,9 +44,13 @@ exports.getBrowserInfo = function() {
   if((tem = ua.match(/version\/([\d.]+)/i)) != null) {
     M.splice(1, 1, tem[1]);
   }
+  var platform = ua.match(/android|ipad|iphone/i);
+  if (!platform)
+    platform = ua.match(/cros|linux|mac os x|windows/i);
   return {
     name: M[0],
-    version: M[1]
+    version: M[1],
+    platform: platform ? platform[0] : 'unknown'
   };
 };
 

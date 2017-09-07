@@ -32,7 +32,7 @@
 var ChannelMap = {
   /** @type {Number[]} - ACN channel map for Chrome and FireFox. (FFMPEG) */
   DEFAULT: [0, 1, 2, 3],
-  /** @type {Number[]} - Safari's 4-channel map. */
+  /** @type {Number[]} - Safari's 4-channel map for AAC codec. */
   SAFARI: [2, 0, 1, 3],
   /** @type {Number[]} - ACN > FuMa conversion map. */
   FUMA: [0, 3, 1, 2]
