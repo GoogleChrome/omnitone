@@ -3024,7 +3024,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return {
 	    name: M[0],
 	    version: M[1],
-	    platform: platform
+	    platform: platform ? platform[0] : 'unknown'
 	  };
 	};
 
