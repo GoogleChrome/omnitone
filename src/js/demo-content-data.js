@@ -14,31 +14,70 @@
  */
 
 
-/**
- * [OmnitoneDemoContentData description]
- * @type {Object}
- */
-var OmnitoneDemoContentData = {
+var BaseUrl =
+    'https://storage.googleapis.com/omnitone-demo.google.com.a.appspot.com/';
 
+// For V3.
+var OmnitoneDemoContentData = {
   'resonance': {
     title: 'Resonance by Tim Fain',
     stereoscopic: true,
+    postGain: 0.95,
     urlSet: {
-      'mp4_720p': 'https://storage.googleapis.com/omnitone-demo.google.com.a.appspot.com/resonance-720p-h264-aac.mp4',
-      'mp4_1080p': 'https://storage.googleapis.com/omnitone-demo.google.com.a.appspot.com/resonance-1080p-h264-aac.mp4',
+      'mp4_720p': BaseUrl + 'resonance-720p-h264-aac.mp4',
+      'mp4_1080p': BaseUrl + 'resonance-1080p-h264-aac.mp4',
       'webm_1080p': '../media/resonance-1080p-vp9-vorbis-excerpt.webm',
       'mp4_1080p_excerpt': '../media/resonance-1080p-h264-aac-excerpt.mp4'
     }
   },
-  
   'fuerzaimprevista': {
     title: 'Fuerza Imprevista by Jaunt VR',
     stereoscopic: false,
-    postGainDB: 3,
+    postGain: 2.5,
     urlSet: {
-      'mp4_1080p': 'https://storage.googleapis.com/omnitone-demo.google.com.a.appspot.com/fuerza-imprevista-1080p-h264-aac.mp4',
-      'webm_1080p': 'https://storage.googleapis.com/omnitone-demo.google.com.a.appspot.com/fuerza-imprevista-1080p-vp9-vorbis.webm'
+      'mp4_1080p': BaseUrl + 'fuerza-imprevista-1080p-h264-aac.mp4',
+      'webm_1080p': BaseUrl + 'fuerza-imprevista-1080p-vp9-vorbis.webm'
     }
   }
 };
 
+// For V4.
+var OmnitoneDemoVideoSourceData = {
+  'resonance': {
+    title: 'Resonance by Tim Fain',
+    stereoscopic: true,
+    sources: [
+      {
+        src: BaseUrl + 'resonance-1080p-h264-aac.mp4',
+        type: 'video/mp4',
+        media: 'screen and (min-device-width:801px)'
+      },
+      {
+        src: BaseUrl + 'resonance-720p-h264-aac.mp4',
+        type: 'video/mp4',
+        media: 'screen and (max-device-width:800px)'
+      },
+      {
+        src: BaseUrl + 'media/resonance-1080p-vp9-vorbis-excerpt.webm',
+        type: 'video/webm',
+        media: 'screen and (min-device-width:801px)'
+      }
+    ]
+  },
+  'fuerzaimprevista': {
+    title: 'Fuerza Imprevista by Jaunt VR',
+    stereoscopic: false,
+    sources: [
+      {
+        src: BaseUrl + 'fuerza-imprevista-1080p-h264-aac.mp4',
+        type: 'video/mp4',
+        media: 'screen and (min-device-width:801px)'
+      },
+      {
+        src: BaseUrl + 'fuerza-imprevista-1080p-vp9-vorbis.webm',
+        type: 'video/webm',
+        media: 'screen and (min-device-width:801px)'
+      }
+    ]
+  }
+};

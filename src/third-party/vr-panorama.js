@@ -142,11 +142,12 @@ window.VRPanorama = (function () {
       }, false);
 
       videoElement.crossOrigin = 'anonymous';
-      videoElement.setAttribute('webkit-playsinline', '');
+      videoElement.setAttribute('webkit-playsinline', 'true');
 
       // NOTE: this is a hack for iOS Safari.
       var userAgent = window.navigator.userAgent;
-      if (userAgent.match(/iPad/i) || userAgent.match(/iPhone/i)) {
+      if (userAgent.match(/iPad/i) || userAgent.match(/iPhone/i) ||
+          userAgent.match(/Mac OS X/i)) {
         console.log('[DEMO] panoview: forced resolution.');
         resolve(self.videoElement);
       }
@@ -212,7 +213,7 @@ window.VRPanorama = (function () {
       video.loop = true;
       video.autoplay = true;
       video.crossorigin = 'anonymous';
-      video.setAttribute('webkit-playsinline', '');
+      video.setAttribute('webkit-playsinline', 'true');
       video.src = url;
     });
   };
