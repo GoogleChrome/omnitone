@@ -9,7 +9,6 @@ The implementation of Omnitone is based on the [Google spatial media](https://gi
 - [Usage](#usage)
   + [FOARenderer](#foarenderer)
   + __[HOARenderer](#hoarenderer) (New in V1!)__
-  + 
   + [Rotation and Rendering Mode](#rotation-and-rendering-mode)
 - [Development](#development)
 - [API Documentation](#documentation)
@@ -124,7 +123,7 @@ foaRenderer.setRenderingMode('off');
 
 For the development, use `git clone` the repository and run the following script to build the library. Omnitone uses WebPack to compile the sources.
 
-```
+```bash
 npm run build       # build a non-minified library.
 npm run watch       # recompile whenever any source file changes.
 npm run build-all   # build a minified library and copy static resources.
