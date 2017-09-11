@@ -10,8 +10,8 @@ The implementation of Omnitone is based on the [Google spatial media](https://gi
   + [FOARenderer](#foarenderer)
   + __[HOARenderer](#hoarenderer) (New in V1!)__
   + [Rotation and Rendering Mode](#rotation-and-rendering-mode)
+- [API Documentation](https://cdn.rawgit.com/GoogleChrome/omnitone/40018cbd/doc/Omnitone.html)
 - [Development](#development)
-- [API Documentation](#documentation)
 - [Audio Codec Compatibility](#audio-codec-compatibility)
 
 If you are looking for interactive panning based on Omnitone's ambisonic rendering, be sure to check out [Songbird](https://github.com/google/songbird) project!
@@ -87,7 +87,7 @@ var hoaRenderer = Omnitone.createHOARenderer(audioContext);
 
 ### Rotation and Rendering Mode
 
-NOTE: All methods here is also applicable to `HOARenderer`.
+_NOTE: All methods here is also applicable to `HOARenderer`._
 
 The rotation matrix in Omnitone renderer can be updated inside of the application's animation loop to rotate the entire sound field. Omnitone supports both 3x3 and 4x4 rotation matrices(column-major).
 
@@ -138,7 +138,7 @@ Omnitone uses [Travis](https://travis-ci.org/) and [Karma](https://karma-runner.
 npm test
 ```
 
-#### Local testing on Linux
+#### Local Testing on Linux
 
 Since the test suite requires Chromium-based browser, the following set up might be necessary for Karma to run properly on Linux distros without Chromium-based browser.
 
