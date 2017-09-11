@@ -1,0 +1,2660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Namespace: Omnitone</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Namespace: Omnitone</h1>
+
+    
+
+
+
+
+<section>
+
+<header>
+    
+        <h2>Omnitone</h2>
+        
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+        
+            <div class="description">Omnitone namespace.</div>
+        
+
+        
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="omnitone.js.html">omnitone.js</a>, <a href="omnitone.js.html#line46">line 46</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Members</h3>
+
+        
+            
+<h4 class="name" id=".browserInfo"><span class="type-signature">(static) </span>browserInfo<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    An object contains the detected browser name and version.
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="omnitone.js.html">omnitone.js</a>, <a href="omnitone.js.html#line60">line 60</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id=".createBufferList"><span class="type-signature">(static) </span>createBufferList<span class="signature">(context, bufferData)</span><span class="type-signature"> &rarr; {Promise.&lt;Array.&lt;AudioBuffer>>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Performs the async loading/decoding of multiple AudioBuffers from multiple
+URLs.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>context</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">BaseAudioContext</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Associated BaseAudioContext.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>bufferData</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array.&lt;string></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">An ordered list of URLs.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="omnitone.js.html">omnitone.js</a>, <a href="omnitone.js.html#line81">line 81</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    - The promise resolves with an array of
+AudioBuffer.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Promise.&lt;Array.&lt;AudioBuffer>></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id=".createFOAConvolver"><span class="type-signature">(static) </span>createFOAConvolver<span class="signature">(context, hrirBufferList<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {FOAConvolver}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Creates an instance of FOA Convolver.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>context</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">BaseAudioContext</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">The associated AudioContext.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>hrirBufferList</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array.&lt;AudioBuffer></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">An ordered-list of stereo</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="omnitone.js.html">omnitone.js</a>, <a href="omnitone.js.html#line120">line 120</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+    <dt class="tag-see">See:</dt>
+    <dd class="tag-see">
+        <ul>
+            <li>FOAConvolver</li>
+        </ul>
+    </dd>
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">FOAConvolver</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id=".createFOADecoder"><span class="type-signature">(static) </span>createFOADecoder<span class="signature">(context, videoElement, options)</span><span class="type-signature"> &rarr; {FOADecoder}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    DEPRECATED. Use FOARenderer instance.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>context</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">AudioContext</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Associated AudioContext.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>videoElement</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">DOMElement</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Video or Audio DOM element to be streamed.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Options for FOA decoder.
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>baseResourceUrl</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">Base URL for resources.
+(base path for HRIR files)</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>postGain</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    26.0
+                
+                </td>
+            
+
+            <td class="description last">Post-decoding gain compensation.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>routingDestination</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">Custom channel layout.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="omnitone.js.html">omnitone.js</a>, <a href="omnitone.js.html#line183">line 183</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+    <dt class="tag-see">See:</dt>
+    <dd class="tag-see">
+        <ul>
+            <li>FOARenderer</li>
+        </ul>
+    </dd>
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">FOADecoder</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id=".createFOARenderer"><span class="type-signature">(static) </span>createFOARenderer<span class="signature">(context, config)</span><span class="type-signature"> &rarr; {FOARenderer}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Create a FOARenderer, the first-order ambisonic decoder and the optimized
+binaural renderer.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>context</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">AudioContext</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Associated AudioContext.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>config</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>channelMap</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">Custom channel routing map. Useful for
+handling the inconsistency in browser's multichannel audio decoding.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>hrirPathList</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">A list of paths to HRIR files. It
+overrides the internal HRIR list if given.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>renderingMode</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">RenderingMode</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    'ambisonic'
+                
+                </td>
+            
+
+            <td class="description last">Rendering mode.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="omnitone.js.html">omnitone.js</a>, <a href="omnitone.js.html#line201">line 201</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">FOARenderer</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id=".createFOARotator"><span class="type-signature">(static) </span>createFOARotator<span class="signature">(context)</span><span class="type-signature"> &rarr; {FOARotator}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Create an instance of FOA Rotator.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>context</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">AudioContext</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Associated AudioContext.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="omnitone.js.html">omnitone.js</a>, <a href="omnitone.js.html#line143">line 143</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+    <dt class="tag-see">See:</dt>
+    <dd class="tag-see">
+        <ul>
+            <li>FOARotator</li>
+        </ul>
+    </dd>
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">FOARotator</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id=".createFOARouter"><span class="type-signature">(static) </span>createFOARouter<span class="signature">(context, channelMap)</span><span class="type-signature"> &rarr; {FOARouter}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Create an instance of FOA Router.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>context</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">AudioContext</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Associated AudioContext.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>channelMap</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array.&lt;Number></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Routing destination array.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="omnitone.js.html">omnitone.js</a>, <a href="omnitone.js.html#line132">line 132</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+    <dt class="tag-see">See:</dt>
+    <dd class="tag-see">
+        <ul>
+            <li>FOARouter</li>
+        </ul>
+    </dd>
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">FOARouter</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id=".createHOAConvolver"><span class="type-signature">(static) </span>createHOAConvolver<span class="signature">(context, ambisonicOrder, hrirBufferList<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Creates HOAConvolver performs the multi-channel convolution for the optmized
+binaural rendering.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>context</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">AudioContext</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Associated AudioContext.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>ambisonicOrder</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Ambisonic order. (2 or 3)</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>hrirBufferList</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array.&lt;AudioBuffer></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">An ordered-list of stereo
+AudioBuffers for convolution. (SOA: 5 AudioBuffers, TOA: 8 AudioBuffers)</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="omnitone.js.html">omnitone.js</a>, <a href="omnitone.js.html#line224">line 224</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id=".createHOARenderer"><span class="type-signature">(static) </span>createHOARenderer<span class="signature">(context, config)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Creates HOARenderer for higher-order ambisonic decoding and the optimized
+binaural rendering.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>context</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">AudioContext</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Associated AudioContext.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>config</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>ambisonicOrder</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    3
+                
+                </td>
+            
+
+            <td class="description last">Ambisonic order.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>hrirPathList</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">A list of paths to HRIR files. It
+overrides the internal HRIR list if given.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>renderingMode</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">RenderingMode</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    'ambisonic'
+                
+                </td>
+            
+
+            <td class="description last">Rendering mode.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="omnitone.js.html">omnitone.js</a>, <a href="omnitone.js.html#line240">line 240</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id=".createHOARotator"><span class="type-signature">(static) </span>createHOARotator<span class="signature">(context, ambisonicOrder)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Creates HOARotator for higher-order ambisonics rotation.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>context</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">AudioContext</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Associated AudioContext.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>ambisonicOrder</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Ambisonic order.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="omnitone.js.html">omnitone.js</a>, <a href="omnitone.js.html#line211">line 211</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id=".mergeBufferListByChannel"><span class="type-signature">(static) </span>mergeBufferListByChannel<span class="signature">(context, bufferList)</span><span class="type-signature"> &rarr; {AudioBuffer}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Perform channel-wise merge on multiple AudioBuffers. The sample rate and
+the length of buffers to be merged must be identical.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>context</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">BaseAudioContext</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Associated BaseAudioContext.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>bufferList</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array.&lt;AudioBuffer></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">An array of AudioBuffers to be merged
+channel-wise.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="omnitone.js.html">omnitone.js</a>, <a href="omnitone.js.html#line97">line 97</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    - A single merged AudioBuffer.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">AudioBuffer</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id=".splitBufferbyChannel"><span class="type-signature">(static) </span>splitBufferbyChannel<span class="signature">(context, audioBuffer, splitBy)</span><span class="type-signature"> &rarr; {Array.&lt;AudioBuffer>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Perform channel-wise split by the given channel count. For example,
+1 x AudioBuffer(8) -> splitBuffer(context, buffer, 2) -> 4 x AudioBuffer(2).
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>context</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">BaseAudioContext</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Associated BaseAudioContext.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>audioBuffer</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">AudioBuffer</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">An AudioBuffer to be splitted.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>splitBy</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Number of channels to be splitted.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="omnitone.js.html">omnitone.js</a>, <a href="omnitone.js.html#line110">line 110</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    - An array of splitted AudioBuffers.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array.&lt;AudioBuffer></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Namespaces</h3><ul><li><a href="Omnitone.html">Omnitone</a></li></ul><h3><a href="global.html">Global</a></h3>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.4</a> on Thu Sep 07 2017 15:40:22 GMT-0700 (PDT)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
