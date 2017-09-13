@@ -2,13 +2,13 @@
 
 [![Travis](https://img.shields.io/travis/GoogleChrome/omnitone.svg)](https://travis-ci.org/GoogleChrome/omnitone) [![npm](https://img.shields.io/npm/v/omnitone.svg?colorB=4bc51d)](https://www.npmjs.com/package/omnitone) [![GitHub license](https://img.shields.io/badge/license-Apache%202-brightgreen.svg)](https://raw.githubusercontent.com/GoogleChrome/omnitone/master/LICENSE)
 
-Omnitone is a robust implementation of [ambisonic](https://en.wikipedia.org/wiki/Ambisonics) decoding and binaural rendering written in Web Audio API. Its decoding process is based on fast gain matrix the native [HRTF](https://en.wikipedia.org/wiki/Head-related_transfer_function) convolution for binaural rendering, ensuring the optimum performance.
+Omnitone is a robust implementation of [ambisonic](https://en.wikipedia.org/wiki/Ambisonics) decoding and binaural rendering written in Web Audio API. Its rendering process is powered by the fast native features from Web Audio API (GainNode and Convolver), ensuring the optimum performance.
 
-The implementation of Omnitone is based on the [Google spatial media](https://github.com/google/spatial-media) specification. The incoming ambisonic stream should be configured to [ACN channel layout with SN3D normalization](https://en.wikipedia.org/wiki/Ambisonic_data_exchange_formats#ACN).
+The implementation of Omnitone is based on the [Google spatial media](https://github.com/google/spatial-media) specification. The incoming ambisonic stream MUST be configured to [ACN channel layout with SN3D normalization](https://en.wikipedia.org/wiki/Ambisonic_data_exchange_formats#ACN).
 
 - [Usage](#usage)
   + [FOARenderer](#foarenderer)
-  + __[HOARenderer](#hoarenderer) (New in V1!)__
+  + __[HOARenderer](#hoarenderer) (New!)__
   + [Rotation and Rendering Mode](#rotation-and-rendering-mode)
 - [API Documentation](https://cdn.rawgit.com/GoogleChrome/omnitone/40018cbd/doc/Omnitone.html)
 - [Development](#development)
@@ -47,10 +47,16 @@ The first step is to include the library file in an HTML document. Omnitone is s
 <script src="https://www.gstatic.com/external_hosted/omnitone/build/omnitone.min.js"></script>
 ```
 
-Alternatively, you can install Omnitone as a part of your local development via [NPM](https://www.npmjs.com/package/omnitone). You can also `git clone` the repository and use the library file as usual.
+Alternatively, you can install Omnitone as a part of your local development via [NPM](https://www.npmjs.com/package/omnitone).
 
 ```bash
 npm install omnitone
+```
+
+You can also `git clone` the repository and use the library file as usual.
+
+```bash
+git clone https://github.com/GoogleChrome/omnitone.git
 ```
 
 ### FOARenderer
@@ -87,33 +93,33 @@ var hoaRenderer = Omnitone.createHOARenderer(audioContext);
 
 ### Rotation and Rendering Mode
 
-_NOTE: All methods here is also applicable to `HOARenderer`._
-
 The rotation matrix in Omnitone renderer can be updated inside of the application's animation loop to rotate the entire sound field. Omnitone supports both 3x3 and 4x4 rotation matrices(column-major).
+
+Note that 
 
 ```js
 // Rotation with 3x3 or 4x4 matrix.
-foaRenderer.setRotationMatrix3(rotationMatrix3);
-foaRenderer.setRotationMatrix4(rotationMatrix4);
+renderer.setRotationMatrix3(rotationMatrix3);
+renderer.setRotationMatrix4(rotationMatrix4);
 ```
 
 For example, if you want to hook up the Three.js perspective camera:
 
 ```js
-foaRenderer.setRotationMatrix4(camera.matrixWorld.elements);
+renderer.setRotationMatrix4(camera.matrixWorld.elements);
 ```
 
 Use `setRenderingMode` method to change the operation of the decoder. This is useful when switching between spatial media (ambisonic) and non-spatial media (mono or stereo) or when you want to save the CPU power by disabling the decoder.
 
 ```js
 // Mono or regular multi-channel layouts.
-foaRenderer.setRenderingMode('bypass');
+renderer.setRenderingMode('bypass');
 
 // Use ambisonic rendering.
-foaRenderer.setRenderingMode('ambisonic');
+renderer.setRenderingMode('ambisonic');
 
 // Disable encoding completely. (audio processing disabled)
-foaRenderer.setRenderingMode('off');
+renderer.setRenderingMode('off');
 ```
 
 
@@ -121,7 +127,7 @@ foaRenderer.setRenderingMode('off');
 
 ### Building Omnitone Locally
 
-For the development, use `git clone` the repository and run the following script to build the library. Omnitone uses WebPack to compile the sources.
+For the development, get a copy of the repository first and run the following script to build the library. Omnitone uses [WebPack](https://webpack.github.io/) to compile the sources.
 
 ```bash
 npm run build       # build a non-minified library.
