@@ -10,7 +10,7 @@ The implementation of Omnitone is based on the [Google spatial media](https://gi
   + [FOARenderer](#foarenderer)
   + __[HOARenderer](#hoarenderer) (New!)__
   + [Rotation and Rendering Mode](#rotation-and-rendering-mode)
-- [API Documentation](https://cdn.rawgit.com/GoogleChrome/omnitone/40018cbd/doc/Omnitone.html)
+- [API Documentation](https://rawgit.com/GoogleChrome/omnitone/master/doc/Omnitone.html)
 - [Development](#development)
 - [Audio Codec Compatibility](#audio-codec-compatibility)
 
@@ -25,7 +25,7 @@ Omnitone offers __ambisonic decoding__ and __binaural rendering__ of:
 ### Omnitone in action:
 
 - __[Project Home](https://googlechrome.github.io/omnitone/#home)__
-- __[Omnitone Examples](https://cdn.rawgit.com/GoogleChrome/omnitone/8aadce39/examples/index.html)__
+- __[Omnitone Examples](https://rawgit.com/GoogleChrome/omnitone/master/examples/index.html)__
 - __[Songbird WebGL Demo](https://cdn.rawgit.com/google/songbird/master/examples/webgl-demo.html)__
 - __[JauntVR Gallery: Music](https://www.jauntvr.com/lobby/MusicLobby)__
 
