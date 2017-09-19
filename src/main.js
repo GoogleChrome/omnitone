@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 
+/**
+ * @file Namespace for Omnitone library.
+ */
+
 'use strict';
 
-// Primary namespace for Omnitone library.
+
 exports.Omnitone = require('./omnitone.js');

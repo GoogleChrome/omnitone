@@ -37,8 +37,9 @@ function FOAConvolver(context, hrirBufferList) {
 
   this._buildAudioGraph();
 
-  if (hrirBufferList)
+  if (hrirBufferList) {
     this.setHRIRBufferList(hrirBufferList);
+  }
 
   this.enable();
 }
@@ -110,8 +111,9 @@ FOAConvolver.prototype.setHRIRBufferList = function(hrirBufferList) {
   // After these assignments, the channel data in the buffer is immutable in
   // FireFox. (i.e. neutered) So we should avoid re-assigning buffers, otherwise
   // an exception will be thrown.
-  if (this._isBufferLoaded)
+  if (this._isBufferLoaded) {
     return;
+  }
 
   this._convolverWY.buffer = hrirBufferList[0];
   this._convolverZX.buffer = hrirBufferList[1];

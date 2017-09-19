@@ -15,37 +15,38 @@
 
 
 /**
- * @fileOverview Omnitone FOA decoder.
+ * @file Omnitone FOA decoder, DEPRECATED in favor of FOARenderer.
  */
 
 'use strict';
 
-var AudioBufferManager = require('./audiobuffer-manager.js');
-var FOARouter = require('./foa-router.js');
-var FOARotator = require('./foa-rotator.js');
-var FOAPhaseMatchedFilter = require('./foa-phase-matched-filter.js');
-var FOAVirtualSpeaker = require('./foa-virtual-speaker.js');
-var FOASpeakerData = require('./foa-speaker-data.js');
-var Utils = require('./utils.js');
+const AudioBufferManager = require('./audiobuffer-manager.js');
+const FOARouter = require('./foa-router.js');
+const FOARotator = require('./foa-rotator.js');
+const FOAPhaseMatchedFilter = require('./foa-phase-matched-filter.js');
+const FOAVirtualSpeaker = require('./foa-virtual-speaker.js');
+const FOASpeakerData = require('./foa-speaker-data.js');
+const Utils = require('./utils.js');
 
 // By default, Omnitone fetches IR from the spatial media repository.
-var HRTFSET_URL = 'https://raw.githubusercontent.com/GoogleChrome/omnitone/master/build/resources/';
+const HRTFSET_URL = 'https://raw.githubusercontent.com/GoogleChrome/omnitone/master/build/resources/';
 
 // Post gain compensation value.
-var POST_GAIN_DB = 0;
+let POST_GAIN_DB = 0;
 
 
 /**
- * @class Omnitone FOA decoder class.
- * @param {AudioContext} context      Associated AudioContext.
- * @param {VideoElement} videoElement Target video (or audio) element for
- *                                    streaming.
+ * Omnitone FOA decoder.
+ * @constructor
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {VideoElement} videoElement - Target video (or audio) element for
+ * streaming.
  * @param {Object} options
- * @param {String} options.HRTFSetUrl Base URL for the cube HRTF sets.
- * @param {Number} options.postGainDB Post-decoding gain compensation in dB.
- * @param {Array} options.channelMap  Custom channel map.
+ * @param {String} options.HRTFSetUrl - Base URL for the cube HRTF sets.
+ * @param {Number} options.postGainDB - Post-decoding gain compensation in dB.
+ * @param {Number[]} options.channelMap - Custom channel map.
  */
-function FOADecoder (context, videoElement, options) {
+function FOADecoder(context, videoElement, options) {
   this._isDecoderReady = false;
   this._context = context;
   this._videoElement = videoElement;
@@ -56,46 +57,48 @@ function FOADecoder (context, videoElement, options) {
   this._channelMap = FOARouter.ChannelMap.DEFAULT; // ACN
 
   if (options) {
-    if (options.postGainDB)
+    if (options.postGainDB) {
       this._postGainDB = options.postGainDB;
-
-    if (options.HRTFSetUrl)
+    }
+    if (options.HRTFSetUrl) {
       this._HRTFSetUrl = options.HRTFSetUrl;
-
-    if (options.channelMap)
+    }
+    if (options.channelMap) {
       this._channelMap = options.channelMap;
+    }
   }
 
   // Rearrange speaker data based on |options.HRTFSetUrl|.
   this._speakerData = [];
-  for (var i = 0; i < FOASpeakerData.length; ++i) {
+  for (let i = 0; i < FOASpeakerData.length; ++i) {
     this._speakerData.push({
       name: FOASpeakerData[i].name,
       url: this._HRTFSetUrl + '/' + FOASpeakerData[i].url,
-      coef: FOASpeakerData[i].coef
+      coef: FOASpeakerData[i].coef,
     });
   }
 
   this._tempMatrix4 = new Float32Array(16);
 }
 
+
 /**
  * Initialize and load the resources for the decode.
  * @return {Promise}
  */
-FOADecoder.prototype.initialize = function () {
+FOADecoder.prototype.initialize = function() {
   Utils.log('Initializing... (mode: ' + this._decodingMode + ')');
 
   // Rerouting channels if necessary.
-  var channelMapString = this._channelMap.toString();
-  var defaultChannelMapString = FOARouter.ChannelMap.DEFAULT.toString();
+  let channelMapString = this._channelMap.toString();
+  let defaultChannelMapString = FOARouter.ChannelMap.DEFAULT.toString();
   if (channelMapString !== defaultChannelMapString) {
     Utils.log('Remapping channels ([' + defaultChannelMapString + '] -> ['
       + channelMapString + '])');
   }
 
-  this._audioElementSource = this._context.createMediaElementSource(
-    this._videoElement);
+  this._audioElementSource =
+      this._context.createMediaElementSource(this._videoElement);
   this._foaRouter = new FOARouter(this._context, this._channelMap);
   this._foaRotator = new FOARotator(this._context);
   this._foaPhaseMatchedFilter = new FOAPhaseMatchedFilter(this._context);
@@ -111,31 +114,30 @@ FOADecoder.prototype.initialize = function () {
   this._audioElementSource.connect(this._bypass);
 
   // Get the linear amplitude from the post gain option, which is in decibel.
-  var postGainLinear = Math.pow(10, this._postGainDB/20);
+  const postGainLinear = Math.pow(10, this._postGainDB/20);
   Utils.log('Gain compensation: ' + postGainLinear + ' (' + this._postGainDB
     + 'dB)');
 
   // This returns a promise so developers can use the decoder when it is ready.
-  var me = this;
-  return new Promise(function (resolve, reject) {
-    new AudioBufferManager(me._context, me._speakerData,
-      function (buffers) {
-        for (var i = 0; i < me._speakerData.length; ++i) {
-          me._foaVirtualSpeakers[i] = new FOAVirtualSpeaker(me._context, {
-            coefficients: me._speakerData[i].coef,
-            IR: buffers.get(me._speakerData[i].name),
-            gain: postGainLinear
+  const that = this;
+  return new Promise(function(resolve, reject) {
+    new AudioBufferManager(that._context, that._speakerData,
+      function(buffers) {
+        for (let i = 0; i < that._speakerData.length; ++i) {
+          that._foaVirtualSpeakers[i] = new FOAVirtualSpeaker(that._context, {
+            coefficients: that._speakerData[i].coef,
+            IR: buffers.get(that._speakerData[i].name),
+            gain: postGainLinear,
           });
 
-          me._foaPhaseMatchedFilter.output.connect(
-            me._foaVirtualSpeakers[i].input);
+          that._foaPhaseMatchedFilter.output.connect(
+            that._foaVirtualSpeakers[i].input);
         }
 
         // Set the decoding mode.
-        me.setMode(me._decodingMode);
-        me._isDecoderReady = true;
+        that.setMode(that._decodingMode);
+        that._isDecoderReady = true;
         Utils.log('HRTF IRs are loaded successfully. The decoder is ready.');
-
         resolve();
       }, reject);
   });
@@ -146,7 +148,7 @@ FOADecoder.prototype.initialize = function () {
  * @param {Array} rotationMatrix      3x3 rotation matrix (row-major
  *                                    representation)
  */
-FOADecoder.prototype.setRotationMatrix = function (rotationMatrix) {
+FOADecoder.prototype.setRotationMatrix = function(rotationMatrix) {
   this._foaRotator.setRotationMatrix(rotationMatrix);
 };
 
@@ -155,7 +157,7 @@ FOADecoder.prototype.setRotationMatrix = function (rotationMatrix) {
  * Update the rotation matrix from a Three.js camera object.
  * @param  {Object} cameraMatrix      The Matrix4 obejct of Three.js the camera.
  */
-FOADecoder.prototype.setRotationMatrixFromCamera = function (cameraMatrix) {
+FOADecoder.prototype.setRotationMatrixFromCamera = function(cameraMatrix) {
   // Extract the inner array elements and inverse. (The actual view rotation is
   // the opposite of the camera movement.)
   Utils.invertMatrix4(this._tempMatrix4, cameraMatrix.elements);
@@ -172,30 +174,33 @@ FOADecoder.prototype.setRotationMatrixFromCamera = function (cameraMatrix) {
  *                                    processing is completely turned off saving
  *                                    the CPU power.
  */
-FOADecoder.prototype.setMode = function (mode) {
-  if (mode === this._decodingMode)
+FOADecoder.prototype.setMode = function(mode) {
+  if (mode === this._decodingMode) {
     return;
+  }
 
   switch (mode) {
-
     case 'bypass':
       this._decodingMode = 'bypass';
-      for (var i = 0; i < this._foaVirtualSpeakers.length; ++i)
+      for (let i = 0; i < this._foaVirtualSpeakers.length; ++i) {
         this._foaVirtualSpeakers[i].disable();
+      }
       this._bypass.connect(this._context.destination);
       break;
 
     case 'ambisonic':
       this._decodingMode = 'ambisonic';
-      for (var i = 0; i < this._foaVirtualSpeakers.length; ++i)
+      for (let i = 0; i < this._foaVirtualSpeakers.length; ++i) {
         this._foaVirtualSpeakers[i].enable();
+      }
       this._bypass.disconnect();
       break;
 
     case 'off':
       this._decodingMode = 'off';
-      for (var i = 0; i < this._foaVirtualSpeakers.length; ++i)
+      for (let i = 0; i < this._foaVirtualSpeakers.length; ++i) {
         this._foaVirtualSpeakers[i].disable();
+      }
       this._bypass.disconnect();
       break;
 

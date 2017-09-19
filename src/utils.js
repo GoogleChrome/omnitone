@@ -27,7 +27,7 @@ exports.log = function() {
     '%c[Omnitone]%c ' + Array.prototype.slice.call(arguments).join(' ') +
         ' %c(@' + performance.now().toFixed(2) + 'ms)',
     'background: #BBDEFB; color: #FF5722; font-weight: 500', 'font-weight: 300',
-    'color: #AAA'
+    'color: #AAA',
   ]);
 };
 
@@ -41,18 +41,43 @@ exports.throw = function() {
     '%c[Omnitone]%c ' + Array.prototype.slice.call(arguments).join(' ') +
         ' %c(@' + performance.now().toFixed(2) + 'ms)',
     'background: #C62828; color: #FFEBEE; font-weight: 800', 'font-weight: 400',
-    'color: #AAA'
+    'color: #AAA',
   ]);
 
-  throw false;
+  throw new Error(false);
 };
 
 
 // Static temp storage for matrix inversion.
-var a00, a01, a02, a03, a10, a11, a12, a13;
-var a20, a21, a22, a23, a30, a31, a32, a33;
-var b00, b01, b02, b03, b04, b05, b06, b07, b08, b09, b10, b11;
-var det;
+let a00;
+let a01;
+let a02;
+let a03;
+let a10;
+let a11;
+let a12;
+let a13;
+let a20;
+let a21;
+let a22;
+let a23;
+let a30;
+let a31;
+let a32;
+let a33;
+let b00;
+let b01;
+let b02;
+let b03;
+let b04;
+let b05;
+let b06;
+let b07;
+let b08;
+let b09;
+let b10;
+let b11;
+let det;
 
 
 /**
@@ -60,7 +85,7 @@ var det;
  * arguments are not proper 4x4 matrices.
  * @param {Float32Array} out   The inverted result.
  * @param {Float32Array} a     The source matrix.
- * @returns {Float32Array} out
+ * @return {Float32Array} out
  */
 exports.invertMatrix4 = function(out, a) {
   a00 = a[0];
@@ -93,8 +118,9 @@ exports.invertMatrix4 = function(out, a) {
   b11 = a22 * a33 - a23 * a32;
   det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
 
-  if (!det)
+  if (!det) {
     return null;
+  }
 
   det = 1.0 / det;
   out[0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;
@@ -150,11 +176,11 @@ exports.isAudioBuffer = function(audioBuffer) {
  * @return {AudioBuffer} - A single merged AudioBuffer.
  */
 exports.mergeBufferListByChannel = function(context, bufferList) {
-  var bufferLength = bufferList[0].length;
-  var bufferNumberOfChannel = 0;
-  var bufferSampleRate = bufferList[0].sampleRate;
+  const bufferLength = bufferList[0].length;
+  const bufferSampleRate = bufferList[0].sampleRate;
+  let bufferNumberOfChannel = 0;
 
-  for (var i = 0; i < bufferList.length; ++i) {
+  for (let i = 0; i < bufferList.length; ++i) {
     if (bufferNumberOfChannel > 32) {
       exports.throw('Utils.mergeBuffer: Number of channels cannot exceed 32.' +
           '(got ' + bufferNumberOfChannel + ')');
@@ -172,12 +198,12 @@ exports.mergeBufferListByChannel = function(context, bufferList) {
     bufferNumberOfChannel += bufferList[i].numberOfChannels;
   }
 
-  var buffer = context.createBuffer(bufferNumberOfChannel,
-                                    bufferLength,
-                                    bufferSampleRate);
-  var destinationChannelIndex = 0;
-  for (var i = 0; i < bufferList.length; ++i) {
-    for (var j = 0; j < bufferList[i].numberOfChannels; ++j) {
+  const buffer = context.createBuffer(bufferNumberOfChannel,
+                                      bufferLength,
+                                      bufferSampleRate);
+  let destinationChannelIndex = 0;
+  for (let i = 0; i < bufferList.length; ++i) {
+    for (let j = 0; j < bufferList[i].numberOfChannels; ++j) {
       buffer.getChannelData(destinationChannelIndex++).set(
           bufferList[i].getChannelData(j));
     }
@@ -201,15 +227,15 @@ exports.splitBufferbyChannel = function(context, audioBuffer, splitBy) {
         audioBuffer.numberOfChannels + ' splitted by ' + splitBy + ')');
   }
 
-  var bufflerList = [];
-  var sourceChannelIndex = 0;
-  var numberOfSplittedBuffer =
+  let bufflerList = [];
+  let sourceChannelIndex = 0;
+  const numberOfSplittedBuffer =
       Math.ceil(audioBuffer.numberOfChannels / splitBy);
-  for (var i = 0; i < numberOfSplittedBuffer; ++i) {
-    var buffer = context.createBuffer(splitBy,
+  for (let i = 0; i < numberOfSplittedBuffer; ++i) {
+    let buffer = context.createBuffer(splitBy,
                                       audioBuffer.length,
                                       audioBuffer.sampleRate);
-    for (var j = 0; j < splitBy; ++j) {
+    for (let j = 0; j < splitBy; ++j) {
       if (sourceChannelIndex < audioBuffer.numberOfChannels) {
         buffer.getChannelData(j).set(
           audioBuffer.getChannelData(sourceChannelIndex++));

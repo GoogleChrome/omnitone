@@ -44,7 +44,7 @@ function getKroneckerDelta(i, j) {
  * @param {Number} gainValue
  */
 function setCenteredElement(matrix, l, i, j, gainValue) {
-  var index = (j + l) * (2 * l + 1) + (i + l);
+  const index = (j + l) * (2 * l + 1) + (i + l);
   // Row-wise indexing.
   matrix[l - 1][index].gain.value = gainValue;
 }
@@ -61,7 +61,8 @@ function setCenteredElement(matrix, l, i, j, gainValue) {
  * @return {Number}
  */
 function getCenteredElement(matrix, l, i, j) {
-  var index = (j + l) * (2 * l + 1) + (i + l);  // Row-wise indexing.
+  // Row-wise indexing.
+  const index = (j + l) * (2 * l + 1) + (i + l);
   return matrix[l - 1][index].gain.value;
 }
 
@@ -78,7 +79,7 @@ function getCenteredElement(matrix, l, i, j) {
  * @param {Number} l
  * @return {Number}
  */
-function P(matrix, i, a, b, l) {
+function getP(matrix, i, a, b, l) {
   if (b === l) {
     return getCenteredElement(matrix, 1, i, 1) *
         getCenteredElement(matrix, l - 1, a, l - 1) -
@@ -109,10 +110,10 @@ function P(matrix, i, a, b, l) {
  * @param {Number} l
  * @return {Number}
  */
-function U(matrix, m, n, l) {
+function getU(matrix, m, n, l) {
   // Although [1, 2] split U into three cases for m == 0, m < 0, m > 0
   // the actual values are the same for all three cases.
-  return P(matrix, 0, m, n, l);
+  return getP(matrix, 0, m, n, l);
 }
 
 
@@ -129,22 +130,22 @@ function U(matrix, m, n, l) {
  * @param {Number} l
  * @return {Number}
  */
-function V(matrix, m, n, l) {
+function getV(matrix, m, n, l) {
   if (m === 0) {
-    return P(matrix, 1, 1, n, l) + P(matrix, -1, -1, n, l);
+    return getP(matrix, 1, 1, n, l) + getP(matrix, -1, -1, n, l);
   } else if (m > 0) {
-    var d = getKroneckerDelta(m, 1);
-    return P(matrix, 1, m - 1, n, l) * Math.sqrt(1 + d) -
-        P(matrix, -1, -m + 1, n, l) * (1 - d);
+    const d = getKroneckerDelta(m, 1);
+    return getP(matrix, 1, m - 1, n, l) * Math.sqrt(1 + d) -
+        getP(matrix, -1, -m + 1, n, l) * (1 - d);
   } else {
     // Note there is apparent errata in [1,2,2b] dealing with this particular
     // case. [2b] writes it should be P*(1-d)+P*(1-d)^0.5
     // [1] writes it as P*(1+d)+P*(1-d)^0.5, but going through the math by hand,
     // you must have it as P*(1-d)+P*(1+d)^0.5 to form a 2^.5 term, which
     // parallels the case where m > 0.
-    var d = getKroneckerDelta(m, -1);
-    return P(matrix, 1, m + 1, n, l) * (1 - d) +
-        P(matrix, -1, -m - 1, n, l) * Math.sqrt(1 + d);
+    const d = getKroneckerDelta(m, -1);
+    return getP(matrix, 1, m + 1, n, l) * (1 - d) +
+        getP(matrix, -1, -m - 1, n, l) * Math.sqrt(1 + d);
   }
 }
 
@@ -160,14 +161,16 @@ function V(matrix, m, n, l) {
  * @param {Number} m
  * @param {Number} n
  * @param {Number} l
+ * @return {Number}
  */
-function W(matrix, m, n, l) {
+function getW(matrix, m, n, l) {
   // Whenever this happens, w is also 0 so W can be anything.
-  if (m === 0)
+  if (m === 0) {
     return 0;
+  }
 
-  return m > 0 ? P(matrix, 1, m + 1, n, l) + P(matrix, -1, -m - 1, n, l) :
-                 P(matrix, 1, m - 1, n, l) - P(matrix, -1, -m + 1, n, l);
+  return m > 0 ? getP(matrix, 1, m + 1, n, l) + getP(matrix, -1, -m - 1, n, l) :
+                 getP(matrix, 1, m - 1, n, l) - getP(matrix, -1, -m + 1, n, l);
 }
 
 
@@ -180,18 +183,18 @@ function W(matrix, m, n, l) {
  * @return {Array} 3 coefficients for U, V and W functions.
  */
 function computeUVWCoeff(m, n, l) {
-  var d = getKroneckerDelta(m, 0);
-  var reciprocalDenominator =
+  const d = getKroneckerDelta(m, 0);
+  const reciprocalDenominator =
       Math.abs(n) === l ? 1 / (2 * l * (2 * l - 1)) : 1 / ((l + n) * (l - n));
 
   return [
     Math.sqrt((l + m) * (l - m) * reciprocalDenominator),
-    0.5 * (1 - 2 * d) *
-        Math.sqrt(
-            (1 + d) * (l + Math.abs(m) - 1) * (l + Math.abs(m)) *
-            reciprocalDenominator),
+    0.5 * (1 - 2 * d) * Math.sqrt((1 + d) *
+                                  (l + Math.abs(m) - 1) *
+                                  (l + Math.abs(m)) *
+                                  reciprocalDenominator),
     -0.5 * (1 - d) * Math.sqrt((l - Math.abs(m) - 1) * (l - Math.abs(m))) *
-        reciprocalDenominator
+        reciprocalDenominator,
   ];
 }
 
@@ -210,18 +213,21 @@ function computeUVWCoeff(m, n, l) {
 function computeBandRotation(matrix, l) {
   // The lth band rotation matrix has rows and columns equal to the number of
   // coefficients within that band (-l <= m <= l implies 2l + 1 coefficients).
-  for (var m = -l; m <= l; m++) {
-    for (var n = -l; n <= l; n++) {
-      var uvwCoefficients = computeUVWCoeff(m, n, l);
+  for (let m = -l; m <= l; m++) {
+    for (let n = -l; n <= l; n++) {
+      const uvwCoefficients = computeUVWCoeff(m, n, l);
 
       // The functions U, V, W are only safe to call if the coefficients
       // u, v, w are not zero.
-      if (Math.abs(uvwCoefficients[0]) > 0)
-        uvwCoefficients[0] *= U(matrix, m, n, l);
-      if (Math.abs(uvwCoefficients[1]) > 0)
-        uvwCoefficients[1] *= V(matrix, m, n, l);
-      if (Math.abs(uvwCoefficients[2]) > 0)
-        uvwCoefficients[2] *= W(matrix, m, n, l);
+      if (Math.abs(uvwCoefficients[0]) > 0) {
+        uvwCoefficients[0] *= getU(matrix, m, n, l);
+      }
+      if (Math.abs(uvwCoefficients[1]) > 0) {
+        uvwCoefficients[1] *= getV(matrix, m, n, l);
+      }
+      if (Math.abs(uvwCoefficients[2]) > 0) {
+        uvwCoefficients[2] *= getW(matrix, m, n, l);
+      }
 
       setCenteredElement(
           matrix, l, m, n,
@@ -238,8 +244,9 @@ function computeBandRotation(matrix, l) {
  */
 function computeHOAMatrices(matrix) {
   // We start by computing the 2nd-order matrix from the 1st-order matrix.
-  for (var i = 2; i <= matrix.length; i++)
+  for (let i = 2; i <= matrix.length; i++) {
     computeBandRotation(matrix, i);
+  }
 }
 
 
@@ -266,24 +273,24 @@ function HOARotator(context, ambisonicOrder) {
 
   // We need to determine the number of channels K based on the ambisonic order
   // N where K = (N + 1)^2.
-  var numberOfChannels = (ambisonicOrder + 1) * (ambisonicOrder + 1);
+  const numberOfChannels = (ambisonicOrder + 1) * (ambisonicOrder + 1);
 
   this._splitter = this._context.createChannelSplitter(numberOfChannels);
   this._merger = this._context.createChannelMerger(numberOfChannels);
 
   // Create a set of per-order rotation matrices using gain nodes.
   this._gainNodeMatrix = [];
-  var orderOffset;
-  var rows;
-  var inputIndex;
-  var outputIndex;
-  var matrixIndex;
-  for (var i = 1; i <= ambisonicOrder; i++) {
+  let orderOffset;
+  let rows;
+  let inputIndex;
+  let outputIndex;
+  let matrixIndex;
+  for (let i = 1; i <= ambisonicOrder; i++) {
     // Each ambisonic order requires a separate (2l + 1) x (2l + 1) rotation
     // matrix. We compute the offset value as the first channel index of the
     // current order where
     //   k_last = l^2 + l + m,
-    // and var m = -l
+    // and m = -l
     //   k_last = l^2
     orderOffset = i * i;
 
@@ -291,9 +298,9 @@ function HOARotator(context, ambisonicOrder) {
     rows = (2 * i + 1);
 
     this._gainNodeMatrix[i - 1] = [];
-    for (var j = 0; j < rows; j++) {
+    for (let j = 0; j < rows; j++) {
       inputIndex = orderOffset + j;
-      for (var k = 0; k < rows; k++) {
+      for (let k = 0; k < rows; k++) {
         outputIndex = orderOffset + k;
         matrixIndex = j * rows + k;
         this._gainNodeMatrix[i - 1][matrixIndex] = this._context.createGain();
@@ -322,8 +329,9 @@ function HOARotator(context, ambisonicOrder) {
  * @param {Number[]} rotationMatrix3 - A 3x3 rotation matrix. (column-major)
  */
 HOARotator.prototype.setRotationMatrix3 = function(rotationMatrix3) {
-  for (var i = 0; i < 9; ++i)
+  for (let i = 0; i < 9; ++i) {
     this._gainNodeMatrix[0][i].gain.value = rotationMatrix3[i];
+  }
   computeHOAMatrices(this._gainNodeMatrix);
 };
 
@@ -351,9 +359,10 @@ HOARotator.prototype.setRotationMatrix4 = function(rotationMatrix4) {
  * @return {Number[]} - A 3x3 rotation matrix. (column-major)
  */
 HOARotator.prototype.getRotationMatrix3 = function() {
-  var rotationMatrix3 = new Float32Array(9);
-  for (var i = 0; i < 9; ++i)
+  let rotationMatrix3 = new Float32Array(9);
+  for (let i = 0; i < 9; ++i) {
     rotationMatrix3[i] = this._gainNodeMatrix[0][i].gain.value;
+  }
   return rotationMatrix3;
 };
 
@@ -363,7 +372,7 @@ HOARotator.prototype.getRotationMatrix3 = function() {
  * @return {Number[]} - A 4x4 rotation matrix. (column-major)
  */
 HOARotator.prototype.getRotationMatrix4 = function() {
-  var rotationMatrix4 = new Float32Array(16);
+  let rotationMatrix4 = new Float32Array(16);
   rotationMatrix4[0] = this._gainNodeMatrix[0][0].gain.value;
   rotationMatrix4[1] = this._gainNodeMatrix[0][1].gain.value;
   rotationMatrix4[2] = this._gainNodeMatrix[0][2].gain.value;

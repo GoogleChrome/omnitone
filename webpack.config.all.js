@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-var webpack = require('webpack');
-var CopyWebpackPlugin = require('copy-webpack-plugin');
+const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
   entry: './src/main.js',
@@ -24,7 +24,7 @@ module.exports = {
     libraryTarget: 'umd'
   },
   plugins: [
-    new webpack.optimize.UglifyJsPlugin(),
+    new UglifyJSPlugin(),
     new CopyWebpackPlugin([{
       from: './src/resources',
       to: 'resources',

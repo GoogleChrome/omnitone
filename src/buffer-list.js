@@ -20,7 +20,7 @@
 
 'use strict';
 
-var Utils = require('./utils.js');
+const Utils = require('./utils.js');
 
 
 /**
@@ -42,7 +42,7 @@ function BufferList(context, bufferData, options) {
   this._bufferData = bufferData.slice(0);
   this._numberOfTasks = this._bufferData.length;
 
-  this._options = { verbose: false };
+  this._options = {verbose: false};
   if (options) {
     this._options = Boolean(options.verbose);
   }
@@ -69,16 +69,19 @@ BufferList.prototype.load = function() {
  * @param {function} reject Promise reject.
  */
 BufferList.prototype._promiseGenerator = function(resolve, reject) {
-  if (typeof resolve !== 'function')
+  if (typeof resolve !== 'function') {
     Utils.throw('BufferList: Invalid Promise resolver.');
-  else
+  } else {
     this._resolveHandler = resolve;
+  }
 
-  if (typeof reject === 'function')
+  if (typeof reject === 'function') {
     this._rejectHandler = reject;
+  }
 
-  for (var i = 0; i < this._bufferData.length; ++i)
+  for (let i = 0; i < this._bufferData.length; ++i) {
     this._launchAsyncLoadTask(i);
+  }
 };
 
 
@@ -88,11 +91,11 @@ BufferList.prototype._promiseGenerator = function(resolve, reject) {
  * @param {Number} taskId Task ID number from |BufferData|.
  */
 BufferList.prototype._launchAsyncLoadTask = function(taskId) {
-  var xhr = new XMLHttpRequest();
+  const xhr = new XMLHttpRequest();
   xhr.open('GET', this._bufferData[taskId]);
   xhr.responseType = 'arraybuffer';
 
-  var that = this;
+  const that = this;
   xhr.onload = function() {
     if (xhr.status === 200) {
       that._context.decodeAudioData(
@@ -102,13 +105,13 @@ BufferList.prototype._launchAsyncLoadTask = function(taskId) {
           },
           function(errorMessage) {
             that._updateProgress(taskId, null);
-            var message = 'BufferList: decoding "' + that._bufferData[taskId] +
-                '" failed. (' + errorMessage + ')';
+            const message = 'BufferList: decoding "' +
+                that._bufferData[taskId] + '" failed. (' + errorMessage + ')';
             Utils.throw(message);
             that._rejectHandler(message);
           });
     } else {
-      var message = 'BufferList: XHR error while loading "' +
+      const message = 'BufferList: XHR error while loading "' +
           that._bufferData[taskId] + '(' + xhr.statusText + ')';
       Utils.throw(message);
       that._rejectHandler(message);

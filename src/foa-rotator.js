@@ -47,9 +47,12 @@ function FOARotator(context) {
   this._merger = this._context.createChannelMerger(4);
 
   // ACN channel ordering: [1, 2, 3] => [-Y, Z, -X]
-  this._splitter.connect(this._inY, 1);  // Y (from channel 1)
-  this._splitter.connect(this._inZ, 2);  // Z (from channel 2)
-  this._splitter.connect(this._inX, 3);  // X (from channel 3)
+  // Y (from channel 1)
+  this._splitter.connect(this._inY, 1);
+  // Z (from channel 2)
+  this._splitter.connect(this._inZ, 2);
+  // X (from channel 3)
+  this._splitter.connect(this._inX, 3);
   this._inY.gain.value = -1;
   this._inX.gain.value = -1;
 
@@ -77,10 +80,14 @@ function FOARotator(context) {
   this._m8.connect(this._outX);
 
   // Transform 3: world space to audio space.
-  this._splitter.connect(this._merger, 0, 0);  // W -> W (to channel 0)
-  this._outY.connect(this._merger, 0, 1);      // Y (to channel 1)
-  this._outZ.connect(this._merger, 0, 2);      // Z (to channel 2)
-  this._outX.connect(this._merger, 0, 3);      // X (to channel 3)
+  // W -> W (to channel 0)
+  this._splitter.connect(this._merger, 0, 0);
+  // Y (to channel 1)
+  this._outY.connect(this._merger, 0, 1);
+  // Z (to channel 2)
+  this._outZ.connect(this._merger, 0, 2);
+  // X (to channel 3)
+  this._outX.connect(this._merger, 0, 3);
   this._outY.gain.value = -1;
   this._outX.gain.value = -1;
 
@@ -134,7 +141,7 @@ FOARotator.prototype.getRotationMatrix3 = function() {
   return [
     this._m0.gain.value, this._m1.gain.value, this._m2.gain.value,
     this._m3.gain.value, this._m4.gain.value, this._m5.gain.value,
-    this._m6.gain.value, this._m7.gain.value, this._m8.gain.value
+    this._m6.gain.value, this._m7.gain.value, this._m8.gain.value,
   ];
 };
 
@@ -144,7 +151,7 @@ FOARotator.prototype.getRotationMatrix3 = function() {
  * @return {Number[]} - A 4x4 rotation matrix. (column-major)
  */
 FOARotator.prototype.getRotationMatrix4 = function() {
-  var rotationMatrix4 = new Float32Array(16);
+  let rotationMatrix4 = new Float32Array(16);
   rotationMatrix4[0] = this._m0.gain.value;
   rotationMatrix4[1] = this._m1.gain.value;
   rotationMatrix4[2] = this._m2.gain.value;

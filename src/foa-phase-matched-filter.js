@@ -14,41 +14,47 @@
  */
 
 
-
 /**
- * @fileOverview Phase matched filter for first-order-ambisonics decoding.
+ * @file Phase matched filter for first-order-ambisonics decoding.
  */
 
 'use strict';
 
-var Utils = require('./utils.js');
+const Utils = require('./utils.js');
+
 
 // Static parameters.
-var CROSSOVER_FREQUENCY = 690;
-var GAIN_COEFFICIENTS = [1.4142, 0.8166, 0.8166, 0.8166];
+const CROSSOVER_FREQUENCY = 690;
+const GAIN_COEFFICIENTS = [1.4142, 0.8166, 0.8166, 0.8166];
 
-// Helper: generate the coefficients for dual band filter.
+
+/**
+ * Generate the coefficients for dual band filter.
+ * @param {Number} crossoverFrequency
+ * @param {Number} sampleRate
+ * @return {Object} Filter coefficients.
+ */
 function generateDualBandCoefficients(crossoverFrequency, sampleRate) {
-  var k = Math.tan(Math.PI * crossoverFrequency / sampleRate),
-      k2 = k * k,
-      denominator = k2 + 2 * k + 1;
+  const k = Math.tan(Math.PI * crossoverFrequency / sampleRate);
+  const k2 = k * k;
+  const denominator = k2 + 2 * k + 1;
 
   return {
     lowpassA: [1, 2 * (k2 - 1) / denominator, (k2 - 2 * k + 1) / denominator],
     lowpassB: [k2 / denominator, 2 * k2 / denominator, k2 / denominator],
     hipassA: [1, 2 * (k2 - 1) / denominator, (k2 - 2 * k + 1) / denominator],
-    hipassB: [1 / denominator, -2 * 1 / denominator, 1 / denominator]
+    hipassB: [1 / denominator, -2 * 1 / denominator, 1 / denominator],
   };
 }
 
+
 /**
- * @class FOAPhaseMatchedFilter
- * @description A set of filters (LP/HP) with a crossover frequency to
- *              compensate the gain of high frequency contents without a phase
- *              difference.
- * @param {AudioContext} context        Associated AudioContext.
+ * FOAPhaseMatchedFilter: A set of filters (LP/HP) with a crossover frequency to
+ * compensate the gain of high frequency contents without a phase difference.
+ * @constructor
+ * @param {AudioContext} context - Associated AudioContext.
  */
-function FOAPhaseMatchedFilter (context) {
+function FOAPhaseMatchedFilter(context) {
   this._context = context;
 
   this._input = this._context.createGain();
@@ -61,8 +67,8 @@ function FOAPhaseMatchedFilter (context) {
     this._hpf.frequency.value = CROSSOVER_FREQUENCY;
     this._hpf.type = 'highpass';
   } else {
-    var coef = generateDualBandCoefficients(
-        CROSSOVER_FREQUENCY, this._context.sampleRate);
+    const coef = generateDualBandCoefficients(CROSSOVER_FREQUENCY,
+                                              this._context.sampleRate);
     this._lpf = this._context.createIIRFilter(coef.lowpassB, coef.lowpassA);
     this._hpf = this._context.createIIRFilter(coef.hipassB, coef.hipassA);
   }
@@ -96,7 +102,7 @@ function FOAPhaseMatchedFilter (context) {
   // Apply gain correction to hi-passed pressure and velocity components:
   // Inverting sign is necessary as the low-passed and high-passed portion are
   // out-of-phase after the filtering.
-  var now = this._context.currentTime;
+  const now = this._context.currentTime;
   this._gainHighW.gain.setValueAtTime(-1 * GAIN_COEFFICIENTS[0], now);
   this._gainHighY.gain.setValueAtTime(-1 * GAIN_COEFFICIENTS[1], now);
   this._gainHighZ.gain.setValueAtTime(-1 * GAIN_COEFFICIENTS[2], now);
@@ -106,5 +112,6 @@ function FOAPhaseMatchedFilter (context) {
   this.input = this._input;
   this.output = this._merger;
 }
+
 
 module.exports = FOAPhaseMatchedFilter;

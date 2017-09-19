@@ -25,32 +25,38 @@
  * @return {string[]} - An array contains the detected browser name and version.
  */
 exports.getBrowserInfo = function() {
-  var ua = navigator.userAgent;
-  var M = ua.match(
+  const ua = navigator.userAgent;
+  let M = ua.match(
       /(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*([\d\.]+)/i) ||
       [];
-  var tem;
+  let tem;
+
   if (/trident/i.test(M[1])) {
     tem = /\brv[ :]+(\d+)/g.exec(ua) || [];
-    return {name:'IE', version: (tem[1] || '')};
+    return {name: 'IE', version: (tem[1] || '')};
   }
+
   if (M[1] === 'Chrome') {
-    tem = ua.match(/\bOPR|Edge\/(\d+)/)
-    if(tem != null) {
+    tem = ua.match(/\bOPR|Edge\/(\d+)/);
+    if (tem != null) {
       return {name: 'Opera', version: tem[1]};
     }
   }
+
   M = M[2] ? [M[1], M[2]] : [navigator.appName, navigator.appVersion, '-?'];
-  if((tem = ua.match(/version\/([\d.]+)/i)) != null) {
+  if ((tem = ua.match(/version\/([\d.]+)/i)) != null) {
     M.splice(1, 1, tem[1]);
   }
-  var platform = ua.match(/android|ipad|iphone/i);
-  if (!platform)
+
+  let platform = ua.match(/android|ipad|iphone/i);
+  if (!platform) {
     platform = ua.match(/cros|linux|mac os x|windows/i);
+  }
+
   return {
     name: M[0],
     version: M[1],
-    platform: platform ? platform[0] : 'unknown'
+    platform: platform ? platform[0] : 'unknown',
   };
 };
 

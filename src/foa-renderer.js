@@ -21,12 +21,12 @@
 
 'use strict';
 
-var BufferList = require('./buffer-list.js');
-var FOAConvolver = require('./foa-convolver.js');
-var FOARotator = require('./foa-rotator.js');
-var FOARouter = require('./foa-router.js');
-var HRIRManager = require('./hrir-manager.js');
-var Utils = require('./utils.js');
+const BufferList = require('./buffer-list.js');
+const FOAConvolver = require('./foa-convolver.js');
+const FOARotator = require('./foa-rotator.js');
+const FOARouter = require('./foa-router.js');
+const HRIRManager = require('./hrir-manager.js');
+const Utils = require('./utils.js');
 
 
 /**
@@ -37,13 +37,13 @@ var Utils = require('./utils.js');
  * Rendering mode ENUM.
  * @enum {RenderingMode}
  */
-var RenderingMode = {
+const RenderingMode = {
   /** @type {string} Use ambisonic rendering. */
   AMBISONIC: 'ambisonic',
   /** @type {string} Bypass. No ambisonic rendering. */
   BYPASS: 'bypass',
   /** @type {string} Disable audio output. */
-  OFF: 'off'
+  OFF: 'off',
 };
 
 
@@ -65,7 +65,7 @@ function FOARenderer(context, config) {
 
   this._config = {
     channelMap: FOARouter.ChannelMap.DEFAULT,
-    renderingMode: RenderingMode.AMBISONIC
+    renderingMode: RenderingMode.AMBISONIC,
   };
 
   if (config.channelMap) {
@@ -135,11 +135,12 @@ FOARenderer.prototype._buildAudioGraph = function() {
  * @param {function} reject - Rejection handler.
  */
 FOARenderer.prototype._initializeCallback = function(resolve, reject) {
-  var bufferLoaderData = [];
-  for (var i = 0; i < this._config.pathList.length; ++i)
+  let bufferLoaderData = [];
+  for (let i = 0; i < this._config.pathList.length; ++i) {
     bufferLoaderData.push({name: i, url: this._config.pathList[i]});
+  }
 
-  var bufferList = new BufferList(this._context, this._config.pathList);
+  const bufferList = new BufferList(this._context, this._config.pathList);
   bufferList.load().then(
       function(hrirBufferList) {
         this._foaConvolver.setHRIRBufferList(hrirBufferList);
@@ -148,9 +149,8 @@ FOARenderer.prototype._initializeCallback = function(resolve, reject) {
         Utils.log('FOARenderer: HRIRs loaded successfully. Ready.');
         resolve();
       }.bind(this),
-      function(errorMessage) {
-        var errorMessage = 'FOARenderer: HRIR loading/decoding failed. (' +
-            Array.from(bufferMap) + ')';
+      function() {
+        const errorMessage = 'FOARenderer: HRIR loading/decoding failed.';
         Utils.throw(errorMessage);
         reject(errorMessage);
       });
@@ -177,8 +177,9 @@ FOARenderer.prototype.initialize = function() {
  * @param {Number[]} channelMap - Custom channel routing for FOA stream.
  */
 FOARenderer.prototype.setChannelMap = function(channelMap) {
-  if (!this._isRendererReady)
+  if (!this._isRendererReady) {
     return;
+  }
 
   if (channelMap.toString() !== this._config.channelMap.toString()) {
     Utils.log(
@@ -195,8 +196,9 @@ FOARenderer.prototype.setChannelMap = function(channelMap) {
  * @param {Number[]} rotationMatrix3 - A 3x3 rotation matrix. (column-major)
  */
 FOARenderer.prototype.setRotationMatrix3 = function(rotationMatrix3) {
-  if (!this._isRendererReady)
+  if (!this._isRendererReady) {
     return;
+  }
 
   this._foaRotator.setRotationMatrix3(rotationMatrix3);
 };
@@ -207,8 +209,9 @@ FOARenderer.prototype.setRotationMatrix3 = function(rotationMatrix3) {
  * @param {Number[]} rotationMatrix4 - A 4x4 rotation matrix. (column-major)
  */
 FOARenderer.prototype.setRotationMatrix4 = function(rotationMatrix4) {
-  if (!this._isRendererReady)
+  if (!this._isRendererReady) {
     return;
+  }
 
   this._foaRotator.setRotationMatrix4(rotationMatrix4);
 };
@@ -222,8 +225,9 @@ FOARenderer.prototype.setRotationMatrix4 = function(rotationMatrix4) {
  * @param {Object} cameraMatrix - Matrix4 from Three.js |camera.matrix|.
  */
 FOARenderer.prototype.setRotationMatrixFromCamera = function(cameraMatrix) {
-  if (!this._isRendererReady)
+  if (!this._isRendererReady) {
     return;
+  }
 
   // Extract the inner array elements and inverse. (The actual view rotation is
   // the opposite of the camera movement.)
@@ -233,16 +237,17 @@ FOARenderer.prototype.setRotationMatrixFromCamera = function(cameraMatrix) {
 
 
 /**
- * Set the decoding mode.
- * @param {RenderingMode} renderingMode - Decoding mode.
+ * Set the rendering mode.
+ * @param {RenderingMode} mode - Rendering mode.
  *  - 'ambisonic': activates the ambisonic decoding/binaurl rendering.
  *  - 'bypass': bypasses the input stream directly to the output. No ambisonic
  *    decoding or encoding.
  *  - 'off': all the processing off saving the CPU power.
  */
 FOARenderer.prototype.setRenderingMode = function(mode) {
-  if (mode === this._config.renderingMode)
+  if (mode === this._config.renderingMode) {
     return;
+  }
 
   switch (mode) {
     case RenderingMode.AMBISONIC:

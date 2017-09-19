@@ -21,7 +21,7 @@
 'use strict';
 
 
-var HRIRList = [
+const HRIRList = [
   // Zero-order ambisonic. Not supported. (0 files, 1 channel)
   null,
   // First-order ambisonic. (2 files, 4 channels)
@@ -29,21 +29,23 @@ var HRIRList = [
   // Second-order ambisonic. (5 files, 9 channels)
   [
     'omnitone-soa-1.wav', 'omnitone-soa-2.wav', 'omnitone-soa-3.wav',
-    'omnitone-soa-4.wav', 'omnitone-soa-5.wav'
+    'omnitone-soa-4.wav', 'omnitone-soa-5.wav',
   ],
   // Third-order ambisonic. (8 files, 16 channels)
   [
     'omnitone-toa-1.wav', 'omnitone-toa-2.wav', 'omnitone-toa-3.wav',
     'omnitone-toa-4.wav', 'omnitone-toa-5.wav', 'omnitone-toa-6.wav',
-    'omnitone-toa-7.wav', 'omnitone-toa-8.wav'
-  ]
+    'omnitone-toa-7.wav', 'omnitone-toa-8.wav',
+  ],
 ];
 
 
 // 2 different types of base URL.
-var SourceURL = {
-  GSTATIC: 'https://www.gstatic.com/external_hosted/omnitone/build/resources/',
-  GITHUB: 'https://cdn.rawgit.com/GoogleChrome/omnitone/master/build/resources/'
+const SourceURL = {
+  GSTATIC:
+      'https://www.gstatic.com/external_hosted/omnitone/build/resources/',
+  GITHUB:
+      'https://cdn.rawgit.com/GoogleChrome/omnitone/master/build/resources/',
 };
 
 
@@ -56,17 +58,17 @@ var SourceURL = {
  * @return {string[]} pathList - HRIR path set (2~8 URLs)
  */
 module.exports.getPathList = function(setting) {
-  var filenames;
-  var staticPath;
-  var pathList;
+  let filenames;
+  let staticPath;
+  let pathList;
 
-  var _setting = setting || {ambisonicOrder: 1, source: 'github'};
+  const setting_ = setting || {ambisonicOrder: 1, source: 'github'};
 
-  switch (_setting.ambisonicOrder) {
+  switch (setting_.ambisonicOrder) {
     case 1:
     case 2:
     case 3:
-      filenames = HRIRList[_setting.ambisonicOrder];
+      filenames = HRIRList[setting_.ambisonicOrder];
       break;
     default:
       // Invalid order gets the null path list.
@@ -74,7 +76,7 @@ module.exports.getPathList = function(setting) {
       break;
   }
 
-  switch (_setting.source) {
+  switch (setting_.source) {
     case 'gstatic':
       staticPath = SourceURL.GSTATIC;
       break;

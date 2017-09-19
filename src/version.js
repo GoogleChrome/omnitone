@@ -14,13 +14,14 @@
  */
 
 /**
- * @fileOverview Omnitone version.
+ * @file Omnitone version.
  */
 
 'use strict';
+
 
 /**
  * Omnitone library version
  * @type {String}
  */
-module.exports = '1.0.0';
+module.exports = '1.0.1';

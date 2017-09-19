@@ -29,13 +29,13 @@
  * Channel map dictionary ENUM.
  * @enum {ChannelMap}
  */
-var ChannelMap = {
+const ChannelMap = {
   /** @type {Number[]} - ACN channel map for Chrome and FireFox. (FFMPEG) */
   DEFAULT: [0, 1, 2, 3],
   /** @type {Number[]} - Safari's 4-channel map for AAC codec. */
   SAFARI: [2, 0, 1, 3],
   /** @type {Number[]} - ACN > FuMa conversion map. */
-  FUMA: [0, 3, 1, 2]
+  FUMA: [0, 3, 1, 2],
 };
 
 
@@ -64,8 +64,9 @@ function FOARouter(context, channelMap) {
  * @param {Number[]} channelMap - A new channel map for FOA stream.
  */
 FOARouter.prototype.setChannelMap = function(channelMap) {
-  if (!Array.isArray(channelMap))
+  if (!Array.isArray(channelMap)) {
     return;
+  }
 
   this._channelMap = channelMap;
   this._splitter.disconnect();

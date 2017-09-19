@@ -19,7 +19,7 @@
 
 'use strict';
 
-var Utils = require('./utils.js');
+const Utils = require('./utils.js');
 
 /**
  * Streamlined audio file loader supports Promise.
@@ -40,8 +40,8 @@ function AudioBufferManager(context, audioFileData, resolve, reject, progress) {
   this._progress = progress;
 
   // Iterating file loading.
-  for (var i = 0; i < audioFileData.length; i++) {
-    var fileInfo = audioFileData[i];
+  for (let i = 0; i < audioFileData.length; i++) {
+    const fileInfo = audioFileData[i];
 
     // Check for duplicates filename and quit if it happens.
     if (this._loadingTasks.hasOwnProperty(fileInfo.name)) {
@@ -55,33 +55,33 @@ function AudioBufferManager(context, audioFileData, resolve, reject, progress) {
   }
 }
 
-AudioBufferManager.prototype._loadAudioFile = function (fileInfo) {
-  var xhr = new XMLHttpRequest();
+AudioBufferManager.prototype._loadAudioFile = function(fileInfo) {
+  const xhr = new XMLHttpRequest();
   xhr.open('GET', fileInfo.url);
   xhr.responseType = 'arraybuffer';
 
-  var that = this;
-  xhr.onload = function () {
+  const that = this;
+  xhr.onload = function() {
     if (xhr.status === 200) {
       that._context.decodeAudioData(xhr.response,
-        function (buffer) {
+        function(buffer) {
           // Utils.log('File loaded: ' + fileInfo.url);
           that._done(fileInfo.name, buffer);
         },
-        function (message) {
+        function(message) {
           Utils.log('Decoding failure: '
             + fileInfo.url + ' (' + message + ')');
           that._done(fileInfo.name, null);
         });
     } else {
-      Utils.log('XHR Error: ' + fileInfo.url + ' (' + xhr.statusText 
+      Utils.log('XHR Error: ' + fileInfo.url + ' (' + xhr.statusText
         + ')');
       that._done(fileInfo.name, null);
     }
   };
 
   // TODO: fetch local resources if XHR fails.
-  xhr.onerror = function (event) {
+  xhr.onerror = function(event) {
     Utils.log('XHR Network failure: ' + fileInfo.url);
     that._done(fileInfo.name, null);
   };
@@ -89,7 +89,7 @@ AudioBufferManager.prototype._loadAudioFile = function (fileInfo) {
   xhr.send();
 };
 
-AudioBufferManager.prototype._done = function (filename, buffer) {
+AudioBufferManager.prototype._done = function(filename, buffer) {
   // Label the loading task.
   this._loadingTasks[filename] = buffer !== null ? 'loaded' : 'failed';
 
@@ -99,16 +99,20 @@ AudioBufferManager.prototype._done = function (filename, buffer) {
   this._updateProgress(filename);
 };
 
-AudioBufferManager.prototype._updateProgress = function (filename) {
-  var numberOfFinishedTasks = 0, numberOfFailedTask = 0;
-  var numberOfTasks = 0;
+AudioBufferManager.prototype._updateProgress = function(filename) {
+  let numberOfFinishedTasks = 0;
+  let numberOfFailedTask = 0;
+  let numberOfTasks = 0;
 
-  for (var task in this._loadingTasks) {
-    numberOfTasks++;
-    if (this._loadingTasks[task] === 'loaded')
-      numberOfFinishedTasks++;
-    else if (this._loadingTasks[task] === 'failed')
-      numberOfFailedTask++;
+  for (const task in this._loadingTasks) {
+    if (Object.prototype.hasOwnProperty.call(this._loadingTasks, task)) {
+      numberOfTasks++;
+      if (this._loadingTasks[task] === 'loaded') {
+        numberOfFinishedTasks++;
+      } else if (this._loadingTasks[task] === 'failed') {
+        numberOfFailedTask++;
+      }
+    }
   }
 
   if (typeof this._progress === 'function') {

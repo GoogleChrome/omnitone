@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-var webpack = require('webpack');
-
 module.exports = {
   entry: './src/main.js',
   output: {

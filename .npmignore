@@ -1,4 +1,5 @@
-# NPM modules must include the production build and related files.
+# Omnitone NPM module must include only the production build and resource files.
+
 doc/
 examples/
 pvt/

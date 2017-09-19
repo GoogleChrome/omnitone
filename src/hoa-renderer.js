@@ -20,11 +20,11 @@
 
 'use strict';
 
-var BufferList = require('./buffer-list.js');
-var HOAConvolver = require('./hoa-convolver.js');
-var HOARotator = require('./hoa-rotator.js');
-var HRIRManager = require('./hrir-manager.js');
-var Utils = require('./utils.js');
+const BufferList = require('./buffer-list.js');
+const HOAConvolver = require('./hoa-convolver.js');
+const HOARotator = require('./hoa-rotator.js');
+const HRIRManager = require('./hrir-manager.js');
+const Utils = require('./utils.js');
 
 
 /**
@@ -35,18 +35,18 @@ var Utils = require('./utils.js');
  * Rendering mode ENUM.
  * @enum {RenderingMode}
  */
-var RenderingMode = {
+const RenderingMode = {
   /** @type {string} Use ambisonic rendering. */
   AMBISONIC: 'ambisonic',
   /** @type {string} Bypass. No ambisonic rendering. */
   BYPASS: 'bypass',
   /** @type {string} Disable audio output. */
-  OFF: 'off'
+  OFF: 'off',
 };
 
 
 // Currently SOA and TOA are only supported.
-var SupportedAmbisonicOrder = [2, 3];
+const SupportedAmbisonicOrder = [2, 3];
 
 
 /**
@@ -139,11 +139,12 @@ HOARenderer.prototype._buildAudioGraph = function() {
  * @param {function} reject - Rejection handler.
  */
 HOARenderer.prototype._initializeCallback = function(resolve, reject) {
-  var bufferLoaderData = [];
-  for (var i = 0; i < this._config.pathList.length; ++i)
+  let bufferLoaderData = [];
+  for (let i = 0; i < this._config.pathList.length; ++i) {
     bufferLoaderData.push({name: i, url: this._config.pathList[i]});
+  }
 
-  var bufferList = new BufferList(this._context, this._config.pathList);
+  const bufferList = new BufferList(this._context, this._config.pathList);
   bufferList.load().then(
       function(hrirBufferList) {
         this._hoaConvolver.setHRIRBufferList(hrirBufferList);
@@ -152,9 +153,8 @@ HOARenderer.prototype._initializeCallback = function(resolve, reject) {
         Utils.log('HOARenderer: HRIRs loaded successfully. Ready.');
         resolve();
       }.bind(this),
-      function(errorMessage) {
-        var errorMessage = 'HOARenderer: HRIR loading/decoding failed. (' +
-            Array.from(bufferMap) + ')';
+      function() {
+        const errorMessage = 'HOARenderer: HRIR loading/decoding failed.';
         Utils.throw(errorMessage);
         reject(errorMessage);
       });
@@ -181,8 +181,9 @@ HOARenderer.prototype.initialize = function() {
  * @param {Number[]} rotationMatrix3 - A 3x3 rotation matrix. (column-major)
  */
 HOARenderer.prototype.setRotationMatrix3 = function(rotationMatrix3) {
-  if (!this._isRendererReady)
+  if (!this._isRendererReady) {
     return;
+  }
 
   this._hoaRotator.setRotationMatrix3(rotationMatrix3);
 };
@@ -193,8 +194,9 @@ HOARenderer.prototype.setRotationMatrix3 = function(rotationMatrix3) {
  * @param {Number[]} rotationMatrix4 - A 4x4 rotation matrix. (column-major)
  */
 HOARenderer.prototype.setRotationMatrix4 = function(rotationMatrix4) {
-  if (!this._isRendererReady)
+  if (!this._isRendererReady) {
     return;
+  }
 
   this._hoaRotator.setRotationMatrix4(rotationMatrix4);
 };
@@ -202,15 +204,16 @@ HOARenderer.prototype.setRotationMatrix4 = function(rotationMatrix4) {
 
 /**
  * Set the decoding mode.
- * @param {RenderingMode} renderingMode - Decoding mode.
+ * @param {RenderingMode} mode - Decoding mode.
  *  - 'ambisonic': activates the ambisonic decoding/binaurl rendering.
  *  - 'bypass': bypasses the input stream directly to the output. No ambisonic
  *    decoding or encoding.
  *  - 'off': all the processing off saving the CPU power.
  */
 HOARenderer.prototype.setRenderingMode = function(mode) {
-  if (mode === this._config.renderingMode)
+  if (mode === this._config.renderingMode) {
     return;
+  }
 
   switch (mode) {
     case RenderingMode.AMBISONIC:

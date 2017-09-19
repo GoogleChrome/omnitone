@@ -42,8 +42,9 @@ function HOAConvolver(context, ambisonicOrder, hrirBufferList) {
       (this._ambisonicOrder + 1) * (this._ambisonicOrder + 1);
 
   this._buildAudioGraph();
-  if (hrirBufferList)
+  if (hrirBufferList) {
     this.setHRIRBufferList(hrirBufferList);
+  }
 
   this.enable();
 }
@@ -58,7 +59,7 @@ function HOAConvolver(context, ambisonicOrder, hrirBufferList) {
  * @private
  */
 HOAConvolver.prototype._buildAudioGraph = function() {
-  var numberOfStereoChannels = Math.ceil(this._numberOfChannels / 2);
+  const numberOfStereoChannels = Math.ceil(this._numberOfChannels / 2);
 
   this._inputSplitter =
       this._context.createChannelSplitter(this._numberOfChannels);
@@ -71,19 +72,19 @@ HOAConvolver.prototype._buildAudioGraph = function() {
   this._binauralMerger = this._context.createChannelMerger(2);
   this._outputGain = this._context.createGain();
 
-  for (var i = 0; i < numberOfStereoChannels; ++i) {
+  for (let i = 0; i < numberOfStereoChannels; ++i) {
     this._stereoMergers[i] = this._context.createChannelMerger(2);
     this._convolvers[i] = this._context.createConvolver();
     this._stereoSplitters[i] = this._context.createChannelSplitter(2);
     this._convolvers[i].normalize = false;
   }
 
-  for (var l = 0; l <= this._ambisonicOrder; ++l) {
-    for (var m = -l; m <= l; m++) {
+  for (let l = 0; l <= this._ambisonicOrder; ++l) {
+    for (let m = -l; m <= l; m++) {
       // We compute the ACN index (k) of ambisonics channel using the degree (l)
       // and index (m): k = l^2 + l + m
-      var acnIndex = l * l + l + m;
-      var stereoIndex = Math.floor(acnIndex / 2);
+      const acnIndex = l * l + l + m;
+      const stereoIndex = Math.floor(acnIndex / 2);
 
       // Split channels from input into array of stereo convolvers.
       // Then create a network of mergers that produces the stereo output.
@@ -135,11 +136,13 @@ HOAConvolver.prototype.setHRIRBufferList = function(hrirBufferList) {
   // After these assignments, the channel data in the buffer is immutable in
   // FireFox. (i.e. neutered) So we should avoid re-assigning buffers, otherwise
   // an exception will be thrown.
-  if (this._isBufferLoaded)
+  if (this._isBufferLoaded) {
     return;
+  }
 
-  for (var i = 0; i < hrirBufferList.length; ++i)
+  for (let i = 0; i < hrirBufferList.length; ++i) {
     this._convolvers[i].buffer = hrirBufferList[i];
+  }
 
   this._isBufferLoaded = true;
 };

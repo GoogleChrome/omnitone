@@ -20,30 +20,30 @@
 
 'use strict';
 
-var BufferList = require('./buffer-list.js');
-var FOAConvolver = require('./foa-convolver.js');
-var FOADecoder = require('./foa-decoder.js');
-var FOAPhaseMatchedFilter = require('./foa-phase-matched-filter.js');
-var FOARenderer = require('./foa-renderer.js');
-var FOARotator = require('./foa-rotator.js');
-var FOARouter = require('./foa-router.js');
-var FOAVirtualSpeaker = require('./foa-virtual-speaker.js');
-var HOAConvolver = require('./hoa-convolver.js');
-var HOARenderer = require('./hoa-renderer.js');
-var HOARotator = require('./hoa-rotator.js');
-var Polyfill = require('./polyfill.js');
-var Utils = require('./utils.js');
-var Version = require('./version.js');
+const BufferList = require('./buffer-list.js');
+const FOAConvolver = require('./foa-convolver.js');
+const FOADecoder = require('./foa-decoder.js');
+const FOAPhaseMatchedFilter = require('./foa-phase-matched-filter.js');
+const FOARenderer = require('./foa-renderer.js');
+const FOARotator = require('./foa-rotator.js');
+const FOARouter = require('./foa-router.js');
+const FOAVirtualSpeaker = require('./foa-virtual-speaker.js');
+const HOAConvolver = require('./hoa-convolver.js');
+const HOARenderer = require('./hoa-renderer.js');
+const HOARotator = require('./hoa-rotator.js');
+const Polyfill = require('./polyfill.js');
+const Utils = require('./utils.js');
+const Version = require('./version.js');
 
 // DEPRECATED in V1, in favor of BufferList.
-var AudioBufferManager = require('./audiobuffer-manager.js');
+const AudioBufferManager = require('./audiobuffer-manager.js');
 
 
 /**
  * Omnitone namespace.
  * @namespace
  */
-var Omnitone = {};
+let Omnitone = {};
 
 
 /**
@@ -79,7 +79,7 @@ Omnitone.loadAudioBuffers = function(context, speakerData) {
  * AudioBuffer.
  */
 Omnitone.createBufferList = function(context, bufferData) {
-  var bufferList = new BufferList(context, bufferData);
+  const bufferList = new BufferList(context, bufferData);
   return bufferList.load();
 };
 
@@ -161,6 +161,8 @@ Omnitone.createFOAPhaseMatchedFilter = function(context) {
  * Create an instance of FOAVirtualSpeaker. For parameters, refer the
  * definition of VirtualSpeaker class.
  * @ignore
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {Object} options - Options.
  * @return {FOAVirtualSpeaker}
  */
 Omnitone.createFOAVirtualSpeaker = function(context, options) {
@@ -207,6 +209,7 @@ Omnitone.createFOARenderer = function(context, config) {
  * Creates HOARotator for higher-order ambisonics rotation.
  * @param {AudioContext} context - Associated AudioContext.
  * @param {Number} ambisonicOrder - Ambisonic order.
+ * @return {HOARotator}
  */
 Omnitone.createHOARotator = function(context, ambisonicOrder) {
   return new HOARotator(context, ambisonicOrder);
@@ -220,6 +223,7 @@ Omnitone.createHOARotator = function(context, ambisonicOrder) {
  * @param {Number} ambisonicOrder - Ambisonic order. (2 or 3)
  * @param {AudioBuffer[]} [hrirBufferList] - An ordered-list of stereo
  * AudioBuffers for convolution. (SOA: 5 AudioBuffers, TOA: 8 AudioBuffers)
+ * @return {HOAConvovler}
  */
 Omnitone.createHOAConvolver = function(
     context, ambisonicOrder, hrirBufferList) {
@@ -236,11 +240,11 @@ Omnitone.createHOAConvolver = function(
  * @param {Array} [config.hrirPathList] - A list of paths to HRIR files. It
  * overrides the internal HRIR list if given.
  * @param {RenderingMode} [config.renderingMode='ambisonic'] - Rendering mode.
+ * @return {HOARenderer}
  */
 Omnitone.createHOARenderer = function(context, config) {
   return new HOARenderer(context, config);
 };
-
 
 
 // Handler Preload Tasks.

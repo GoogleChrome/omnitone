@@ -13,31 +13,31 @@
  * limitations under the License.
  */
 
+
 /**
- * @fileOverview Virtual speaker abstraction for first-order-ambisonics
- *               decoding.
+ * @file Virtual speaker abstraction for first-order-ambisonics decoding.
  */
 
 'use strict';
 
+
 /**
- * @class FOAVirtualSpeaker
- * @description A virtual speaker with ambisonic decoding gain coefficients
- *              and HRTF convolution for first-order-ambisonics stream.
- *              Note that the subgraph directly connects to context's
- *              destination.
- * @param {AudioContext} context        Associated AudioContext.
- * @param {Object} options              Options for speaker.
- * @param {Array} options.coefficients  Decoding coefficients for (W,Y,Z,X).
- * @param {AudioBuffer} options.IR      Stereo IR buffer for HRTF convolution.
- * @param {Number} options.gain         Post-gain for the speaker.
+ * DEPRECATED at V1: A virtual speaker with ambisonic decoding gain coefficients
+ * and HRTF convolution for first-order-ambisonics stream. Note that the
+ * subgraph directly connects to context's destination.
+ * @constructor
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {Object} options - Options for speaker.
+ * @param {Number[]} options.coefficients - Decoding coefficients for (W,Y,Z,X).
+ * @param {AudioBuffer} options.IR - Stereo IR buffer for HRTF convolution.
+ * @param {Number} options.gain - Post-gain for the speaker.
  */
-function FOAVirtualSpeaker (context, options) {
-  if (options.IR.numberOfChannels !== 2)
-    throw 'IR does not have 2 channels. cannot proceed.';
+function FOAVirtualSpeaker(context, options) {
+  if (options.IR.numberOfChannels !== 2) {
+    throw new Error('IR does not have 2 channels. cannot proceed.');
+  }
 
   this._active = false;
-  
   this._context = context;
 
   this._input = this._context.createChannelSplitter(4);
@@ -75,14 +75,17 @@ function FOAVirtualSpeaker (context, options) {
   this.input = this._input;
 }
 
-FOAVirtualSpeaker.prototype.enable = function () {
+
+FOAVirtualSpeaker.prototype.enable = function() {
   this._gain.connect(this._context.destination);
   this._active = true;
 };
 
-FOAVirtualSpeaker.prototype.disable = function () {
+
+FOAVirtualSpeaker.prototype.disable = function() {
   this._gain.disconnect();
   this._active = false;
 };
+
 
 module.exports = FOAVirtualSpeaker;
