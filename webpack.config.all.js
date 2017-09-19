@@ -24,7 +24,15 @@ module.exports = {
     libraryTarget: 'umd'
   },
   plugins: [
-    new UglifyJSPlugin(),
+    new UglifyJSPlugin({
+      uglifyOptions: {
+        mangle: {
+          // To address the 'let' bug in Safari 10. See:
+          // https://github.com/mishoo/UglifyJS2/issues/1753
+          'safari10': true
+        }
+      }
+    }),
     new CopyWebpackPlugin([{
       from: './src/resources',
       to: 'resources',
