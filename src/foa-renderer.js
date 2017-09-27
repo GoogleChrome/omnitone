@@ -88,7 +88,6 @@ function FOARenderer(context, config) {
     }
   } else {
     // By default, the path list points to GitHub CDN with FOA files.
-    // TODO(hoch): update this to Gstatic server when it's available.
     this._config.pathList = HRIRManager.getPathList();
   }
 

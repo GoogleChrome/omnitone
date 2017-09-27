@@ -40,10 +40,8 @@ const HRIRList = [
 ];
 
 
-// 2 different types of base URL.
+// Base URL. 
 const SourceURL = {
-  GSTATIC:
-      'https://www.gstatic.com/external_hosted/omnitone/build/resources/',
   GITHUB:
       'https://cdn.rawgit.com/GoogleChrome/omnitone/master/build/resources/',
 };
@@ -77,12 +75,9 @@ module.exports.getPathList = function(setting) {
   }
 
   switch (setting_.source) {
-    case 'gstatic':
-      staticPath = SourceURL.GSTATIC;
-      break;
     case 'github':
     default:
-      // By default, use GitHub's CDN until Gstatic setup is completed.
+      // By default, use GitHub's CDN.
       staticPath = SourceURL.GITHUB;
       break;
   }

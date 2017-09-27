@@ -93,7 +93,6 @@ function HOARenderer(context, config) {
     }
   } else {
     // By default, the path list points to GitHub CDN with HOA files.
-    // TODO(hoch): update this to Gstatic server when it's available.
     this._config.pathList =
         HRIRManager.getPathList({ambisonicOrder: this._config.ambisonicOrder});
   }

@@ -1321,10 +1321,8 @@ const HRIRList = [
 ];
 
 
-// 2 different types of base URL.
+// Base URL. 
 const SourceURL = {
-  GSTATIC:
-      'https://www.gstatic.com/external_hosted/omnitone/build/resources/',
   GITHUB:
       'https://cdn.rawgit.com/GoogleChrome/omnitone/master/build/resources/',
 };
@@ -1358,12 +1356,9 @@ module.exports.getPathList = function(setting) {
   }
 
   switch (setting_.source) {
-    case 'gstatic':
-      staticPath = SourceURL.GSTATIC;
-      break;
     case 'github':
     default:
-      // By default, use GitHub's CDN until Gstatic setup is completed.
+      // By default, use GitHub's CDN.
       staticPath = SourceURL.GITHUB;
       break;
   }
@@ -2652,7 +2647,6 @@ function FOARenderer(context, config) {
     }
   } else {
     // By default, the path list points to GitHub CDN with FOA files.
-    // TODO(hoch): update this to Gstatic server when it's available.
     this._config.pathList = HRIRManager.getPathList();
   }
 
@@ -2941,7 +2935,6 @@ function HOARenderer(context, config) {
     }
   } else {
     // By default, the path list points to GitHub CDN with HOA files.
-    // TODO(hoch): update this to Gstatic server when it's available.
     this._config.pathList =
         HRIRManager.getPathList({ambisonicOrder: this._config.ambisonicOrder});
   }
@@ -3201,7 +3194,7 @@ exports.patchSafari = function() {
  * Omnitone library version
  * @type {String}
  */
-module.exports = '1.0.1';
+module.exports = '1.0.2';
 
 
 /***/ })
