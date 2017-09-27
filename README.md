@@ -41,10 +41,10 @@ The input audio stream can be either an `HTMLMediaElement` (`<video>` or `<audio
 
 ## Usage
 
-The first step is to include the library file in an HTML document. Omnitone is served from Google's CDN.
+The first step is to include the library file in an HTML document.
 
 ```html
-<script src="https://www.gstatic.com/external_hosted/omnitone/build/omnitone.min.js"></script>
+<script src="https://cdn.rawgit.com/GoogleChrome/omnitone/master/build/omnitone.min.js"></script>
 ```
 
 Alternatively, you can install Omnitone as a part of your local development via [NPM](https://www.npmjs.com/package/omnitone).
