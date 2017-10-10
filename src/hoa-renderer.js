@@ -20,6 +20,7 @@
 
 'use strict';
 
+const TOAHrirBase64 = require('./resources/omnitone-toa-hrir-base64.js');
 const BufferList = require('./buffer-list.js');
 const HOAConvolver = require('./hoa-convolver.js');
 const HOARotator = require('./hoa-rotator.js');
@@ -64,9 +65,12 @@ function HOARenderer(context, config) {
       context :
       Utils.throw('HOARenderer: Invalid BaseAudioContext.');
 
-  this._config = {ambisonicOrder: 3, renderingMode: RenderingMode.AMBISONIC};
+  this._config = {
+    ambisonicOrder: 3,
+    renderingMode: RenderingMode.AMBISONIC
+  };
 
-  if (config.ambisonicOrder) {
+  if (config && config.ambisonicOrder) {
     if (SupportedAmbisonicOrder.includes(config.ambisonicOrder)) {
       this._config.ambisonicOrder = config.ambisonicOrder;
     } else {
@@ -81,7 +85,7 @@ function HOARenderer(context, config) {
   this._config.numberOfStereoChannels =
       Math.ceil(this._config.numberOfChannels / 2);
 
-  if (config.hrirPathList) {
+  if (config && config.hrirPathList) {
     if (Array.isArray(config.hrirPathList) &&
         config.hrirPathList.length === this._config.numberOfStereoChannels) {
       this._config.pathList = config.hrirPathList;
@@ -91,13 +95,9 @@ function HOARenderer(context, config) {
           this._config.numberOfStereoChannels + ' URLs to HRIR files.' +
           ' (got ' + config.hrirPathList + ')');
     }
-  } else {
-    // By default, the path list points to GitHub CDN with HOA files.
-    this._config.pathList =
-        HRIRManager.getPathList({ambisonicOrder: this._config.ambisonicOrder});
   }
 
-  if (config.renderingMode) {
+  if (config && config.renderingMode) {
     if (Object.values(RenderingMode).includes(config.renderingMode)) {
       this._config.renderingMode = config.renderingMode;
     } else {
@@ -138,12 +138,9 @@ HOARenderer.prototype._buildAudioGraph = function() {
  * @param {function} reject - Rejection handler.
  */
 HOARenderer.prototype._initializeCallback = function(resolve, reject) {
-  let bufferLoaderData = [];
-  for (let i = 0; i < this._config.pathList.length; ++i) {
-    bufferLoaderData.push({name: i, url: this._config.pathList[i]});
-  }
-
-  const bufferList = new BufferList(this._context, this._config.pathList);
+  const bufferList = this._config.pathList
+      ? new BufferList(this._context, this._config.pathList, {dataType: 'url'})
+      : new BufferList(this._context, TOAHrirBase64);
   bufferList.load().then(
       function(hrirBufferList) {
         this._hoaConvolver.setHRIRBufferList(hrirBufferList);

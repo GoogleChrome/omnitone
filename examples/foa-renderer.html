@@ -77,9 +77,6 @@
       audioElement.src = audioSources['speech'];
 
       foaRenderer = Omnitone.createFOARenderer(audioContext, {
-        hrirPathList: [
-          '../build/resources/omnitone-foa-1.wav',
-          '../build/resources/omnitone-foa-2.wav'],
         // The example audio is in the FuMa ordering (W,X,Y,Z). So remap the
         // channels to the ACN format.
         channelMap: [0, 3, 1, 2]

@@ -21,6 +21,7 @@
 
 'use strict';
 
+const FOAHrirBase64 = require('./resources/omnitone-foa-hrir-base64.js');
 const BufferList = require('./buffer-list.js');
 const FOAConvolver = require('./foa-convolver.js');
 const FOARotator = require('./foa-rotator.js');
@@ -86,9 +87,6 @@ function FOARenderer(context, config) {
           'FOARenderer: Invalid HRIR URLs. It must be an array with ' +
           '2 URLs to HRIR files. (got ' + config.hrirPathList + ')');
     }
-  } else {
-    // By default, the path list points to GitHub CDN with FOA files.
-    this._config.pathList = HRIRManager.getPathList();
   }
 
   if (config.renderingMode) {
@@ -134,12 +132,9 @@ FOARenderer.prototype._buildAudioGraph = function() {
  * @param {function} reject - Rejection handler.
  */
 FOARenderer.prototype._initializeCallback = function(resolve, reject) {
-  let bufferLoaderData = [];
-  for (let i = 0; i < this._config.pathList.length; ++i) {
-    bufferLoaderData.push({name: i, url: this._config.pathList[i]});
-  }
-
-  const bufferList = new BufferList(this._context, this._config.pathList);
+  const bufferList = this._config.pathList
+      ? new BufferList(this._context, this._config.pathList, {dataType: 'url'})
+      : new BufferList(this._context, FOAHrirBase64);
   bufferList.load().then(
       function(hrirBufferList) {
         this._foaConvolver.setHRIRBufferList(hrirBufferList);

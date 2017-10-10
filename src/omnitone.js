@@ -79,7 +79,7 @@ Omnitone.loadAudioBuffers = function(context, speakerData) {
  * AudioBuffer.
  */
 Omnitone.createBufferList = function(context, bufferData) {
-  const bufferList = new BufferList(context, bufferData);
+  const bufferList = new BufferList(context, bufferData, {dataType: 'url'});
   return bufferList.load();
 };
 

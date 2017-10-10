@@ -145,6 +145,21 @@ exports.invertMatrix4 = function(out, a) {
 
 
 /**
+ * Check if a value is defined in the ENUM dictionary.
+ * @param {Object} enumDictionary - ENUM dictionary.
+ * @param {Number|String} entryValue - a value to probe.
+ * @return {Boolean}
+ */
+exports.isDefinedENUMEntry = function(enumDictionary, entryValue) {
+  for (let enumKey in enumDictionary) {
+    if (entryValue === enumDictionary[enumKey])
+      return true;
+  }
+  return false;
+};
+
+
+/**
  * Check if the given object is an instance of BaseAudioContext.
  * @param {AudioContext} context - A context object to be checked.
  * @return {Boolean}
@@ -245,4 +260,16 @@ exports.splitBufferbyChannel = function(context, audioBuffer, splitBy) {
   }
 
   return bufferList;
+};
+
+
+/**
+ * Base64String => Binary => ArrayBuffer Conversion
+ */
+exports.getArrayBufferFromBase64String = function(base64String) {
+  let binaryString = window.atob(base64String);
+  let byteArray = new Uint8Array(binaryString.length);
+  byteArray.forEach(
+    (value, index) => byteArray[index] = binaryString.charCodeAt(index));
+  return byteArray.buffer;
 };
