@@ -152,8 +152,9 @@ exports.invertMatrix4 = function(out, a) {
  */
 exports.isDefinedENUMEntry = function(enumDictionary, entryValue) {
   for (let enumKey in enumDictionary) {
-    if (entryValue === enumDictionary[enumKey])
+    if (entryValue === enumDictionary[enumKey]) {
       return true;
+    }
   }
   return false;
 };
@@ -264,7 +265,9 @@ exports.splitBufferbyChannel = function(context, audioBuffer, splitBy) {
 
 
 /**
- * Base64String => Binary => ArrayBuffer Conversion
+ * Converts Base64-encoded string to ArrayBuffer.
+ * @param {string} base64String - Base64-encdoed string.
+ * @return {ArrayByuffer} Converted ArrayBuffer object.
  */
 exports.getArrayBufferFromBase64String = function(base64String) {
   let binaryString = window.atob(base64String);

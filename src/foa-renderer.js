@@ -21,12 +21,11 @@
 
 'use strict';
 
-const FOAHrirBase64 = require('./resources/omnitone-foa-hrir-base64.js');
 const BufferList = require('./buffer-list.js');
 const FOAConvolver = require('./foa-convolver.js');
+const FOAHrirBase64 = require('./resources/omnitone-foa-hrir-base64.js');
 const FOARotator = require('./foa-rotator.js');
 const FOARouter = require('./foa-router.js');
-const HRIRManager = require('./hrir-manager.js');
 const Utils = require('./utils.js');
 
 

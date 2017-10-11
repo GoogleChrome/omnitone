@@ -70,7 +70,7 @@ function BufferList(context, bufferData, options) {
   }
 
   this._bufferList = [];
-  this._bufferData = this._options.dataType === BufferDataType.BASE64 
+  this._bufferData = this._options.dataType === BufferDataType.BASE64
       ? bufferData
       : bufferData.slice(0);
   this._numberOfTasks = this._bufferData.length;
@@ -129,7 +129,7 @@ BufferList.prototype._launchAsyncLoadTask = function(taskId) {
       },
       function(errorMessage) {
         that._updateProgress(taskId, null);
-        const message = 'BufferList: decoding ArrayByffer("' + taskId + 
+        const message = 'BufferList: decoding ArrayByffer("' + taskId +
             '" from Base64-encoded data failed. (' + errorMessage + ')';
         Utils.throw(message);
         that._rejectHandler(message);
@@ -192,7 +192,7 @@ BufferList.prototype._updateProgress = function(taskId, audioBuffer) {
 
   if (this._options.verbose) {
     let messageString = this._options.dataType === BufferDataType.BASE64
-        ? 'ArrayBuffer(' + taskId + ') from Base64-encoded HRIR' 
+        ? 'ArrayBuffer(' + taskId + ') from Base64-encoded HRIR'
         : '"' + this._bufferData[taskId] + '"';
     Utils.log('BufferList: ' + messageString + ' successfully loaded.');
   }

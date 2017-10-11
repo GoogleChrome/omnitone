@@ -15,16 +15,16 @@
 
 
 /**
- * @file Omnitone HOA decoder.
+ * @file Omnitone HOARenderer. This is user-facing API for the higher-order
+ * ambisonic decoder and the optimized binaural renderer.
  */
 
 'use strict';
 
-const TOAHrirBase64 = require('./resources/omnitone-toa-hrir-base64.js');
 const BufferList = require('./buffer-list.js');
 const HOAConvolver = require('./hoa-convolver.js');
 const HOARotator = require('./hoa-rotator.js');
-const HRIRManager = require('./hrir-manager.js');
+const TOAHrirBase64 = require('./resources/omnitone-toa-hrir-base64.js');
 const Utils = require('./utils.js');
 
 
@@ -67,7 +67,7 @@ function HOARenderer(context, config) {
 
   this._config = {
     ambisonicOrder: 3,
-    renderingMode: RenderingMode.AMBISONIC
+    renderingMode: RenderingMode.AMBISONIC,
   };
 
   if (config && config.ambisonicOrder) {

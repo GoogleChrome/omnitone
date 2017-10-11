@@ -16,6 +16,20 @@
 const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 
+// This is not used anymore with Base64-encoded HRIRs. Only for the deprecated
+// FOADecoder.
+const CopyPluginResource = new CopyWebpackPlugin([{
+  from: './src/resources',
+  to: 'resources',
+  ignore: [
+    'cube.config',
+    'LICENSE',
+    'omnitone-*',
+    'README.md',
+    'sh_*',
+  ]
+}]);
+
 module.exports = {
   entry: './src/main.js',
   output: {
@@ -33,15 +47,6 @@ module.exports = {
         }
       }
     }),
-    new CopyWebpackPlugin([{
-      from: './src/resources',
-      to: 'resources',
-      ignore: [
-        'sh_*',
-        'README.md',
-        'LICENSE',
-        'cube.config'
-      ]
-    }])
+    CopyPluginResource
   ]
 };

@@ -3,9 +3,9 @@ module.exports = function(config) {
     basePath: '',
     frameworks: ['mocha', 'chai'],
     files: [
-      { pattern: 'build/resources/*.wav', included: false, served: true },
       'build/omnitone.min.js',
       'test/test-setup.js',
+      'test/resources/*.js',
       'test/*.js'
     ],
     reporters: ['mocha'],

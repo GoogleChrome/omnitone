@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 11);
+/******/ 	return __webpack_require__(__webpack_require__.s = 10);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -231,8 +231,9 @@ exports.invertMatrix4 = function(out, a) {
  */
 exports.isDefinedENUMEntry = function(enumDictionary, entryValue) {
   for (let enumKey in enumDictionary) {
-    if (entryValue === enumDictionary[enumKey])
+    if (entryValue === enumDictionary[enumKey]) {
       return true;
+    }
   }
   return false;
 };
@@ -343,7 +344,9 @@ exports.splitBufferbyChannel = function(context, audioBuffer, splitBy) {
 
 
 /**
- * Base64String => Binary => ArrayBuffer Conversion
+ * Converts Base64-encoded string to ArrayBuffer.
+ * @param {string} base64String - Base64-encdoed string.
+ * @return {ArrayByuffer} Converted ArrayBuffer object.
  */
 exports.getArrayBufferFromBase64String = function(base64String) {
   let binaryString = window.atob(base64String);
@@ -431,7 +434,7 @@ function BufferList(context, bufferData, options) {
   }
 
   this._bufferList = [];
-  this._bufferData = this._options.dataType === BufferDataType.BASE64 
+  this._bufferData = this._options.dataType === BufferDataType.BASE64
       ? bufferData
       : bufferData.slice(0);
   this._numberOfTasks = this._bufferData.length;
@@ -490,7 +493,7 @@ BufferList.prototype._launchAsyncLoadTask = function(taskId) {
       },
       function(errorMessage) {
         that._updateProgress(taskId, null);
-        const message = 'BufferList: decoding ArrayByffer("' + taskId + 
+        const message = 'BufferList: decoding ArrayByffer("' + taskId +
             '" from Base64-encoded data failed. (' + errorMessage + ')';
         Utils.throw(message);
         that._rejectHandler(message);
@@ -553,7 +556,7 @@ BufferList.prototype._updateProgress = function(taskId, audioBuffer) {
 
   if (this._options.verbose) {
     let messageString = this._options.dataType === BufferDataType.BASE64
-        ? 'ArrayBuffer(' + taskId + ') from Base64-encoded HRIR' 
+        ? 'ArrayBuffer(' + taskId + ') from Base64-encoded HRIR'
         : '"' + this._bufferData[taskId] + '"';
     Utils.log('BufferList: ' + messageString + ' successfully loaded.');
   }
@@ -1375,106 +1378,6 @@ module.exports = FOAVirtualSpeaker;
  * limitations under the License.
  */
 
-/**
- * @file Static data manager for HRIR list and URLs. For Omnitone's HRIR list
- * structure, see src/resources/README.md for the detail.
- */
-
-
-
-
-const HRIRList = [
-  // Zero-order ambisonic. Not supported. (0 files, 1 channel)
-  null,
-  // First-order ambisonic. (2 files, 4 channels)
-  ['omnitone-foa-1.wav', 'omnitone-foa-2.wav'],
-  // Second-order ambisonic. (5 files, 9 channels)
-  [
-    'omnitone-soa-1.wav', 'omnitone-soa-2.wav', 'omnitone-soa-3.wav',
-    'omnitone-soa-4.wav', 'omnitone-soa-5.wav',
-  ],
-  // Third-order ambisonic. (8 files, 16 channels)
-  [
-    'omnitone-toa-1.wav', 'omnitone-toa-2.wav', 'omnitone-toa-3.wav',
-    'omnitone-toa-4.wav', 'omnitone-toa-5.wav', 'omnitone-toa-6.wav',
-    'omnitone-toa-7.wav', 'omnitone-toa-8.wav',
-  ],
-];
-
-
-// Base URL. 
-const SourceURL = {
-  GITHUB:
-      'https://cdn.rawgit.com/GoogleChrome/omnitone/master/build/resources/',
-};
-
-
-/**
- * [getPathSet description]
- * @param {object} [setting] - Setting object.
- * @param {string} [setting.source="github"] - The base location for the HRIR
- * set.
- * @param {number} [setting.ambisonicOrder=1] - Requested ambisonic order.
- * @return {string[]} pathList - HRIR path set (2~8 URLs)
- */
-module.exports.getPathList = function(setting) {
-  let filenames;
-  let staticPath;
-  let pathList;
-
-  const setting_ = setting || {ambisonicOrder: 1, source: 'github'};
-
-  switch (setting_.ambisonicOrder) {
-    case 1:
-    case 2:
-    case 3:
-      filenames = HRIRList[setting_.ambisonicOrder];
-      break;
-    default:
-      // Invalid order gets the null path list.
-      filenames = HRIRList[0];
-      break;
-  }
-
-  switch (setting_.source) {
-    case 'github':
-    default:
-      // By default, use GitHub's CDN.
-      staticPath = SourceURL.GITHUB;
-      break;
-  }
-
-  if (filenames) {
-    pathList = [];
-    filenames.forEach(function(filename) {
-      pathList.push(staticPath + filename);
-    });
-  }
-
-  return pathList;
-};
-
-
-/***/ }),
-/* 9 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/**
- * Copyright 2017 Google Inc. All Rights Reserved.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 
 /**
  * @file A collection of convolvers. Can be used for the optimized HOA binaural
@@ -1634,7 +1537,7 @@ module.exports = HOAConvolver;
 
 
 /***/ }),
-/* 10 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2039,7 +1942,7 @@ module.exports = HOARotator;
 
 
 /***/ }),
-/* 11 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2066,11 +1969,11 @@ module.exports = HOARotator;
 
 
 
-exports.Omnitone = __webpack_require__(12);
+exports.Omnitone = __webpack_require__(11);
 
 
 /***/ }),
-/* 12 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2098,18 +2001,18 @@ exports.Omnitone = __webpack_require__(12);
 
 const BufferList = __webpack_require__(1);
 const FOAConvolver = __webpack_require__(4);
-const FOADecoder = __webpack_require__(13);
+const FOADecoder = __webpack_require__(12);
 const FOAPhaseMatchedFilter = __webpack_require__(6);
-const FOARenderer = __webpack_require__(15);
+const FOARenderer = __webpack_require__(14);
 const FOARotator = __webpack_require__(3);
 const FOARouter = __webpack_require__(2);
 const FOAVirtualSpeaker = __webpack_require__(7);
-const HOAConvolver = __webpack_require__(9);
-const HOARenderer = __webpack_require__(17);
-const HOARotator = __webpack_require__(10);
-const Polyfill = __webpack_require__(19);
+const HOAConvolver = __webpack_require__(8);
+const HOARenderer = __webpack_require__(16);
+const HOARotator = __webpack_require__(9);
+const Polyfill = __webpack_require__(18);
 const Utils = __webpack_require__(0);
-const Version = __webpack_require__(20);
+const Version = __webpack_require__(19);
 
 // DEPRECATED in V1, in favor of BufferList.
 const AudioBufferManager = __webpack_require__(5);
@@ -2151,11 +2054,14 @@ Omnitone.loadAudioBuffers = function(context, speakerData) {
  * URLs.
  * @param {BaseAudioContext} context - Associated BaseAudioContext.
  * @param {string[]} bufferData - An ordered list of URLs.
+ * @param {Object} [options] - BufferList options.
+ * @param {String} [options.dataType='url'] - BufferList data type.
  * @return {Promise<AudioBuffer[]>} - The promise resolves with an array of
  * AudioBuffer.
  */
-Omnitone.createBufferList = function(context, bufferData) {
-  const bufferList = new BufferList(context, bufferData, {dataType: 'url'});
+Omnitone.createBufferList = function(context, bufferData, options) {
+  const bufferList =
+      new BufferList(context, bufferData, options || {dataType: 'url'});
   return bufferList.load();
 };
 
@@ -2341,7 +2247,7 @@ module.exports = Omnitone;
 
 
 /***/ }),
-/* 13 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2372,7 +2278,7 @@ const FOARouter = __webpack_require__(2);
 const FOARotator = __webpack_require__(3);
 const FOAPhaseMatchedFilter = __webpack_require__(6);
 const FOAVirtualSpeaker = __webpack_require__(7);
-const FOASpeakerData = __webpack_require__(14);
+const FOASpeakerData = __webpack_require__(13);
 const Utils = __webpack_require__(0);
 
 // By default, Omnitone fetches IR from the spatial media repository.
@@ -2562,7 +2468,7 @@ module.exports = FOADecoder;
 
 
 /***/ }),
-/* 14 */
+/* 13 */
 /***/ (function(module, exports) {
 
 /**
@@ -2634,7 +2540,7 @@ module.exports = FOASpeakerData;
 
 
 /***/ }),
-/* 15 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2661,12 +2567,11 @@ module.exports = FOASpeakerData;
 
 
 
-const FOAHrirBase64 = __webpack_require__(16);
 const BufferList = __webpack_require__(1);
 const FOAConvolver = __webpack_require__(4);
+const FOAHrirBase64 = __webpack_require__(15);
 const FOARotator = __webpack_require__(3);
 const FOARouter = __webpack_require__(2);
-const HRIRManager = __webpack_require__(8);
 const Utils = __webpack_require__(0);
 
 
@@ -2912,7 +2817,7 @@ module.exports = FOARenderer;
 
 
 /***/ }),
-/* 16 */
+/* 15 */
 /***/ (function(module, exports) {
 
 const OmnitoneFOAHrirBase64 = [
@@ -2924,7 +2829,7 @@ module.exports = OmnitoneFOAHrirBase64;
 
 
 /***/ }),
-/* 17 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2945,16 +2850,16 @@ module.exports = OmnitoneFOAHrirBase64;
 
 
 /**
- * @file Omnitone HOA decoder.
+ * @file Omnitone HOARenderer. This is user-facing API for the higher-order
+ * ambisonic decoder and the optimized binaural renderer.
  */
 
 
 
-const TOAHrirBase64 = __webpack_require__(18);
 const BufferList = __webpack_require__(1);
-const HOAConvolver = __webpack_require__(9);
-const HOARotator = __webpack_require__(10);
-const HRIRManager = __webpack_require__(8);
+const HOAConvolver = __webpack_require__(8);
+const HOARotator = __webpack_require__(9);
+const TOAHrirBase64 = __webpack_require__(17);
 const Utils = __webpack_require__(0);
 
 
@@ -2997,7 +2902,7 @@ function HOARenderer(context, config) {
 
   this._config = {
     ambisonicOrder: 3,
-    renderingMode: RenderingMode.AMBISONIC
+    renderingMode: RenderingMode.AMBISONIC,
   };
 
   if (config && config.ambisonicOrder) {
@@ -3170,7 +3075,7 @@ module.exports = HOARenderer;
 
 
 /***/ }),
-/* 18 */
+/* 17 */
 /***/ (function(module, exports) {
 
 const OmnitoneTOAHrirBase64 = [
@@ -3188,7 +3093,7 @@ module.exports = OmnitoneTOAHrirBase64;
 
 
 /***/ }),
-/* 19 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3267,7 +3172,7 @@ exports.patchSafari = function() {
 
 
 /***/ }),
-/* 20 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
