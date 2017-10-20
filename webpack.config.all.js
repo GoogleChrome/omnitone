@@ -39,6 +39,7 @@ module.exports = {
   },
   plugins: [
     new UglifyJSPlugin({
+      sourceMap: true,
       uglifyOptions: {
         mangle: {
           // To address the 'let' bug in Safari 10. See:
