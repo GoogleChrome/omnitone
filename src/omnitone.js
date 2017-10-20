@@ -75,11 +75,14 @@ Omnitone.loadAudioBuffers = function(context, speakerData) {
  * URLs.
  * @param {BaseAudioContext} context - Associated BaseAudioContext.
  * @param {string[]} bufferData - An ordered list of URLs.
+ * @param {Object} [options] - BufferList options.
+ * @param {String} [options.dataType='url'] - BufferList data type.
  * @return {Promise<AudioBuffer[]>} - The promise resolves with an array of
  * AudioBuffer.
  */
-Omnitone.createBufferList = function(context, bufferData) {
-  const bufferList = new BufferList(context, bufferData);
+Omnitone.createBufferList = function(context, bufferData, options) {
+  const bufferList =
+      new BufferList(context, bufferData, options || {dataType: 'url'});
   return bufferList.load();
 };
 

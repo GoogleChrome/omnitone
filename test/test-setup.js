@@ -16,6 +16,9 @@
 var expect = chai.expect;
 var should = chai.should();
 
+// This is necessary for module exporting of Base64-encoded HRIR strings.
+var module = {};
+
 
 /**
  * Create a buffer for testing. Each channel contains a stream of single,

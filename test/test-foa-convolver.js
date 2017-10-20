@@ -36,10 +36,6 @@ describe('FOAConvolver', function() {
   var foaImpulseBuffer;
   var foaSHMaxREBuffer;
 
-  var hrirBufferData = [
-    'base/build/resources/omnitone-foa-1.wav',
-    'base/build/resources/omnitone-foa-2.wav'
-  ];
   var hrirBufferList;
 
 
@@ -68,7 +64,8 @@ describe('FOAConvolver', function() {
   beforeEach(function(done) {
     context = new OfflineAudioContext(4, renderLength, sampleRate);
     foaImpulseBuffer = createImpulseBuffer(context, 4, renderLength);
-    Omnitone.createBufferList(context, hrirBufferData)
+    Omnitone
+        .createBufferList(context, OmnitoneFOAHrirBase64, {dataType: 'base64'})
         .then(function(bufferList) {
           hrirBufferList = bufferList;
           foaSHMaxREBuffer =

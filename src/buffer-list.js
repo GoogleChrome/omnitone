@@ -22,6 +22,21 @@
 
 const Utils = require('./utils.js');
 
+/**
+ * @typedef {string} BufferDataType
+ */
+
+/**
+ * Buffer data type for ENUM.
+ * @enum {BufferDataType}
+ */
+const BufferDataType = {
+  /** @type {string} The data contains Base64-encoded string.. */
+  BASE64: 'base64',
+  /** @type {string} The data is a URL for audio file. */
+  URL: 'url',
+};
+
 
 /**
  * BufferList object mananges the async loading/decoding of multiple
@@ -30,7 +45,8 @@ const Utils = require('./utils.js');
  * @param {BaseAudioContext} context - Associated BaseAudioContext.
  * @param {string[]} bufferData - An ordered list of URLs.
  * @param {Object} options - Options
- * @param {Boolean} options.verbose - Log verbosity. |true| prints the
+ * @param {string} [options.dataType='base64'] - BufferDataType specifier.
+ * @param {Boolean} [options.verbose=false] - Log verbosity. |true| prints the
  * individual message from each URL and AudioBuffer.
  */
 function BufferList(context, bufferData, options) {
@@ -38,14 +54,26 @@ function BufferList(context, bufferData, options) {
       context :
       Utils.throw('BufferList: Invalid BaseAudioContext.');
 
-  this._bufferList = [];
-  this._bufferData = bufferData.slice(0);
-  this._numberOfTasks = this._bufferData.length;
+  this._options = {
+    dataType: BufferDataType.BASE64,
+    verbose: false,
+  };
 
-  this._options = {verbose: false};
   if (options) {
-    this._options = Boolean(options.verbose);
+    if (options.dataType &&
+        Utils.isDefinedENUMEntry(BufferDataType, options.dataType)) {
+      this._options.dataType = options.dataType;
+    }
+    if (options.verbose) {
+      this._options.verbose = Boolean(options.verbose);
+    }
   }
+
+  this._bufferList = [];
+  this._bufferData = this._options.dataType === BufferDataType.BASE64
+      ? bufferData
+      : bufferData.slice(0);
+  this._numberOfTasks = this._bufferData.length;
 
   this._resolveHandler = null;
   this._rejectHandler = new Function();
@@ -80,17 +108,41 @@ BufferList.prototype._promiseGenerator = function(resolve, reject) {
   }
 
   for (let i = 0; i < this._bufferData.length; ++i) {
-    this._launchAsyncLoadTask(i);
+    this._options.dataType === BufferDataType.BASE64
+        ? this._launchAsyncLoadTask(i)
+        : this._launchAsyncLoadTaskXHR(i);
   }
 };
 
 
 /**
- * Individual async loading task.
+ * Run async loading task for Base64-encoded string.
  * @private
- * @param {Number} taskId Task ID number from |BufferData|.
+ * @param {Number} taskId Task ID number from the ordered list |bufferData|.
  */
 BufferList.prototype._launchAsyncLoadTask = function(taskId) {
+  const that = this;
+  this._context.decodeAudioData(
+      Utils.getArrayBufferFromBase64String(this._bufferData[taskId]),
+      function(audioBuffer) {
+        that._updateProgress(taskId, audioBuffer);
+      },
+      function(errorMessage) {
+        that._updateProgress(taskId, null);
+        const message = 'BufferList: decoding ArrayByffer("' + taskId +
+            '" from Base64-encoded data failed. (' + errorMessage + ')';
+        Utils.throw(message);
+        that._rejectHandler(message);
+      });
+};
+
+
+/**
+ * Run async loading task via XHR for audio file URLs.
+ * @private
+ * @param {Number} taskId Task ID number from the ordered list |bufferData|.
+ */
+BufferList.prototype._launchAsyncLoadTaskXHR = function(taskId) {
   const xhr = new XMLHttpRequest();
   xhr.open('GET', this._bufferData[taskId]);
   xhr.responseType = 'arraybuffer';
@@ -139,15 +191,17 @@ BufferList.prototype._updateProgress = function(taskId, audioBuffer) {
   this._bufferList[taskId] = audioBuffer;
 
   if (this._options.verbose) {
-    Utils.log(
-        'BufferList: "' + this._bufferData[taskId] + '" successfully' +
-        'loaded.');
+    let messageString = this._options.dataType === BufferDataType.BASE64
+        ? 'ArrayBuffer(' + taskId + ') from Base64-encoded HRIR'
+        : '"' + this._bufferData[taskId] + '"';
+    Utils.log('BufferList: ' + messageString + ' successfully loaded.');
   }
 
   if (--this._numberOfTasks === 0) {
-    Utils.log(
-        'BufferList: ' + this._bufferData.length + ' files loaded ' +
-        'successfully.');
+    let messageString = this._options.dataType === BufferDataType.BASE64
+        ? this._bufferData.length + ' AudioBuffers from Base64-encoded HRIRs'
+        : this._bufferData.length + ' files via XHR';
+    Utils.log('BufferList: ' + messageString + ' loaded successfully.');
     this._resolveHandler(this._bufferList);
   }
 };

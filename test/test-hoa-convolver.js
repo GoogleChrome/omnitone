@@ -37,16 +37,6 @@ describe('HOAConvolver (3rd order ambisonic)', function() {
   var toaImpulseBuffer;
   var toaSHMaxREBuffer;
 
-  var hrirBufferData = [
-    'base/build/resources/omnitone-toa-1.wav',
-    'base/build/resources/omnitone-toa-2.wav',
-    'base/build/resources/omnitone-toa-3.wav',
-    'base/build/resources/omnitone-toa-4.wav',
-    'base/build/resources/omnitone-toa-5.wav',
-    'base/build/resources/omnitone-toa-6.wav',
-    'base/build/resources/omnitone-toa-7.wav',
-    'base/build/resources/omnitone-toa-8.wav'
-  ];
   var hrirBufferList;
 
   /**
@@ -96,7 +86,8 @@ describe('HOAConvolver (3rd order ambisonic)', function() {
         new OfflineAudioContext(numberOfChannels, renderLength, sampleRate);
     toaImpulseBuffer =
         createImpulseBuffer(context, numberOfChannels, renderLength);
-    Omnitone.createBufferList(context, hrirBufferData)
+    Omnitone
+        .createBufferList(context, OmnitoneTOAHrirBase64, {dataType: 'base64'})
         .then(function(bufferList) {
           hrirBufferList = bufferList;
           toaSHMaxREBuffer =

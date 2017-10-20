@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 11);
+/******/ 	return __webpack_require__(__webpack_require__.s = 10);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -224,6 +224,22 @@ exports.invertMatrix4 = function(out, a) {
 
 
 /**
+ * Check if a value is defined in the ENUM dictionary.
+ * @param {Object} enumDictionary - ENUM dictionary.
+ * @param {Number|String} entryValue - a value to probe.
+ * @return {Boolean}
+ */
+exports.isDefinedENUMEntry = function(enumDictionary, entryValue) {
+  for (let enumKey in enumDictionary) {
+    if (entryValue === enumDictionary[enumKey]) {
+      return true;
+    }
+  }
+  return false;
+};
+
+
+/**
  * Check if the given object is an instance of BaseAudioContext.
  * @param {AudioContext} context - A context object to be checked.
  * @return {Boolean}
@@ -327,6 +343,20 @@ exports.splitBufferbyChannel = function(context, audioBuffer, splitBy) {
 };
 
 
+/**
+ * Converts Base64-encoded string to ArrayBuffer.
+ * @param {string} base64String - Base64-encdoed string.
+ * @return {ArrayByuffer} Converted ArrayBuffer object.
+ */
+exports.getArrayBufferFromBase64String = function(base64String) {
+  let binaryString = window.atob(base64String);
+  let byteArray = new Uint8Array(binaryString.length);
+  byteArray.forEach(
+    (value, index) => byteArray[index] = binaryString.charCodeAt(index));
+  return byteArray.buffer;
+};
+
+
 /***/ }),
 /* 1 */
 /***/ (function(module, exports, __webpack_require__) {
@@ -356,6 +386,21 @@ exports.splitBufferbyChannel = function(context, audioBuffer, splitBy) {
 
 const Utils = __webpack_require__(0);
 
+/**
+ * @typedef {string} BufferDataType
+ */
+
+/**
+ * Buffer data type for ENUM.
+ * @enum {BufferDataType}
+ */
+const BufferDataType = {
+  /** @type {string} The data contains Base64-encoded string.. */
+  BASE64: 'base64',
+  /** @type {string} The data is a URL for audio file. */
+  URL: 'url',
+};
+
 
 /**
  * BufferList object mananges the async loading/decoding of multiple
@@ -364,7 +409,8 @@ const Utils = __webpack_require__(0);
  * @param {BaseAudioContext} context - Associated BaseAudioContext.
  * @param {string[]} bufferData - An ordered list of URLs.
  * @param {Object} options - Options
- * @param {Boolean} options.verbose - Log verbosity. |true| prints the
+ * @param {string} [options.dataType='base64'] - BufferDataType specifier.
+ * @param {Boolean} [options.verbose=false] - Log verbosity. |true| prints the
  * individual message from each URL and AudioBuffer.
  */
 function BufferList(context, bufferData, options) {
@@ -372,14 +418,26 @@ function BufferList(context, bufferData, options) {
       context :
       Utils.throw('BufferList: Invalid BaseAudioContext.');
 
-  this._bufferList = [];
-  this._bufferData = bufferData.slice(0);
-  this._numberOfTasks = this._bufferData.length;
+  this._options = {
+    dataType: BufferDataType.BASE64,
+    verbose: false,
+  };
 
-  this._options = {verbose: false};
   if (options) {
-    this._options = Boolean(options.verbose);
+    if (options.dataType &&
+        Utils.isDefinedENUMEntry(BufferDataType, options.dataType)) {
+      this._options.dataType = options.dataType;
+    }
+    if (options.verbose) {
+      this._options.verbose = Boolean(options.verbose);
+    }
   }
+
+  this._bufferList = [];
+  this._bufferData = this._options.dataType === BufferDataType.BASE64
+      ? bufferData
+      : bufferData.slice(0);
+  this._numberOfTasks = this._bufferData.length;
 
   this._resolveHandler = null;
   this._rejectHandler = new Function();
@@ -414,17 +472,41 @@ BufferList.prototype._promiseGenerator = function(resolve, reject) {
   }
 
   for (let i = 0; i < this._bufferData.length; ++i) {
-    this._launchAsyncLoadTask(i);
+    this._options.dataType === BufferDataType.BASE64
+        ? this._launchAsyncLoadTask(i)
+        : this._launchAsyncLoadTaskXHR(i);
   }
 };
 
 
 /**
- * Individual async loading task.
+ * Run async loading task for Base64-encoded string.
  * @private
- * @param {Number} taskId Task ID number from |BufferData|.
+ * @param {Number} taskId Task ID number from the ordered list |bufferData|.
  */
 BufferList.prototype._launchAsyncLoadTask = function(taskId) {
+  const that = this;
+  this._context.decodeAudioData(
+      Utils.getArrayBufferFromBase64String(this._bufferData[taskId]),
+      function(audioBuffer) {
+        that._updateProgress(taskId, audioBuffer);
+      },
+      function(errorMessage) {
+        that._updateProgress(taskId, null);
+        const message = 'BufferList: decoding ArrayByffer("' + taskId +
+            '" from Base64-encoded data failed. (' + errorMessage + ')';
+        Utils.throw(message);
+        that._rejectHandler(message);
+      });
+};
+
+
+/**
+ * Run async loading task via XHR for audio file URLs.
+ * @private
+ * @param {Number} taskId Task ID number from the ordered list |bufferData|.
+ */
+BufferList.prototype._launchAsyncLoadTaskXHR = function(taskId) {
   const xhr = new XMLHttpRequest();
   xhr.open('GET', this._bufferData[taskId]);
   xhr.responseType = 'arraybuffer';
@@ -473,15 +555,17 @@ BufferList.prototype._updateProgress = function(taskId, audioBuffer) {
   this._bufferList[taskId] = audioBuffer;
 
   if (this._options.verbose) {
-    Utils.log(
-        'BufferList: "' + this._bufferData[taskId] + '" successfully' +
-        'loaded.');
+    let messageString = this._options.dataType === BufferDataType.BASE64
+        ? 'ArrayBuffer(' + taskId + ') from Base64-encoded HRIR'
+        : '"' + this._bufferData[taskId] + '"';
+    Utils.log('BufferList: ' + messageString + ' successfully loaded.');
   }
 
   if (--this._numberOfTasks === 0) {
-    Utils.log(
-        'BufferList: ' + this._bufferData.length + ' files loaded ' +
-        'successfully.');
+    let messageString = this._options.dataType === BufferDataType.BASE64
+        ? this._bufferData.length + ' AudioBuffers from Base64-encoded HRIRs'
+        : this._bufferData.length + ' files via XHR';
+    Utils.log('BufferList: ' + messageString + ' loaded successfully.');
     this._resolveHandler(this._bufferList);
   }
 };
@@ -1294,106 +1378,6 @@ module.exports = FOAVirtualSpeaker;
  * limitations under the License.
  */
 
-/**
- * @file Static data manager for HRIR list and URLs. For Omnitone's HRIR list
- * structure, see src/resources/README.md for the detail.
- */
-
-
-
-
-const HRIRList = [
-  // Zero-order ambisonic. Not supported. (0 files, 1 channel)
-  null,
-  // First-order ambisonic. (2 files, 4 channels)
-  ['omnitone-foa-1.wav', 'omnitone-foa-2.wav'],
-  // Second-order ambisonic. (5 files, 9 channels)
-  [
-    'omnitone-soa-1.wav', 'omnitone-soa-2.wav', 'omnitone-soa-3.wav',
-    'omnitone-soa-4.wav', 'omnitone-soa-5.wav',
-  ],
-  // Third-order ambisonic. (8 files, 16 channels)
-  [
-    'omnitone-toa-1.wav', 'omnitone-toa-2.wav', 'omnitone-toa-3.wav',
-    'omnitone-toa-4.wav', 'omnitone-toa-5.wav', 'omnitone-toa-6.wav',
-    'omnitone-toa-7.wav', 'omnitone-toa-8.wav',
-  ],
-];
-
-
-// Base URL. 
-const SourceURL = {
-  GITHUB:
-      'https://cdn.rawgit.com/GoogleChrome/omnitone/master/build/resources/',
-};
-
-
-/**
- * [getPathSet description]
- * @param {object} [setting] - Setting object.
- * @param {string} [setting.source="github"] - The base location for the HRIR
- * set.
- * @param {number} [setting.ambisonicOrder=1] - Requested ambisonic order.
- * @return {string[]} pathList - HRIR path set (2~8 URLs)
- */
-module.exports.getPathList = function(setting) {
-  let filenames;
-  let staticPath;
-  let pathList;
-
-  const setting_ = setting || {ambisonicOrder: 1, source: 'github'};
-
-  switch (setting_.ambisonicOrder) {
-    case 1:
-    case 2:
-    case 3:
-      filenames = HRIRList[setting_.ambisonicOrder];
-      break;
-    default:
-      // Invalid order gets the null path list.
-      filenames = HRIRList[0];
-      break;
-  }
-
-  switch (setting_.source) {
-    case 'github':
-    default:
-      // By default, use GitHub's CDN.
-      staticPath = SourceURL.GITHUB;
-      break;
-  }
-
-  if (filenames) {
-    pathList = [];
-    filenames.forEach(function(filename) {
-      pathList.push(staticPath + filename);
-    });
-  }
-
-  return pathList;
-};
-
-
-/***/ }),
-/* 9 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/**
- * Copyright 2017 Google Inc. All Rights Reserved.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 
 /**
  * @file A collection of convolvers. Can be used for the optimized HOA binaural
@@ -1553,7 +1537,7 @@ module.exports = HOAConvolver;
 
 
 /***/ }),
-/* 10 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1958,7 +1942,7 @@ module.exports = HOARotator;
 
 
 /***/ }),
-/* 11 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1985,11 +1969,11 @@ module.exports = HOARotator;
 
 
 
-exports.Omnitone = __webpack_require__(12);
+exports.Omnitone = __webpack_require__(11);
 
 
 /***/ }),
-/* 12 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2017,18 +2001,18 @@ exports.Omnitone = __webpack_require__(12);
 
 const BufferList = __webpack_require__(1);
 const FOAConvolver = __webpack_require__(4);
-const FOADecoder = __webpack_require__(13);
+const FOADecoder = __webpack_require__(12);
 const FOAPhaseMatchedFilter = __webpack_require__(6);
-const FOARenderer = __webpack_require__(15);
+const FOARenderer = __webpack_require__(14);
 const FOARotator = __webpack_require__(3);
 const FOARouter = __webpack_require__(2);
 const FOAVirtualSpeaker = __webpack_require__(7);
-const HOAConvolver = __webpack_require__(9);
+const HOAConvolver = __webpack_require__(8);
 const HOARenderer = __webpack_require__(16);
-const HOARotator = __webpack_require__(10);
-const Polyfill = __webpack_require__(17);
+const HOARotator = __webpack_require__(9);
+const Polyfill = __webpack_require__(18);
 const Utils = __webpack_require__(0);
-const Version = __webpack_require__(18);
+const Version = __webpack_require__(19);
 
 // DEPRECATED in V1, in favor of BufferList.
 const AudioBufferManager = __webpack_require__(5);
@@ -2070,11 +2054,14 @@ Omnitone.loadAudioBuffers = function(context, speakerData) {
  * URLs.
  * @param {BaseAudioContext} context - Associated BaseAudioContext.
  * @param {string[]} bufferData - An ordered list of URLs.
+ * @param {Object} [options] - BufferList options.
+ * @param {String} [options.dataType='url'] - BufferList data type.
  * @return {Promise<AudioBuffer[]>} - The promise resolves with an array of
  * AudioBuffer.
  */
-Omnitone.createBufferList = function(context, bufferData) {
-  const bufferList = new BufferList(context, bufferData);
+Omnitone.createBufferList = function(context, bufferData, options) {
+  const bufferList =
+      new BufferList(context, bufferData, options || {dataType: 'url'});
   return bufferList.load();
 };
 
@@ -2260,7 +2247,7 @@ module.exports = Omnitone;
 
 
 /***/ }),
-/* 13 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2291,7 +2278,7 @@ const FOARouter = __webpack_require__(2);
 const FOARotator = __webpack_require__(3);
 const FOAPhaseMatchedFilter = __webpack_require__(6);
 const FOAVirtualSpeaker = __webpack_require__(7);
-const FOASpeakerData = __webpack_require__(14);
+const FOASpeakerData = __webpack_require__(13);
 const Utils = __webpack_require__(0);
 
 // By default, Omnitone fetches IR from the spatial media repository.
@@ -2481,7 +2468,7 @@ module.exports = FOADecoder;
 
 
 /***/ }),
-/* 14 */
+/* 13 */
 /***/ (function(module, exports) {
 
 /**
@@ -2553,7 +2540,7 @@ module.exports = FOASpeakerData;
 
 
 /***/ }),
-/* 15 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2582,9 +2569,9 @@ module.exports = FOASpeakerData;
 
 const BufferList = __webpack_require__(1);
 const FOAConvolver = __webpack_require__(4);
+const FOAHrirBase64 = __webpack_require__(15);
 const FOARotator = __webpack_require__(3);
 const FOARouter = __webpack_require__(2);
-const HRIRManager = __webpack_require__(8);
 const Utils = __webpack_require__(0);
 
 
@@ -2645,9 +2632,6 @@ function FOARenderer(context, config) {
           'FOARenderer: Invalid HRIR URLs. It must be an array with ' +
           '2 URLs to HRIR files. (got ' + config.hrirPathList + ')');
     }
-  } else {
-    // By default, the path list points to GitHub CDN with FOA files.
-    this._config.pathList = HRIRManager.getPathList();
   }
 
   if (config.renderingMode) {
@@ -2693,12 +2677,9 @@ FOARenderer.prototype._buildAudioGraph = function() {
  * @param {function} reject - Rejection handler.
  */
 FOARenderer.prototype._initializeCallback = function(resolve, reject) {
-  let bufferLoaderData = [];
-  for (let i = 0; i < this._config.pathList.length; ++i) {
-    bufferLoaderData.push({name: i, url: this._config.pathList[i]});
-  }
-
-  const bufferList = new BufferList(this._context, this._config.pathList);
+  const bufferList = this._config.pathList
+      ? new BufferList(this._context, this._config.pathList, {dataType: 'url'})
+      : new BufferList(this._context, FOAHrirBase64);
   bufferList.load().then(
       function(hrirBufferList) {
         this._foaConvolver.setHRIRBufferList(hrirBufferList);
@@ -2836,6 +2817,18 @@ module.exports = FOARenderer;
 
 
 /***/ }),
+/* 15 */
+/***/ (function(module, exports) {
+
+const OmnitoneFOAHrirBase64 = [
+"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",
+];
+
+module.exports = OmnitoneFOAHrirBase64;
+
+
+/***/ }),
 /* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -2857,15 +2850,16 @@ module.exports = FOARenderer;
 
 
 /**
- * @file Omnitone HOA decoder.
+ * @file Omnitone HOARenderer. This is user-facing API for the higher-order
+ * ambisonic decoder and the optimized binaural renderer.
  */
 
 
 
 const BufferList = __webpack_require__(1);
-const HOAConvolver = __webpack_require__(9);
-const HOARotator = __webpack_require__(10);
-const HRIRManager = __webpack_require__(8);
+const HOAConvolver = __webpack_require__(8);
+const HOARotator = __webpack_require__(9);
+const TOAHrirBase64 = __webpack_require__(17);
 const Utils = __webpack_require__(0);
 
 
@@ -2906,9 +2900,12 @@ function HOARenderer(context, config) {
       context :
       Utils.throw('HOARenderer: Invalid BaseAudioContext.');
 
-  this._config = {ambisonicOrder: 3, renderingMode: RenderingMode.AMBISONIC};
+  this._config = {
+    ambisonicOrder: 3,
+    renderingMode: RenderingMode.AMBISONIC,
+  };
 
-  if (config.ambisonicOrder) {
+  if (config && config.ambisonicOrder) {
     if (SupportedAmbisonicOrder.includes(config.ambisonicOrder)) {
       this._config.ambisonicOrder = config.ambisonicOrder;
     } else {
@@ -2923,7 +2920,7 @@ function HOARenderer(context, config) {
   this._config.numberOfStereoChannels =
       Math.ceil(this._config.numberOfChannels / 2);
 
-  if (config.hrirPathList) {
+  if (config && config.hrirPathList) {
     if (Array.isArray(config.hrirPathList) &&
         config.hrirPathList.length === this._config.numberOfStereoChannels) {
       this._config.pathList = config.hrirPathList;
@@ -2933,13 +2930,9 @@ function HOARenderer(context, config) {
           this._config.numberOfStereoChannels + ' URLs to HRIR files.' +
           ' (got ' + config.hrirPathList + ')');
     }
-  } else {
-    // By default, the path list points to GitHub CDN with HOA files.
-    this._config.pathList =
-        HRIRManager.getPathList({ambisonicOrder: this._config.ambisonicOrder});
   }
 
-  if (config.renderingMode) {
+  if (config && config.renderingMode) {
     if (Object.values(RenderingMode).includes(config.renderingMode)) {
       this._config.renderingMode = config.renderingMode;
     } else {
@@ -2980,12 +2973,9 @@ HOARenderer.prototype._buildAudioGraph = function() {
  * @param {function} reject - Rejection handler.
  */
 HOARenderer.prototype._initializeCallback = function(resolve, reject) {
-  let bufferLoaderData = [];
-  for (let i = 0; i < this._config.pathList.length; ++i) {
-    bufferLoaderData.push({name: i, url: this._config.pathList[i]});
-  }
-
-  const bufferList = new BufferList(this._context, this._config.pathList);
+  const bufferList = this._config.pathList
+      ? new BufferList(this._context, this._config.pathList, {dataType: 'url'})
+      : new BufferList(this._context, TOAHrirBase64);
   bufferList.load().then(
       function(hrirBufferList) {
         this._hoaConvolver.setHRIRBufferList(hrirBufferList);
@@ -3086,6 +3076,24 @@ module.exports = HOARenderer;
 
 /***/ }),
 /* 17 */
+/***/ (function(module, exports) {
+
+const OmnitoneTOAHrirBase64 = [
+"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AAD7/wEAAgD7//7/AQD8/wAAAwD8//3/AwD9/wAAAgD9//z/AwD/////AgD+//z/AwAAAP7/AQD///3/AgABAP3/AAAAAP3/AgACAPz///8BAP3/AQACAP3//v8BAP7/AAABAP3//v8CAP7///8BAP7//f8CAP////8AAAAA/v8CAAAAAAAAAAAA/v8BAAAAAAD//wAA//8AAP//AAD//wAA//8AAP//",
+"UklGRiQEAABXQVZFZm10IBAAAAABAAIAgLsAAADuAgAEABAAZGF0YQAEAAAAAP//AAD//wAA//8AAAAA/////wAAAQD+////AAAGAP3/OAABAIIAAwBv//f/E/0QAK0ADQCzA/7/8P4u/0cBDQCJA6ABbQDg/w7/z/9o+Vn/SPnL/1//Ef+2+jr9RfZgA5QFZwILDFj+PAb2/nEFKgKk/R0Dlv6b/FUDsP6YAoj9SgAT/iL/tAPwAv8A0P6zAr7/dwAnAf39uP22/skA2v///2YCoP4UAUsAZgF2AJH+4P70/rz9+f+U/Xv/8v7CAcb+TACS/kwAv/+x/tX9oP71/oL/1f8nAEUAZwGtAAgAIgC/AD4BaP8GAGH/dQDF/64Arf8nAakAhAH9/+kAQQD3AFb/q/8p/yIAR/8FAPD/ZAA/AIYA3v8tADQADQBp/3f/CwABAP3/Wf8OANj/WwDH/xoAe/8DAKz/zv96/z8A3f/J/5X/IAD5//j/q//c/+//RADq//D/vv8pADUAFQDI/y8ACAAbANb/OwD3/+3/9f/e/wcAIAAeAMH/8/8xAC0AEADW/+3/HAADAPv/8P8DAOL/OwD3/xcACQAHAM//5f8XAAcAz//T/9D/HgD9////yf/e//v/AgD//9H/6/////H/+/8hAAIA9//7/w0AFgAQAPL/2v/8/xsAGQABANz/9P8YAAQA/v/y/wMA5v8YAAkAAAAAAAMA7/8KABgADwDs//j/BwATABsA8P/1//z/BAAMAAAA9P/s/xAA/v8GAAkA/v/p/wMACwALAP7/9P/p/wcADQAFAPb/7//4/w0ACAD8//b//v/1/wMACwD1//T/8P/8/wAACQDz/+f/5P8GAAkABQD5//D/+v8FAA0AAwD///T/AgACABAA/v8CAPD/+/8FAAoA9f/3//f//v8GAP7/9v/t//z/+f8AAPj/+v/3/wEA+v8HAPr//P/5/wQA//8DAPr/+P/3/wYA///+//X/+//5/wQA/f/7//X/+//4/wMA/f/8//j//v/9/wYA///8//f/AgAAAAUA/f/6//n/AwACAAIA/f/7//z/AwACAAAA/f/6//3/AgADAP7//f/7/wAAAwAFAPz////8/wMAAgAEAPv//v/+/wMAAgADAPv//v///wMAAQABAPv//f8AAAIAAAD///v//f8BAAIA///+//z//v8CAAIA/v/9//3///8CAAEA/v/9//7/AAACAAAA/v/9////AAABAAAA/f/9/wAAAQABAP///f/+/wEAAQAAAP///v/+/wEAAQD///7//v///wEAAQD///7//v///wEAAAD+//7///8AAAAAAAD+//7///8AAAAA///+//7///8AAAAA////////AAAAAP////////////8AAP//////////",
+"UklGRiQEAABXQVZFZm10IBAAAAABAAIAgLsAAADuAgAEABAAZGF0YQAEAAAAAAAAAAABAAAAAAD//////////////v////3/////////+//8////AQD9//z/9f8BAAIA+f8dACgAWQBxAJX/qv+Y/uz9aP9k/7UDUQQBAiQA4Pgi/AkB0gKaBsD/+fxp/vz9CQSp/I/+ywDO+vMD0fzK/PABcgBeBfoBv/+uAuH9Sf5gAy39awMmBWUBuP9fA9/9fgDj/2/+EACaACcCSv9Z/2j/rv7hAA0AWf55/7L84P7E/SIAT/67AMv/tf+FAA7/1v+7/gv/IP+E/sQA+P5aAXz/tP9XAFX/tP8o/4r/j//e/yQAMv9mAJT/rgCr/9X/EwCb//H/9f7F/6D/EAAoAK3//v+e/zsAh/+B/7r/if/C/2r/4P/z/6//HwCy/0IA7/9ZALT/y/80ACgA9v/J/9//DgA5ADUALQARADIACwAfAOf/NgArACMACQBBAEcAGAAjAC4AWQBUAHcAAAAfACEAIAAcAPj/CADk/yQA7v89AEEAFwD5/xYA6f8aAOX/AADF/zQADwAUAOT/BQDr/yUA6P8XAOf/HADR/0AA8P8nAAgACQDt/ycAKAAHAPH/IQDz/xsACADn//n/DgADAA4A8P///8z/GgDN/yMA/f8QANj/MwACAC0ACwAOAO3/JgAZAAUACgAAAA4AIgAaAAkADwACAAAAHQATAAUABQACAAgACwAjAO////8AAA8ABQAPAPL//f8GAAsABgAGAPD/8v8GAPz/CAD6//H/6v8PAAgABgD4//3/9v8aAAgABwD1//7//v8QAAoACAD//wUA9v8QAAoABAAFAAgAAgAJAAoAAwD//w0AAgD//wcA/v8DAAoABQAFABUABAAKAAYABwAHAA8ACgAGAAwADwAMAAkAEAAJAAgADwAMAAgADgAJAAUACQAPAAUACwAHAAEABgAIAAEABAAGAP//AgAJAAAAAgAEAP7///8IAAIA//8GAAEAAQAJAAIA/v8EAAMA//8JAAEA/v8DAAMA/v8HAAMA/f8BAAUA/v8FAAMA/v8BAAcA//8DAAMA/v8BAAYA//8CAAMA/////wcAAAAAAAMAAAD//wYAAQD+/wMAAQD//wUAAQD+/wIAAgD//wQAAgD+/wEAAwD//wMAAwD+/wEAAwD//wIAAwD//wEABAAAAAEABAD//wAABAABAAAAAwAAAAAABAABAP//AwABAAAAAwACAP//AgACAAAAAwACAP//AgACAAAAAgACAAAAAQADAAAAAQACAAAAAQADAAAAAQACAAAAAAACAAEAAAACAAEAAAACAAEAAAABAAEAAAABAAEAAAABAAEAAAABAAEAAAABAAEAAAABAAEAAAAAAAAAAAAAAAAA",
+"UklGRiQEAABXQVZFZm10IBAAAAABAAIAgLsAAADuAgAEABAAZGF0YQAEAAAAAP//AAD//wAA//8AAAAA//8AAP//AAACAAAA+f8BAAYA///4/wIA//8AAA8A/v/V/wEAEwA9AAEBRwA2AF7/kfog/3gBwv99CDYBU/qtAUX/AP7OAfkAX/o9B38FSfwaAuT14/60BAr8CQAI/tfyIQTzAXP+egdUBBwBof7TBMT8bAWi/5EEWwBRAAAKyfxE/8b88vp6ACP+PAF4/qD8MQNM/ygCJ/2XAPD9kP5gAVT/iP9I/lEB4P8qAD0BFAGa/+7/DgB2AOP98gFm/u/+Vv5/AG8ASP9gAM//qv9w//oAcv+2/jIBHgA7/6D/oAAGAKH/lADT/wAAggC8AAYAkP9yAEcAkf8BAOD/RAAr/zUANwDt/xQAJQAkAMT/zwA/AOH/xv9zAGsANQBTAIcALAAvACIATACy/xMADADg/xcAWABvAJL/7f9VAPb/EgDt/wcA4f8kAPP/5P+h/wgACQDy//r/LgAQAMn/8/9CAOX/5v/S/9//3P8pABYAuP/s/w8AFgDt/+3/7v/w/9j/5/8GAOf/2P/2//P//v8kABMAuf/m/xoADADZ/+r/3P8KAAUAKwDe/wsA3P8VAAAADgAfAB0ACAAMAF4AGgAhAPL/MwDz/0kABAAKAPX/LwAbAAkA9v/s/+3/8/8CABAAAADm//n/BQALAAUAAQDj//n/JQAVAPX/9v/+/wIAEQABAPP/8P/1/wAABgD6/+3/7//o//j/DAD8/+b/8P8IAAkABgD4//D/8P8UAAoAAwD4/wAA+f8OAAcAAAAFAPX/9v8TAAkA8v8EAPb/9/8dAA0A7/8CAPn/+f8SAAQA8/8CAOf/+v8DAAgA9P////H//P8IAAUA8//0/wIAAQAGAAgA9//7/wAA+/8EAP//+P/+////AgACAAsA8v/+/wIABQD7/wgA9v/7/wMABAD5/wAA/P/3/wEAAQD7//7//P/1/wQA///3//r////3/wMAAwD1//r/AwD6////AgD4//n/AwD8//7/AgD4//n/AwD+//3/AQD4//n/BQD///n/AAD6//j/BAABAPj/AAD9//v/AwADAPj//v/+//z/AwAEAPj//v8BAP7/AQADAPj//f8CAP////8EAPr//P8DAAAA/v8CAPv//P8DAAEA/f8BAP3//f8DAAIA/P8AAP7//f8DAAIA/P///wAA/f8BAAIA+//+/wEA//8AAAEA+//+/wEA/////wEA/P/+/wEA///+/wAA/f/9/wEAAAD9/wAA/f/+/wEAAQD8/////v/+/wAAAQD8////////////AQD9////AAD/////AAD+////AAAAAP//AAD///////8AAP//AAD//wAA//8AAP//",
+];
+
+module.exports = OmnitoneTOAHrirBase64;
+
+
+/***/ }),
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3164,7 +3172,7 @@ exports.patchSafari = function() {
 
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3194,7 +3202,7 @@ exports.patchSafari = function() {
  * Omnitone library version
  * @type {String}
  */
-module.exports = '1.0.2';
+module.exports = '1.0.5';
 
 
 /***/ })

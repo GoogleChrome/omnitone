@@ -177,7 +177,7 @@
     
 
     
-    <h4 class="name" id=".createBufferList"><span class="type-signature">(static) </span>createBufferList<span class="signature">(context, bufferData)</span><span class="type-signature"> &rarr; {Promise.&lt;Array.&lt;AudioBuffer>>}</span></h4>
+    <h4 class="name" id=".createBufferList"><span class="type-signature">(static) </span>createBufferList<span class="signature">(context, bufferData, options<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise.&lt;Array.&lt;AudioBuffer>>}</span></h4>
     
 
     
@@ -210,6 +210,8 @@ URLs.
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
         
 
@@ -235,6 +237,14 @@ URLs.
             </td>
 
             
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
 
             
 
@@ -258,10 +268,120 @@ URLs.
             </td>
 
             
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
 
             
 
             <td class="description last">An ordered list of URLs.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">BufferList options.
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>dataType</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    'url'
+                
+                </td>
+            
+
+            <td class="description last">BufferList data type.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
         </tr>
 
     
@@ -302,7 +422,7 @@ URLs.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="omnitone.js.html">omnitone.js</a>, <a href="omnitone.js.html#line81">line 81</a>
+        <a href="omnitone.js.html">omnitone.js</a>, <a href="omnitone.js.html#line83">line 83</a>
     </li></ul></dd>
     
 
@@ -503,7 +623,7 @@ AudioBuffer.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="omnitone.js.html">omnitone.js</a>, <a href="omnitone.js.html#line120">line 120</a>
+        <a href="omnitone.js.html">omnitone.js</a>, <a href="omnitone.js.html#line123">line 123</a>
     </li></ul></dd>
     
 
@@ -851,7 +971,7 @@ AudioBuffer.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="omnitone.js.html">omnitone.js</a>, <a href="omnitone.js.html#line183">line 183</a>
+        <a href="omnitone.js.html">omnitone.js</a>, <a href="omnitone.js.html#line188">line 188</a>
     </li></ul></dd>
     
 
@@ -1180,7 +1300,7 @@ overrides the internal HRIR list if given.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="omnitone.js.html">omnitone.js</a>, <a href="omnitone.js.html#line201">line 201</a>
+        <a href="omnitone.js.html">omnitone.js</a>, <a href="omnitone.js.html#line206">line 206</a>
     </li></ul></dd>
     
 
@@ -1333,7 +1453,7 @@ overrides the internal HRIR list if given.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="omnitone.js.html">omnitone.js</a>, <a href="omnitone.js.html#line143">line 143</a>
+        <a href="omnitone.js.html">omnitone.js</a>, <a href="omnitone.js.html#line146">line 146</a>
     </li></ul></dd>
     
 
@@ -1516,7 +1636,7 @@ overrides the internal HRIR list if given.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="omnitone.js.html">omnitone.js</a>, <a href="omnitone.js.html#line132">line 132</a>
+        <a href="omnitone.js.html">omnitone.js</a>, <a href="omnitone.js.html#line135">line 135</a>
     </li></ul></dd>
     
 
@@ -1575,7 +1695,7 @@ overrides the internal HRIR list if given.</td>
     
 
     
-    <h4 class="name" id=".createHOAConvolver"><span class="type-signature">(static) </span>createHOAConvolver<span class="signature">(context, ambisonicOrder, hrirBufferList<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".createHOAConvolver"><span class="type-signature">(static) </span>createHOAConvolver<span class="signature">(context, ambisonicOrder, hrirBufferList<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {HOAConvovler}</span></h4>
     
 
     
@@ -1752,7 +1872,7 @@ AudioBuffers for convolution. (SOA: 5 AudioBuffers, TOA: 8 AudioBuffers)</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="omnitone.js.html">omnitone.js</a>, <a href="omnitone.js.html#line224">line 224</a>
+        <a href="omnitone.js.html">omnitone.js</a>, <a href="omnitone.js.html#line231">line 231</a>
     </li></ul></dd>
     
 
@@ -1775,6 +1895,24 @@ AudioBuffers for convolution. (SOA: 5 AudioBuffers, TOA: 8 AudioBuffers)</td>
 
 
 
+<h5>Returns:</h5>
+
+        
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">HOAConvovler</span>
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -1786,7 +1924,7 @@ AudioBuffers for convolution. (SOA: 5 AudioBuffers, TOA: 8 AudioBuffers)</td>
     
 
     
-    <h4 class="name" id=".createHOARenderer"><span class="type-signature">(static) </span>createHOARenderer<span class="signature">(context, config)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".createHOARenderer"><span class="type-signature">(static) </span>createHOARenderer<span class="signature">(context, config)</span><span class="type-signature"> &rarr; {HOARenderer}</span></h4>
     
 
     
@@ -2057,7 +2195,7 @@ overrides the internal HRIR list if given.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="omnitone.js.html">omnitone.js</a>, <a href="omnitone.js.html#line240">line 240</a>
+        <a href="omnitone.js.html">omnitone.js</a>, <a href="omnitone.js.html#line248">line 248</a>
     </li></ul></dd>
     
 
@@ -2080,6 +2218,24 @@ overrides the internal HRIR list if given.</td>
 
 
 
+<h5>Returns:</h5>
+
+        
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">HOARenderer</span>
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -2091,7 +2247,7 @@ overrides the internal HRIR list if given.</td>
     
 
     
-    <h4 class="name" id=".createHOARotator"><span class="type-signature">(static) </span>createHOARotator<span class="signature">(context, ambisonicOrder)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".createHOARotator"><span class="type-signature">(static) </span>createHOARotator<span class="signature">(context, ambisonicOrder)</span><span class="type-signature"> &rarr; {HOARotator}</span></h4>
     
 
     
@@ -2215,7 +2371,7 @@ overrides the internal HRIR list if given.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="omnitone.js.html">omnitone.js</a>, <a href="omnitone.js.html#line211">line 211</a>
+        <a href="omnitone.js.html">omnitone.js</a>, <a href="omnitone.js.html#line217">line 217</a>
     </li></ul></dd>
     
 
@@ -2238,6 +2394,24 @@ overrides the internal HRIR list if given.</td>
 
 
 
+<h5>Returns:</h5>
+
+        
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">HOARotator</span>
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -2375,7 +2549,7 @@ channel-wise.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="omnitone.js.html">omnitone.js</a>, <a href="omnitone.js.html#line97">line 97</a>
+        <a href="omnitone.js.html">omnitone.js</a>, <a href="omnitone.js.html#line100">line 100</a>
     </li></ul></dd>
     
 
@@ -2579,7 +2753,7 @@ channel-wise.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="omnitone.js.html">omnitone.js</a>, <a href="omnitone.js.html#line110">line 110</a>
+        <a href="omnitone.js.html">omnitone.js</a>, <a href="omnitone.js.html#line113">line 113</a>
     </li></ul></dd>
     
 
@@ -2651,7 +2825,7 @@ channel-wise.</td>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.4</a> on Thu Sep 07 2017 15:40:22 GMT-0700 (PDT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Fri Oct 20 2017 13:05:26 GMT-0700 (PDT)
 </footer>
 
 <script> prettyPrint(); </script>
