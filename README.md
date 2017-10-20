@@ -134,6 +134,7 @@ npm run build       # build a non-minified library.
 npm run watch       # recompile whenever any source file changes.
 npm run build-all   # build a minified library and copy static resources.
 npm run build-doc   # build JSDoc3 documentation.
+npm run eslint      # Run ESLint against source files.
 ```
 
 ### Test
