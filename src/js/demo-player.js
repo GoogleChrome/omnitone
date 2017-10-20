@@ -24,7 +24,7 @@
 window.OmnitoneDemoPlayer = (function() {
 
   // Player information
-  var VERSION = '0.3.0.0000';
+  var VERSION = '0.3.1.0000';
 
   // The GL video mapping is 180 degree opposite.
   // TODO: fix this in vr-panorama.js
@@ -340,10 +340,6 @@ window.OmnitoneDemoPlayer = (function() {
     _audioContext = new AudioContext();
     _videoElementSource = _audioContext.createMediaElementSource(_videoElement);
     _foaRenderer = Omnitone.createFOARenderer(_audioContext, {
-      hrirPathList: [
-        'third-party/resources/omnitone-foa-1.wav',
-        'third-party/resources/omnitone-foa-2.wav'
-      ],
       channelMap: channelMap
     });
     _masterGain = _audioContext.createGain();
