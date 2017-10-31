@@ -25,6 +25,7 @@ const BufferList = require('./buffer-list.js');
 const HOAConvolver = require('./hoa-convolver.js');
 const HOARotator = require('./hoa-rotator.js');
 const TOAHrirBase64 = require('./resources/omnitone-toa-hrir-base64.js');
+const SOAHrirBase64 = require('./resources/omnitone-soa-hrir-base64.js');
 const Utils = require('./utils.js');
 
 
@@ -102,8 +103,8 @@ function HOARenderer(context, config) {
       this._config.renderingMode = config.renderingMode;
     } else {
       Utils.log(
-          'HOARenderer: Invalid rendering mode. (got ' + config.renderingMode +
-          ') Fallbacks to "ambisonic".');
+          'HOARenderer: Invalid rendering mode. (got ' +
+          config.renderingMode + ') Fallbacks to "ambisonic".');
     }
   }
 
@@ -128,6 +129,10 @@ HOARenderer.prototype._buildAudioGraph = function() {
   this.input.connect(this._bypass);
   this._hoaRotator.output.connect(this._hoaConvolver.input);
   this._hoaConvolver.output.connect(this.output);
+
+  this.input.channelCount = this._config.numberOfChannels;
+  this.input.channelCountMode = 'explicit';
+  this.input.channelInterpretation = 'discrete';
 };
 
 
@@ -138,9 +143,16 @@ HOARenderer.prototype._buildAudioGraph = function() {
  * @param {function} reject - Rejection handler.
  */
 HOARenderer.prototype._initializeCallback = function(resolve, reject) {
-  const bufferList = this._config.pathList
-      ? new BufferList(this._context, this._config.pathList, {dataType: 'url'})
-      : new BufferList(this._context, TOAHrirBase64);
+  let bufferList;
+  if (this._config.pathList) {
+    bufferList =
+        new BufferList(this._context, this._config.pathList, {dataType: 'url'});
+  } else {
+    bufferList = this._config.ambisonicOrder === 2
+        ? new BufferList(this._context, SOAHrirBase64)
+        : new BufferList(this._context, TOAHrirBase64);
+  }
+
   bufferList.load().then(
       function(hrirBufferList) {
         this._hoaConvolver.setHRIRBufferList(hrirBufferList);

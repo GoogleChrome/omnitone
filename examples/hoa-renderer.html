@@ -30,7 +30,8 @@
       <code>HOARenderer</code> is an optimized higher-order ambisonic renderer
       based on the integrated convolution (SH-MaxRe HRIR). This renderer
       supports arbitrary order ambisonic rendering, provided the user supplies
-      the appropriate SH-MaxRe HRIRs.
+      the appropriate SH-MaxRe HRIRs. You may toggle between 2nd and 3rd order
+      ambisonic renderer.
     </p>
     <div id="secSource">
       <p>
@@ -61,7 +62,9 @@
           <input oninput="adjustGain(this);" id="eRangeGain" type="range" min=
           "-60" max="24" value="0" step="1">
         </dd>
-      </dl><button id="eButtonPlayback" disabled>Play</button>
+      </dl>
+      <button id="eButtonPlayback" disabled>Play</button>
+      <button id="eButtonAmbisonicOrder" disabled>3rd Order</button>
     </div>
     <div id="footer">
       <p>
@@ -77,13 +80,15 @@
       var exampleInitialized = false;
 
       var audioContext;
-      var hoaRenderer;
+      var toaRenderer;
+      var soaRenderer;
       var currentBufferSource;
       var inputGain;
-      var mergedTOABuffer;
+      var contentBuffer;
       var rotationMatrix3 = new Float32Array(9);
 
       var eButtonPlayback;
+      var eButtonAmbisonicOrder;
       var eRangeAzimuth;
       var eRangeElevation;
       var eRangeGain;
@@ -142,17 +147,27 @@
         rotationMatrix3[7] = forward[1];
         rotationMatrix3[8] = forward[2];
 
-        hoaRenderer.setRotationMatrix3(rotationMatrix3);
+        eButtonAmbisonicOrder.textContent === '3rd order'
+            ? toaRenderer.setRotationMatrix3(rotationMatrix3)
+            : soaRenderer.setRotationMatrix3(rotationMatrix3);
       }
 
-      function onToggleButton(event) {
+      function onGainSliderChange() {
+        if (!exampleInitialized)
+          return;
+
+        document.getElementById('eLabelGain').textContent = eRangeGain.value;
+        inputGain.gain.value = Math.pow(10, parseFloat(eRangeGain.value) / 20);
+      }
+
+      function onTogglePlayback(event) {
         if (!exampleInitialized)
           return;
 
         switch (event.target.textContent) {
           case 'Play':
             currentBufferSource = audioContext.createBufferSource();
-            currentBufferSource.buffer = mergedTOABuffer;
+            currentBufferSource.buffer = contentBuffer;
             currentBufferSource.loop = true;
             currentBufferSource.connect(inputGain);
             currentBufferSource.start();
@@ -166,39 +181,60 @@
         }
       }
 
-      function onGainSliderChange() {
+      function onToggleAmbisonicOrder(event) {
         if (!exampleInitialized)
           return;
 
-        document.getElementById('eLabelGain').textContent = eRangeGain.value;
-        inputGain.gain.value = Math.pow(10, parseFloat(eRangeGain.value) / 20);
+        switch (event.target.textContent) {
+          case '3rd Order':
+            toaRenderer.setRenderingMode('off');
+            soaRenderer.setRenderingMode('ambisonic');
+            soaRenderer.setRotationMatrix3(rotationMatrix3);
+            event.target.textContent = '2nd Order';
+            break;
+          case '2nd Order':
+            soaRenderer.setRenderingMode('off');
+            toaRenderer.setRenderingMode('ambisonic');
+            toaRenderer.setRotationMatrix3(rotationMatrix3);
+            event.target.textContent = '3rd Order';
+            break;
+        }
       }
 
       function onLoad() {
         eButtonPlayback = document.getElementById('eButtonPlayback');
+        eButtonAmbisonicOrder =
+            document.getElementById('eButtonAmbisonicOrder');
         eRangeAzimuth = document.getElementById('eRangeAzimuth');
         eRangeElevation = document.getElementById('eRangeElevation');
         eRangeGain = document.getElementById('eRangeGain');
 
-        eButtonPlayback.onclick = onToggleButton;
-        eButtonPlayback.disabled = true;
+        eButtonPlayback.onclick = onTogglePlayback;
+        eButtonAmbisonicOrder.onclick = onToggleAmbisonicOrder;
         eRangeGain.oninput = onGainSliderChange;
         eRangeAzimuth.oninput = onDirectionChange;
         eRangeElevation.oninput = onDirectionChange;
 
         audioContext = new AudioContext();
         inputGain = audioContext.createGain();
-        hoaRenderer = Omnitone.createHOARenderer(audioContext);
+        toaRenderer = Omnitone.createHOARenderer(audioContext);
+        soaRenderer = Omnitone.createHOARenderer(audioContext, 
+                                                 {ambisonicOrder: 2});
 
         Promise.all([
           Omnitone.createBufferList(audioContext, exampleSoundPathList),
-          hoaRenderer.initialize()
+          toaRenderer.initialize(),
+          soaRenderer.initialize()
           ]).then((results) => {
-            mergedTOABuffer =
+            contentBuffer =
                 Omnitone.mergeBufferListByChannel(audioContext, results[0]);
-            inputGain.connect(hoaRenderer.input);
-            hoaRenderer.output.connect(audioContext.destination);
+            inputGain.connect(soaRenderer.input);
+            inputGain.connect(toaRenderer.input);
+            soaRenderer.output.connect(audioContext.destination);
+            toaRenderer.output.connect(audioContext.destination);
+            soaRenderer.setRenderingMode('off');
             eButtonPlayback.disabled = false;
+            eButtonAmbisonicOrder.disabled = false;
             exampleInitialized = true;
           });
       }
