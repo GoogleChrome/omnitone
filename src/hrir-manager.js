@@ -40,7 +40,7 @@ const HRIRList = [
 ];
 
 
-// Base URL. 
+// Base URL.
 const SourceURL = {
   GITHUB:
       'https://cdn.rawgit.com/GoogleChrome/omnitone/master/build/resources/',

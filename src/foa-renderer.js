@@ -68,33 +68,36 @@ function FOARenderer(context, config) {
     renderingMode: RenderingMode.AMBISONIC,
   };
 
-  if (config.channelMap) {
-    if (Array.isArray(config.channelMap) && config.channelMap.length === 4) {
-      this._config.channelMap = config.channelMap;
-    } else {
-      Utils.throw(
-          'FOARenderer: Invalid channel map. (got ' + config.channelMap + ')');
+  if (config) {
+    if (config.channelMap) {
+      if (Array.isArray(config.channelMap) && config.channelMap.length === 4) {
+        this._config.channelMap = config.channelMap;
+      } else {
+        Utils.throw(
+            'FOARenderer: Invalid channel map. (got ' + config.channelMap
+            + ')');
+      }
     }
-  }
 
-  if (config.hrirPathList) {
-    if (Array.isArray(config.hrirPathList) &&
-        config.hrirPathList.length === 2) {
-      this._config.pathList = config.hrirPathList;
-    } else {
-      Utils.throw(
-          'FOARenderer: Invalid HRIR URLs. It must be an array with ' +
-          '2 URLs to HRIR files. (got ' + config.hrirPathList + ')');
+    if (config.hrirPathList) {
+      if (Array.isArray(config.hrirPathList) &&
+          config.hrirPathList.length === 2) {
+        this._config.pathList = config.hrirPathList;
+      } else {
+        Utils.throw(
+            'FOARenderer: Invalid HRIR URLs. It must be an array with ' +
+            '2 URLs to HRIR files. (got ' + config.hrirPathList + ')');
+      }
     }
-  }
 
-  if (config.renderingMode) {
-    if (Object.values(RenderingMode).includes(config.renderingMode)) {
-      this._config.renderingMode = config.renderingMode;
-    } else {
-      Utils.log(
-          'FOARenderer: Invalid rendering mode order. (got' +
-          config.renderingMode + ') Fallbacks to the mode "ambisonic".');
+    if (config.renderingMode) {
+      if (Object.values(RenderingMode).includes(config.renderingMode)) {
+        this._config.renderingMode = config.renderingMode;
+      } else {
+        Utils.log(
+            'FOARenderer: Invalid rendering mode order. (got' +
+            config.renderingMode + ') Fallbacks to the mode "ambisonic".');
+      }
     }
   }
 
@@ -121,6 +124,10 @@ FOARenderer.prototype._buildAudioGraph = function() {
   this._foaRouter.output.connect(this._foaRotator.input);
   this._foaRotator.output.connect(this._foaConvolver.input);
   this._foaConvolver.output.connect(this.output);
+
+  this.input.channelCount = 4;
+  this.input.channelCountMode = 'explicit';
+  this.input.channelInterpretation = 'discrete';
 };
 
 
