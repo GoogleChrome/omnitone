@@ -4,7 +4,7 @@
 
 Omnitone is a robust implementation of [ambisonic](https://en.wikipedia.org/wiki/Ambisonics) decoding and binaural rendering written in Web Audio API. Its rendering process is powered by the fast native features from Web Audio API (GainNode and Convolver), ensuring the optimum performance.
 
-The implementation of Omnitone is based on the [Google spatial media](https://github.com/google/spatial-media) specification. The incoming ambisonic stream MUST be configured to [ACN channel layout with SN3D normalization](https://en.wikipedia.org/wiki/Ambisonic_data_exchange_formats#ACN).
+The implementation of Omnitone is based on the [Google spatial media](https://github.com/google/spatial-media) specification, and it is the spatial audio renderer that powers the web support of [Resonance Audio](https://developers.google.com/resonance-audio/).
 
 - [Usage](#usage)
   + [FOARenderer](#foarenderer)
@@ -20,14 +20,14 @@ If you are looking for interactive panning based on Omnitone's ambisonic renderi
 
 Omnitone offers __ambisonic decoding__ and __binaural rendering__ of:
 - First-order-ambisonic stream
-- High-order-ambisonic stream: 2nd and 3rd order.
+- High-order-ambisonic stream (2nd and 3rd order)
 
 ### Omnitone in action:
 
-- __[Project Home](https://googlechrome.github.io/omnitone/#home)__
+- __[Omnitone Demos](https://googlechrome.github.io/omnitone/#home)__
 - __[Omnitone Examples](https://rawgit.com/GoogleChrome/omnitone/master/examples/index.html)__
-- __[Songbird WebGL Demo](https://cdn.rawgit.com/google/songbird/master/examples/webgl-demo.html)__
 - __[JauntVR Gallery: Music](https://www.jauntvr.com/lobby/MusicLobby)__
+- __[Resonance Audio Web SDK Demos](https://cdn.rawgit.com/resonance-audio/resonance-audio-web-sdk/master/examples/index.html)
 
 
 ## How it works
@@ -61,7 +61,7 @@ git clone https://github.com/GoogleChrome/omnitone.git
 
 ### FOARenderer
 
-`FOARenderer` is for the first-order-ambisonic stream, which contains 4 channels.
+`FOARenderer` is for the first-order-ambisonic stream, which consists of 4 channels.
 
 ```js
 // Set up an audio element to feed the ambisonic source audio feed.
@@ -84,7 +84,7 @@ foaRenderer.initialize().then(function() {
 
 ### HOARenderer
 
-`HOARenderer` is for the higher-order-ambisonic stream. Currently Omnitone supports 2nd and 3rd order ambisonics, which contain 9 channels and 16 channels respectively.
+`HOARenderer` is for the higher-order-ambisonic stream. Currently Omnitone supports 2nd and 3rd order ambisonics, which consist of 9 channels and 16 channels respectively.
 
 ```js
 // Works exactly the same way with FOARenderer. See the usage above.
@@ -158,14 +158,15 @@ export CHROME_BIN=chromium-browser
 
 ## Audio Codec Compatibility
 
-Omnitone is designed to run on any browser that supports Web Audio API, however, it does not address the incompatibility issue around various media codecs in the browser. At the time of writing, the decoding of compressed multichannel audio via `<video>` or `<audio>` elements is not fully supported by the majority of mobile browsers.
+Omnitone is designed to run on any browser that supports Web Audio API, however, it does not address the incompatibility issue around various media codecs in the browser. At the time of writing, the decoding of compressed multichannel audio with more than 3 channels via `<video>` or `<audio>` elements is not fully supported by the majority of mobile browsers.
 
 
 ## Related Resources
 
-* [Google Spatial Media](https://github.com/google/spatial-media)
 * [Web Audio API](https://webaudio.github.io/web-audio-api)
 * [WebVR](https://webvr.info)
+* [Google Spatial Media](https://github.com/google/spatial-media)
+* [Resonance Audio Web SDK](https://github.com/resonance-audio/resonance-audio-web-sdk)
 
 
 ## Acknowledgments
