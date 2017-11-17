@@ -27,7 +27,7 @@ Omnitone offers __ambisonic decoding__ and __binaural rendering__ of:
 - __[Omnitone Demos](https://googlechrome.github.io/omnitone/#home)__
 - __[Omnitone Examples](https://rawgit.com/GoogleChrome/omnitone/master/examples/index.html)__
 - __[Resonance Audio Web SDK Demos](https://cdn.rawgit.com/resonance-audio/resonance-audio-web-sdk/master/examples/index.html)__
-- __[JauntVR Gallery: Music](https://www.jauntvr.com/lobby/MusicLobby)__
+- __[JauntVR Music Gallery](https://www.jauntvr.com/lobby/MusicLobby)__
 
 
 ## How it works
