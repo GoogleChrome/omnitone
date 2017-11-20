@@ -27,7 +27,7 @@
   "scripts": {
     "build": "webpack --progress --color",
     "build-all": "webpack --progress --color && webpack --config webpack.config.all.js --progress --color",
-    "build-hrir": "node generate-hrir-base64.js",
+    "build-hrir": "node src/resources/build-hrir-base64.js",
     "build-doc": "node_modules/.bin/jsdoc src/omnitone.js -d doc/",
     "eslint": "./node_modules/.bin/eslint src/*",
     "test": "node_modules/karma/bin/karma start",
