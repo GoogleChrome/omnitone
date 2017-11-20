@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 10);
+/******/ 	return __webpack_require__(__webpack_require__.s = 7);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -580,7 +580,7 @@ module.exports = BufferList;
 
 "use strict";
 /**
- * Copyright 2016 Google Inc. All Rights Reserved.
+ * Copyright 2017 Google Inc. All Rights Reserved.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -594,79 +594,135 @@ module.exports = BufferList;
  * limitations under the License.
  */
 
+
 /**
- * @file An audio channel router to resolve different channel layouts between
- * browsers.
+ * @file A collection of convolvers. Can be used for the optimized FOA binaural
+ * rendering. (e.g. SH-MaxRe HRTFs)
  */
 
 
 
 
 /**
- * @typedef {Number[]} ChannelMap
- */
-
-/**
- * Channel map dictionary ENUM.
- * @enum {ChannelMap}
- */
-const ChannelMap = {
-  /** @type {Number[]} - ACN channel map for Chrome and FireFox. (FFMPEG) */
-  DEFAULT: [0, 1, 2, 3],
-  /** @type {Number[]} - Safari's 4-channel map for AAC codec. */
-  SAFARI: [2, 0, 1, 3],
-  /** @type {Number[]} - ACN > FuMa conversion map. */
-  FUMA: [0, 3, 1, 2],
-};
-
-
-/**
- * Channel router for FOA stream.
+ * FOAConvolver. A collection of 2 stereo convolvers for 4-channel FOA stream.
  * @constructor
- * @param {AudioContext} context - Associated AudioContext.
- * @param {Number[]} channelMap - Routing destination array.
+ * @param {BaseAudioContext} context The associated AudioContext.
+ * @param {AudioBuffer[]} [hrirBufferList] - An ordered-list of stereo
+ * AudioBuffers for convolution. (i.e. 2 stereo AudioBuffers for FOA)
  */
-function FOARouter(context, channelMap) {
+function FOAConvolver(context, hrirBufferList) {
   this._context = context;
 
-  this._splitter = this._context.createChannelSplitter(4);
-  this._merger = this._context.createChannelMerger(4);
+  this._active = false;
+  this._isBufferLoaded = false;
 
-  // input/output proxy.
-  this.input = this._splitter;
-  this.output = this._merger;
+  this._buildAudioGraph();
 
-  this.setChannelMap(channelMap || ChannelMap.DEFAULT);
+  if (hrirBufferList) {
+    this.setHRIRBufferList(hrirBufferList);
+  }
+
+  this.enable();
 }
 
 
 /**
- * Sets channel map.
- * @param {Number[]} channelMap - A new channel map for FOA stream.
+ * Build the internal audio graph.
+ *
+ * @private
  */
-FOARouter.prototype.setChannelMap = function(channelMap) {
-  if (!Array.isArray(channelMap)) {
-    return;
-  }
+FOAConvolver.prototype._buildAudioGraph = function() {
+  this._splitterWYZX = this._context.createChannelSplitter(4);
+  this._mergerWY = this._context.createChannelMerger(2);
+  this._mergerZX = this._context.createChannelMerger(2);
+  this._convolverWY = this._context.createConvolver();
+  this._convolverZX = this._context.createConvolver();
+  this._splitterWY = this._context.createChannelSplitter(2);
+  this._splitterZX = this._context.createChannelSplitter(2);
+  this._inverter = this._context.createGain();
+  this._mergerBinaural = this._context.createChannelMerger(2);
+  this._summingBus = this._context.createGain();
 
-  this._channelMap = channelMap;
-  this._splitter.disconnect();
-  this._splitter.connect(this._merger, 0, this._channelMap[0]);
-  this._splitter.connect(this._merger, 1, this._channelMap[1]);
-  this._splitter.connect(this._merger, 2, this._channelMap[2]);
-  this._splitter.connect(this._merger, 3, this._channelMap[3]);
+  // Group W and Y, then Z and X.
+  this._splitterWYZX.connect(this._mergerWY, 0, 0);
+  this._splitterWYZX.connect(this._mergerWY, 1, 1);
+  this._splitterWYZX.connect(this._mergerZX, 2, 0);
+  this._splitterWYZX.connect(this._mergerZX, 3, 1);
+
+  // Create a network of convolvers using splitter/merger.
+  this._mergerWY.connect(this._convolverWY);
+  this._mergerZX.connect(this._convolverZX);
+  this._convolverWY.connect(this._splitterWY);
+  this._convolverZX.connect(this._splitterZX);
+  this._splitterWY.connect(this._mergerBinaural, 0, 0);
+  this._splitterWY.connect(this._mergerBinaural, 0, 1);
+  this._splitterWY.connect(this._mergerBinaural, 1, 0);
+  this._splitterWY.connect(this._inverter, 1, 0);
+  this._inverter.connect(this._mergerBinaural, 0, 1);
+  this._splitterZX.connect(this._mergerBinaural, 0, 0);
+  this._splitterZX.connect(this._mergerBinaural, 0, 1);
+  this._splitterZX.connect(this._mergerBinaural, 1, 0);
+  this._splitterZX.connect(this._mergerBinaural, 1, 1);
+
+  // By default, WebAudio's convolver does the normalization based on IR's
+  // energy. For the precise convolution, it must be disabled before the buffer
+  // assignment.
+  this._convolverWY.normalize = false;
+  this._convolverZX.normalize = false;
+
+  // For asymmetric degree.
+  this._inverter.gain.value = -1;
+
+  // Input/output proxy.
+  this.input = this._splitterWYZX;
+  this.output = this._summingBus;
 };
 
 
 /**
- * Static channel map ENUM.
- * @static
- * @type {ChannelMap}
+ * Assigns 2 HRIR AudioBuffers to 2 convolvers: Note that we use 2 stereo
+ * convolutions for 4-channel direct convolution. Using mono convolver or
+ * 4-channel convolver is not viable because mono convolution wastefully
+ * produces the stereo outputs, and the 4-ch convolver does cross-channel
+ * convolution. (See Web Audio API spec)
+ * @param {AudioBuffer[]} hrirBufferList - An array of stereo AudioBuffers for
+ * convolvers.
  */
-FOARouter.ChannelMap = ChannelMap;
+FOAConvolver.prototype.setHRIRBufferList = function(hrirBufferList) {
+  // After these assignments, the channel data in the buffer is immutable in
+  // FireFox. (i.e. neutered) So we should avoid re-assigning buffers, otherwise
+  // an exception will be thrown.
+  if (this._isBufferLoaded) {
+    return;
+  }
+
+  this._convolverWY.buffer = hrirBufferList[0];
+  this._convolverZX.buffer = hrirBufferList[1];
+  this._isBufferLoaded = true;
+};
 
 
-module.exports = FOARouter;
+/**
+ * Enable FOAConvolver instance. The audio graph will be activated and pulled by
+ * the WebAudio engine. (i.e. consume CPU cycle)
+ */
+FOAConvolver.prototype.enable = function() {
+  this._mergerBinaural.connect(this._summingBus);
+  this._active = true;
+};
+
+
+/**
+ * Disable FOAConvolver instance. The inner graph will be disconnected from the
+ * audio destination, thus no CPU cycle will be consumed.
+ */
+FOAConvolver.prototype.disable = function() {
+  this._mergerBinaural.disconnect();
+  this._active = false;
+};
+
+
+module.exports = FOAConvolver;
 
 
 /***/ }),
@@ -850,7 +906,7 @@ module.exports = FOARotator;
 
 "use strict";
 /**
- * Copyright 2017 Google Inc. All Rights Reserved.
+ * Copyright 2016 Google Inc. All Rights Reserved.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -864,502 +920,83 @@ module.exports = FOARotator;
  * limitations under the License.
  */
 
-
 /**
- * @file A collection of convolvers. Can be used for the optimized FOA binaural
- * rendering. (e.g. SH-MaxRe HRTFs)
+ * @file An audio channel router to resolve different channel layouts between
+ * browsers.
  */
 
 
 
 
 /**
- * FOAConvolver. A collection of 2 stereo convolvers for 4-channel FOA stream.
+ * @typedef {Number[]} ChannelMap
+ */
+
+/**
+ * Channel map dictionary ENUM.
+ * @enum {ChannelMap}
+ */
+const ChannelMap = {
+  /** @type {Number[]} - ACN channel map for Chrome and FireFox. (FFMPEG) */
+  DEFAULT: [0, 1, 2, 3],
+  /** @type {Number[]} - Safari's 4-channel map for AAC codec. */
+  SAFARI: [2, 0, 1, 3],
+  /** @type {Number[]} - ACN > FuMa conversion map. */
+  FUMA: [0, 3, 1, 2],
+};
+
+
+/**
+ * Channel router for FOA stream.
  * @constructor
- * @param {BaseAudioContext} context The associated AudioContext.
- * @param {AudioBuffer[]} [hrirBufferList] - An ordered-list of stereo
- * AudioBuffers for convolution. (i.e. 2 stereo AudioBuffers for FOA)
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {Number[]} channelMap - Routing destination array.
  */
-function FOAConvolver(context, hrirBufferList) {
+function FOARouter(context, channelMap) {
   this._context = context;
 
-  this._active = false;
-  this._isBufferLoaded = false;
+  this._splitter = this._context.createChannelSplitter(4);
+  this._merger = this._context.createChannelMerger(4);
 
-  this._buildAudioGraph();
+  // input/output proxy.
+  this.input = this._splitter;
+  this.output = this._merger;
 
-  if (hrirBufferList) {
-    this.setHRIRBufferList(hrirBufferList);
-  }
-
-  this.enable();
+  this.setChannelMap(channelMap || ChannelMap.DEFAULT);
 }
 
 
 /**
- * Build the internal audio graph.
- *
- * @private
+ * Sets channel map.
+ * @param {Number[]} channelMap - A new channel map for FOA stream.
  */
-FOAConvolver.prototype._buildAudioGraph = function() {
-  this._splitterWYZX = this._context.createChannelSplitter(4);
-  this._mergerWY = this._context.createChannelMerger(2);
-  this._mergerZX = this._context.createChannelMerger(2);
-  this._convolverWY = this._context.createConvolver();
-  this._convolverZX = this._context.createConvolver();
-  this._splitterWY = this._context.createChannelSplitter(2);
-  this._splitterZX = this._context.createChannelSplitter(2);
-  this._inverter = this._context.createGain();
-  this._mergerBinaural = this._context.createChannelMerger(2);
-  this._summingBus = this._context.createGain();
-
-  // Group W and Y, then Z and X.
-  this._splitterWYZX.connect(this._mergerWY, 0, 0);
-  this._splitterWYZX.connect(this._mergerWY, 1, 1);
-  this._splitterWYZX.connect(this._mergerZX, 2, 0);
-  this._splitterWYZX.connect(this._mergerZX, 3, 1);
-
-  // Create a network of convolvers using splitter/merger.
-  this._mergerWY.connect(this._convolverWY);
-  this._mergerZX.connect(this._convolverZX);
-  this._convolverWY.connect(this._splitterWY);
-  this._convolverZX.connect(this._splitterZX);
-  this._splitterWY.connect(this._mergerBinaural, 0, 0);
-  this._splitterWY.connect(this._mergerBinaural, 0, 1);
-  this._splitterWY.connect(this._mergerBinaural, 1, 0);
-  this._splitterWY.connect(this._inverter, 1, 0);
-  this._inverter.connect(this._mergerBinaural, 0, 1);
-  this._splitterZX.connect(this._mergerBinaural, 0, 0);
-  this._splitterZX.connect(this._mergerBinaural, 0, 1);
-  this._splitterZX.connect(this._mergerBinaural, 1, 0);
-  this._splitterZX.connect(this._mergerBinaural, 1, 1);
-
-  // By default, WebAudio's convolver does the normalization based on IR's
-  // energy. For the precise convolution, it must be disabled before the buffer
-  // assignment.
-  this._convolverWY.normalize = false;
-  this._convolverZX.normalize = false;
-
-  // For asymmetric degree.
-  this._inverter.gain.value = -1;
-
-  // Input/output proxy.
-  this.input = this._splitterWYZX;
-  this.output = this._summingBus;
-};
-
-
-/**
- * Assigns 2 HRIR AudioBuffers to 2 convolvers: Note that we use 2 stereo
- * convolutions for 4-channel direct convolution. Using mono convolver or
- * 4-channel convolver is not viable because mono convolution wastefully
- * produces the stereo outputs, and the 4-ch convolver does cross-channel
- * convolution. (See Web Audio API spec)
- * @param {AudioBuffer[]} hrirBufferList - An array of stereo AudioBuffers for
- * convolvers.
- */
-FOAConvolver.prototype.setHRIRBufferList = function(hrirBufferList) {
-  // After these assignments, the channel data in the buffer is immutable in
-  // FireFox. (i.e. neutered) So we should avoid re-assigning buffers, otherwise
-  // an exception will be thrown.
-  if (this._isBufferLoaded) {
+FOARouter.prototype.setChannelMap = function(channelMap) {
+  if (!Array.isArray(channelMap)) {
     return;
   }
 
-  this._convolverWY.buffer = hrirBufferList[0];
-  this._convolverZX.buffer = hrirBufferList[1];
-  this._isBufferLoaded = true;
+  this._channelMap = channelMap;
+  this._splitter.disconnect();
+  this._splitter.connect(this._merger, 0, this._channelMap[0]);
+  this._splitter.connect(this._merger, 1, this._channelMap[1]);
+  this._splitter.connect(this._merger, 2, this._channelMap[2]);
+  this._splitter.connect(this._merger, 3, this._channelMap[3]);
 };
 
 
 /**
- * Enable FOAConvolver instance. The audio graph will be activated and pulled by
- * the WebAudio engine. (i.e. consume CPU cycle)
+ * Static channel map ENUM.
+ * @static
+ * @type {ChannelMap}
  */
-FOAConvolver.prototype.enable = function() {
-  this._mergerBinaural.connect(this._summingBus);
-  this._active = true;
-};
+FOARouter.ChannelMap = ChannelMap;
 
 
-/**
- * Disable FOAConvolver instance. The inner graph will be disconnected from the
- * audio destination, thus no CPU cycle will be consumed.
- */
-FOAConvolver.prototype.disable = function() {
-  this._mergerBinaural.disconnect();
-  this._active = false;
-};
-
-
-module.exports = FOAConvolver;
+module.exports = FOARouter;
 
 
 /***/ }),
 /* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/**
- * Copyright 2016 Google Inc. All Rights Reserved.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/**
- * @fileOverview DEPRECATED at V1. Audio buffer loading utility.
- */
-
-
-
-const Utils = __webpack_require__(0);
-
-/**
- * Streamlined audio file loader supports Promise.
- * @param {Object} context          AudioContext
- * @param {Object} audioFileData    Audio file info as [{name, url}]
- * @param {Function} resolve        Resolution handler for promise.
- * @param {Function} reject         Rejection handler for promise.
- * @param {Function} progress       Progress event handler.
- */
-function AudioBufferManager(context, audioFileData, resolve, reject, progress) {
-  this._context = context;
-
-  this._buffers = new Map();
-  this._loadingTasks = {};
-
-  this._resolve = resolve;
-  this._reject = reject;
-  this._progress = progress;
-
-  // Iterating file loading.
-  for (let i = 0; i < audioFileData.length; i++) {
-    const fileInfo = audioFileData[i];
-
-    // Check for duplicates filename and quit if it happens.
-    if (this._loadingTasks.hasOwnProperty(fileInfo.name)) {
-      Utils.log('Duplicated filename when loading: ' + fileInfo.name);
-      return;
-    }
-
-    // Mark it as pending (0)
-    this._loadingTasks[fileInfo.name] = 0;
-    this._loadAudioFile(fileInfo);
-  }
-}
-
-AudioBufferManager.prototype._loadAudioFile = function(fileInfo) {
-  const xhr = new XMLHttpRequest();
-  xhr.open('GET', fileInfo.url);
-  xhr.responseType = 'arraybuffer';
-
-  const that = this;
-  xhr.onload = function() {
-    if (xhr.status === 200) {
-      that._context.decodeAudioData(xhr.response,
-        function(buffer) {
-          // Utils.log('File loaded: ' + fileInfo.url);
-          that._done(fileInfo.name, buffer);
-        },
-        function(message) {
-          Utils.log('Decoding failure: '
-            + fileInfo.url + ' (' + message + ')');
-          that._done(fileInfo.name, null);
-        });
-    } else {
-      Utils.log('XHR Error: ' + fileInfo.url + ' (' + xhr.statusText
-        + ')');
-      that._done(fileInfo.name, null);
-    }
-  };
-
-  // TODO: fetch local resources if XHR fails.
-  xhr.onerror = function(event) {
-    Utils.log('XHR Network failure: ' + fileInfo.url);
-    that._done(fileInfo.name, null);
-  };
-
-  xhr.send();
-};
-
-AudioBufferManager.prototype._done = function(filename, buffer) {
-  // Label the loading task.
-  this._loadingTasks[filename] = buffer !== null ? 'loaded' : 'failed';
-
-  // A failed task will be a null buffer.
-  this._buffers.set(filename, buffer);
-
-  this._updateProgress(filename);
-};
-
-AudioBufferManager.prototype._updateProgress = function(filename) {
-  let numberOfFinishedTasks = 0;
-  let numberOfFailedTask = 0;
-  let numberOfTasks = 0;
-
-  for (const task in this._loadingTasks) {
-    if (Object.prototype.hasOwnProperty.call(this._loadingTasks, task)) {
-      numberOfTasks++;
-      if (this._loadingTasks[task] === 'loaded') {
-        numberOfFinishedTasks++;
-      } else if (this._loadingTasks[task] === 'failed') {
-        numberOfFailedTask++;
-      }
-    }
-  }
-
-  if (typeof this._progress === 'function') {
-    this._progress(filename, numberOfFinishedTasks, numberOfTasks);
-    return;
-  }
-
-  if (numberOfFinishedTasks === numberOfTasks) {
-    this._resolve(this._buffers);
-    return;
-  }
-
-  if (numberOfFinishedTasks + numberOfFailedTask === numberOfTasks) {
-    this._reject(this._buffers);
-    return;
-  }
-};
-
-module.exports = AudioBufferManager;
-
-
-/***/ }),
-/* 6 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/**
- * Copyright 2016 Google Inc. All Rights Reserved.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-
-/**
- * @file Phase matched filter for first-order-ambisonics decoding.
- */
-
-
-
-const Utils = __webpack_require__(0);
-
-
-// Static parameters.
-const CROSSOVER_FREQUENCY = 690;
-const GAIN_COEFFICIENTS = [1.4142, 0.8166, 0.8166, 0.8166];
-
-
-/**
- * Generate the coefficients for dual band filter.
- * @param {Number} crossoverFrequency
- * @param {Number} sampleRate
- * @return {Object} Filter coefficients.
- */
-function generateDualBandCoefficients(crossoverFrequency, sampleRate) {
-  const k = Math.tan(Math.PI * crossoverFrequency / sampleRate);
-  const k2 = k * k;
-  const denominator = k2 + 2 * k + 1;
-
-  return {
-    lowpassA: [1, 2 * (k2 - 1) / denominator, (k2 - 2 * k + 1) / denominator],
-    lowpassB: [k2 / denominator, 2 * k2 / denominator, k2 / denominator],
-    hipassA: [1, 2 * (k2 - 1) / denominator, (k2 - 2 * k + 1) / denominator],
-    hipassB: [1 / denominator, -2 * 1 / denominator, 1 / denominator],
-  };
-}
-
-
-/**
- * FOAPhaseMatchedFilter: A set of filters (LP/HP) with a crossover frequency to
- * compensate the gain of high frequency contents without a phase difference.
- * @constructor
- * @param {AudioContext} context - Associated AudioContext.
- */
-function FOAPhaseMatchedFilter(context) {
-  this._context = context;
-
-  this._input = this._context.createGain();
-
-  if (!this._context.createIIRFilter) {
-    Utils.log('IIR filter is missing. Using Biquad filter instead.');
-    this._lpf = this._context.createBiquadFilter();
-    this._hpf = this._context.createBiquadFilter();
-    this._lpf.frequency.value = CROSSOVER_FREQUENCY;
-    this._hpf.frequency.value = CROSSOVER_FREQUENCY;
-    this._hpf.type = 'highpass';
-  } else {
-    const coef = generateDualBandCoefficients(CROSSOVER_FREQUENCY,
-                                              this._context.sampleRate);
-    this._lpf = this._context.createIIRFilter(coef.lowpassB, coef.lowpassA);
-    this._hpf = this._context.createIIRFilter(coef.hipassB, coef.hipassA);
-  }
-
-  this._splitterLow = this._context.createChannelSplitter(4);
-  this._splitterHigh = this._context.createChannelSplitter(4);
-  this._gainHighW = this._context.createGain();
-  this._gainHighY = this._context.createGain();
-  this._gainHighZ = this._context.createGain();
-  this._gainHighX = this._context.createGain();
-  this._merger = this._context.createChannelMerger(4);
-
-  this._input.connect(this._hpf);
-  this._hpf.connect(this._splitterHigh);
-  this._splitterHigh.connect(this._gainHighW, 0);
-  this._splitterHigh.connect(this._gainHighY, 1);
-  this._splitterHigh.connect(this._gainHighZ, 2);
-  this._splitterHigh.connect(this._gainHighX, 3);
-  this._gainHighW.connect(this._merger, 0, 0);
-  this._gainHighY.connect(this._merger, 0, 1);
-  this._gainHighZ.connect(this._merger, 0, 2);
-  this._gainHighX.connect(this._merger, 0, 3);
-
-  this._input.connect(this._lpf);
-  this._lpf.connect(this._splitterLow);
-  this._splitterLow.connect(this._merger, 0, 0);
-  this._splitterLow.connect(this._merger, 1, 1);
-  this._splitterLow.connect(this._merger, 2, 2);
-  this._splitterLow.connect(this._merger, 3, 3);
-
-  // Apply gain correction to hi-passed pressure and velocity components:
-  // Inverting sign is necessary as the low-passed and high-passed portion are
-  // out-of-phase after the filtering.
-  const now = this._context.currentTime;
-  this._gainHighW.gain.setValueAtTime(-1 * GAIN_COEFFICIENTS[0], now);
-  this._gainHighY.gain.setValueAtTime(-1 * GAIN_COEFFICIENTS[1], now);
-  this._gainHighZ.gain.setValueAtTime(-1 * GAIN_COEFFICIENTS[2], now);
-  this._gainHighX.gain.setValueAtTime(-1 * GAIN_COEFFICIENTS[3], now);
-
-  // Input/output Proxy.
-  this.input = this._input;
-  this.output = this._merger;
-}
-
-
-module.exports = FOAPhaseMatchedFilter;
-
-
-/***/ }),
-/* 7 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/**
- * Copyright 2016 Google Inc. All Rights Reserved.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-
-/**
- * @file Virtual speaker abstraction for first-order-ambisonics decoding.
- */
-
-
-
-
-/**
- * DEPRECATED at V1: A virtual speaker with ambisonic decoding gain coefficients
- * and HRTF convolution for first-order-ambisonics stream. Note that the
- * subgraph directly connects to context's destination.
- * @constructor
- * @param {AudioContext} context - Associated AudioContext.
- * @param {Object} options - Options for speaker.
- * @param {Number[]} options.coefficients - Decoding coefficients for (W,Y,Z,X).
- * @param {AudioBuffer} options.IR - Stereo IR buffer for HRTF convolution.
- * @param {Number} options.gain - Post-gain for the speaker.
- */
-function FOAVirtualSpeaker(context, options) {
-  if (options.IR.numberOfChannels !== 2) {
-    throw new Error('IR does not have 2 channels. cannot proceed.');
-  }
-
-  this._active = false;
-  this._context = context;
-
-  this._input = this._context.createChannelSplitter(4);
-  this._cW = this._context.createGain();
-  this._cY = this._context.createGain();
-  this._cZ = this._context.createGain();
-  this._cX = this._context.createGain();
-  this._convolver = this._context.createConvolver();
-  this._gain = this._context.createGain();
-
-  this._input.connect(this._cW, 0);
-  this._input.connect(this._cY, 1);
-  this._input.connect(this._cZ, 2);
-  this._input.connect(this._cX, 3);
-  this._cW.connect(this._convolver);
-  this._cY.connect(this._convolver);
-  this._cZ.connect(this._convolver);
-  this._cX.connect(this._convolver);
-  this._convolver.connect(this._gain);
-  this._gain.connect(this._context.destination);
-
-  this.enable();
-
-  this._convolver.normalize = false;
-  this._convolver.buffer = options.IR;
-  this._gain.gain.value = options.gain;
-
-  // Set gain coefficients for FOA ambisonic streams.
-  this._cW.gain.value = options.coefficients[0];
-  this._cY.gain.value = options.coefficients[1];
-  this._cZ.gain.value = options.coefficients[2];
-  this._cX.gain.value = options.coefficients[3];
-
-  // Input proxy. Output directly connects to the destination.
-  this.input = this._input;
-}
-
-
-FOAVirtualSpeaker.prototype.enable = function() {
-  this._gain.connect(this._context.destination);
-  this._active = true;
-};
-
-
-FOAVirtualSpeaker.prototype.disable = function() {
-  this._gain.disconnect();
-  this._active = false;
-};
-
-
-module.exports = FOAVirtualSpeaker;
-
-
-/***/ }),
-/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1537,7 +1174,7 @@ module.exports = HOAConvolver;
 
 
 /***/ }),
-/* 9 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1942,7 +1579,7 @@ module.exports = HOARotator;
 
 
 /***/ }),
-/* 10 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1969,11 +1606,11 @@ module.exports = HOARotator;
 
 
 
-exports.Omnitone = __webpack_require__(11);
+exports.Omnitone = __webpack_require__(8);
 
 
 /***/ }),
-/* 11 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2000,22 +1637,16 @@ exports.Omnitone = __webpack_require__(11);
 
 
 const BufferList = __webpack_require__(1);
-const FOAConvolver = __webpack_require__(4);
-const FOADecoder = __webpack_require__(12);
-const FOAPhaseMatchedFilter = __webpack_require__(6);
-const FOARenderer = __webpack_require__(14);
+const FOAConvolver = __webpack_require__(2);
+const FOARenderer = __webpack_require__(9);
 const FOARotator = __webpack_require__(3);
-const FOARouter = __webpack_require__(2);
-const FOAVirtualSpeaker = __webpack_require__(7);
-const HOAConvolver = __webpack_require__(8);
-const HOARenderer = __webpack_require__(16);
-const HOARotator = __webpack_require__(9);
-const Polyfill = __webpack_require__(19);
+const FOARouter = __webpack_require__(4);
+const HOAConvolver = __webpack_require__(5);
+const HOARenderer = __webpack_require__(11);
+const HOARotator = __webpack_require__(6);
+const Polyfill = __webpack_require__(14);
 const Utils = __webpack_require__(0);
-const Version = __webpack_require__(20);
-
-// DEPRECATED in V1, in favor of BufferList.
-const AudioBufferManager = __webpack_require__(5);
+const Version = __webpack_require__(15);
 
 
 /**
@@ -2037,16 +1668,6 @@ let Omnitone = {};
  * @static {BrowserInfo}
  */
 Omnitone.browserInfo = Polyfill.getBrowserInfo();
-
-
-// DEPRECATED in V1. DO. NOT. USE.
-Omnitone.loadAudioBuffers = function(context, speakerData) {
-  return new Promise(function(resolve, reject) {
-    new AudioBufferManager(context, speakerData, function(buffers) {
-      resolve(buffers);
-    }, reject);
-  });
-};
 
 
 /**
@@ -2128,66 +1749,6 @@ Omnitone.createFOARotator = function(context) {
 
 
 /**
- * Create an instance of FOAPhaseMatchedFilter.
- * @ignore
- * @see FOAPhaseMatchedFilter
- * @param {AudioContext} context - Associated AudioContext.
- * @return {FOAPhaseMatchedFilter}
- */
-Omnitone.createFOAPhaseMatchedFilter = function(context) {
-  return new FOAPhaseMatchedFilter(context);
-};
-
-
-/**
- * Create an instance of FOAVirtualSpeaker. For parameters, refer the
- * definition of VirtualSpeaker class.
- * @ignore
- * @param {AudioContext} context - Associated AudioContext.
- * @param {Object} options - Options.
- * @return {FOAVirtualSpeaker}
- */
-Omnitone.createFOAVirtualSpeaker = function(context, options) {
-  return new FOAVirtualSpeaker(context, options);
-};
-
-
-/**
- * DEPRECATED. Use FOARenderer instance.
- * @see FOARenderer
- * @param {AudioContext} context - Associated AudioContext.
- * @param {DOMElement} videoElement - Video or Audio DOM element to be streamed.
- * @param {Object} options - Options for FOA decoder.
- * @param {String} options.baseResourceUrl - Base URL for resources.
- * (base path for HRIR files)
- * @param {Number} [options.postGain=26.0] - Post-decoding gain compensation.
- * @param {Array} [options.routingDestination]  Custom channel layout.
- * @return {FOADecoder}
- */
-Omnitone.createFOADecoder = function(context, videoElement, options) {
-  Utils.log('WARNING: FOADecoder is deprecated in favor of FOARenderer.');
-  return new FOADecoder(context, videoElement, options);
-};
-
-
-/**
- * Create a FOARenderer, the first-order ambisonic decoder and the optimized
- * binaural renderer.
- * @param {AudioContext} context - Associated AudioContext.
- * @param {Object} config
- * @param {Array} [config.channelMap] - Custom channel routing map. Useful for
- * handling the inconsistency in browser's multichannel audio decoding.
- * @param {Array} [config.hrirPathList] - A list of paths to HRIR files. It
- * overrides the internal HRIR list if given.
- * @param {RenderingMode} [config.renderingMode='ambisonic'] - Rendering mode.
- * @return {FOARenderer}
- */
-Omnitone.createFOARenderer = function(context, config) {
-  return new FOARenderer(context, config);
-};
-
-
-/**
  * Creates HOARotator for higher-order ambisonics rotation.
  * @param {AudioContext} context - Associated AudioContext.
  * @param {Number} ambisonicOrder - Ambisonic order.
@@ -2214,6 +1775,23 @@ Omnitone.createHOAConvolver = function(
 
 
 /**
+ * Create a FOARenderer, the first-order ambisonic decoder and the optimized
+ * binaural renderer.
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {Object} config
+ * @param {Array} [config.channelMap] - Custom channel routing map. Useful for
+ * handling the inconsistency in browser's multichannel audio decoding.
+ * @param {Array} [config.hrirPathList] - A list of paths to HRIR files. It
+ * overrides the internal HRIR list if given.
+ * @param {RenderingMode} [config.renderingMode='ambisonic'] - Rendering mode.
+ * @return {FOARenderer}
+ */
+Omnitone.createFOARenderer = function(context, config) {
+  return new FOARenderer(context, config);
+};
+
+
+/**
  * Creates HOARenderer for higher-order ambisonic decoding and the optimized
  * binaural rendering.
  * @param {AudioContext} context - Associated AudioContext.
@@ -2229,16 +1807,15 @@ Omnitone.createHOARenderer = function(context, config) {
 };
 
 
-// Handler Preload Tasks.
-// - Detects the browser information.
-// - Prints out the version number.
+// Handle Pre-load Tasks: detects the browser information and prints out the
+// version number. If the browser is Safari, patch prefixed interfaces.
 (function() {
   Utils.log('Version ' + Version + ' (running ' +
       Omnitone.browserInfo.name + ' ' + Omnitone.browserInfo.version +
       ' on ' + Omnitone.browserInfo.platform +')');
   if (Omnitone.browserInfo.name.toLowerCase() === 'safari') {
     Polyfill.patchSafari();
-    Utils.log(Omnitone.browserInfo.name + ' detected. Appliying polyfill...');
+    Utils.log(Omnitone.browserInfo.name + ' detected. Polyfill applied.');
   }
 })();
 
@@ -2247,300 +1824,7 @@ module.exports = Omnitone;
 
 
 /***/ }),
-/* 12 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/**
- * Copyright 2016 Google Inc. All Rights Reserved.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-
-/**
- * @file Omnitone FOA decoder, DEPRECATED in favor of FOARenderer.
- */
-
-
-
-const AudioBufferManager = __webpack_require__(5);
-const FOARouter = __webpack_require__(2);
-const FOARotator = __webpack_require__(3);
-const FOAPhaseMatchedFilter = __webpack_require__(6);
-const FOAVirtualSpeaker = __webpack_require__(7);
-const FOASpeakerData = __webpack_require__(13);
-const Utils = __webpack_require__(0);
-
-// By default, Omnitone fetches IR from the spatial media repository.
-const HRTFSET_URL = 'https://raw.githubusercontent.com/GoogleChrome/omnitone/master/build/resources/';
-
-// Post gain compensation value.
-let POST_GAIN_DB = 0;
-
-
-/**
- * Omnitone FOA decoder.
- * @constructor
- * @param {AudioContext} context - Associated AudioContext.
- * @param {VideoElement} videoElement - Target video (or audio) element for
- * streaming.
- * @param {Object} options
- * @param {String} options.HRTFSetUrl - Base URL for the cube HRTF sets.
- * @param {Number} options.postGainDB - Post-decoding gain compensation in dB.
- * @param {Number[]} options.channelMap - Custom channel map.
- */
-function FOADecoder(context, videoElement, options) {
-  this._isDecoderReady = false;
-  this._context = context;
-  this._videoElement = videoElement;
-  this._decodingMode = 'ambisonic';
-
-  this._postGainDB = POST_GAIN_DB;
-  this._HRTFSetUrl = HRTFSET_URL;
-  this._channelMap = FOARouter.ChannelMap.DEFAULT; // ACN
-
-  if (options) {
-    if (options.postGainDB) {
-      this._postGainDB = options.postGainDB;
-    }
-    if (options.HRTFSetUrl) {
-      this._HRTFSetUrl = options.HRTFSetUrl;
-    }
-    if (options.channelMap) {
-      this._channelMap = options.channelMap;
-    }
-  }
-
-  // Rearrange speaker data based on |options.HRTFSetUrl|.
-  this._speakerData = [];
-  for (let i = 0; i < FOASpeakerData.length; ++i) {
-    this._speakerData.push({
-      name: FOASpeakerData[i].name,
-      url: this._HRTFSetUrl + '/' + FOASpeakerData[i].url,
-      coef: FOASpeakerData[i].coef,
-    });
-  }
-
-  this._tempMatrix4 = new Float32Array(16);
-}
-
-
-/**
- * Initialize and load the resources for the decode.
- * @return {Promise}
- */
-FOADecoder.prototype.initialize = function() {
-  Utils.log('Initializing... (mode: ' + this._decodingMode + ')');
-
-  // Rerouting channels if necessary.
-  let channelMapString = this._channelMap.toString();
-  let defaultChannelMapString = FOARouter.ChannelMap.DEFAULT.toString();
-  if (channelMapString !== defaultChannelMapString) {
-    Utils.log('Remapping channels ([' + defaultChannelMapString + '] -> ['
-      + channelMapString + '])');
-  }
-
-  this._audioElementSource =
-      this._context.createMediaElementSource(this._videoElement);
-  this._foaRouter = new FOARouter(this._context, this._channelMap);
-  this._foaRotator = new FOARotator(this._context);
-  this._foaPhaseMatchedFilter = new FOAPhaseMatchedFilter(this._context);
-
-  this._audioElementSource.connect(this._foaRouter.input);
-  this._foaRouter.output.connect(this._foaRotator.input);
-  this._foaRotator.output.connect(this._foaPhaseMatchedFilter.input);
-
-  this._foaVirtualSpeakers = [];
-
-  // Bypass signal path.
-  this._bypass = this._context.createGain();
-  this._audioElementSource.connect(this._bypass);
-
-  // Get the linear amplitude from the post gain option, which is in decibel.
-  const postGainLinear = Math.pow(10, this._postGainDB/20);
-  Utils.log('Gain compensation: ' + postGainLinear + ' (' + this._postGainDB
-    + 'dB)');
-
-  // This returns a promise so developers can use the decoder when it is ready.
-  const that = this;
-  return new Promise(function(resolve, reject) {
-    new AudioBufferManager(that._context, that._speakerData,
-      function(buffers) {
-        for (let i = 0; i < that._speakerData.length; ++i) {
-          that._foaVirtualSpeakers[i] = new FOAVirtualSpeaker(that._context, {
-            coefficients: that._speakerData[i].coef,
-            IR: buffers.get(that._speakerData[i].name),
-            gain: postGainLinear,
-          });
-
-          that._foaPhaseMatchedFilter.output.connect(
-            that._foaVirtualSpeakers[i].input);
-        }
-
-        // Set the decoding mode.
-        that.setMode(that._decodingMode);
-        that._isDecoderReady = true;
-        Utils.log('HRTF IRs are loaded successfully. The decoder is ready.');
-        resolve();
-      }, reject);
-  });
-};
-
-/**
- * Set the rotation matrix for the sound field rotation.
- * @param {Array} rotationMatrix      3x3 rotation matrix (row-major
- *                                    representation)
- */
-FOADecoder.prototype.setRotationMatrix = function(rotationMatrix) {
-  this._foaRotator.setRotationMatrix(rotationMatrix);
-};
-
-
-/**
- * Update the rotation matrix from a Three.js camera object.
- * @param  {Object} cameraMatrix      The Matrix4 obejct of Three.js the camera.
- */
-FOADecoder.prototype.setRotationMatrixFromCamera = function(cameraMatrix) {
-  // Extract the inner array elements and inverse. (The actual view rotation is
-  // the opposite of the camera movement.)
-  Utils.invertMatrix4(this._tempMatrix4, cameraMatrix.elements);
-  this._foaRotator.setRotationMatrix4(this._tempMatrix4);
-};
-
-/**
- * Set the decoding mode.
- * @param {String} mode               Decoding mode. When the mode is 'bypass'
- *                                    the decoder is disabled and bypass the
- *                                    input stream to the output. Setting the
- *                                    mode to 'ambisonic' activates the decoder.
- *                                    When the mode is 'off', all the
- *                                    processing is completely turned off saving
- *                                    the CPU power.
- */
-FOADecoder.prototype.setMode = function(mode) {
-  if (mode === this._decodingMode) {
-    return;
-  }
-
-  switch (mode) {
-    case 'bypass':
-      this._decodingMode = 'bypass';
-      for (let i = 0; i < this._foaVirtualSpeakers.length; ++i) {
-        this._foaVirtualSpeakers[i].disable();
-      }
-      this._bypass.connect(this._context.destination);
-      break;
-
-    case 'ambisonic':
-      this._decodingMode = 'ambisonic';
-      for (let i = 0; i < this._foaVirtualSpeakers.length; ++i) {
-        this._foaVirtualSpeakers[i].enable();
-      }
-      this._bypass.disconnect();
-      break;
-
-    case 'off':
-      this._decodingMode = 'off';
-      for (let i = 0; i < this._foaVirtualSpeakers.length; ++i) {
-        this._foaVirtualSpeakers[i].disable();
-      }
-      this._bypass.disconnect();
-      break;
-
-    default:
-      break;
-  }
-
-  Utils.log('Decoding mode changed. (' + mode + ')');
-};
-
-module.exports = FOADecoder;
-
-
-/***/ }),
-/* 13 */
-/***/ (function(module, exports) {
-
-/**
- * Copyright 2016 Google Inc. All Rights Reserved.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-
-/**
- * The data for FOAVirtualSpeaker. Each entry contains the URL for IR files and
- * the gain coefficients for the associated IR files. Note that the order of
- * coefficients follows the ACN channel ordering. (W,Y,Z,X)
- * @type {Object[]}
- */
-const FOASpeakerData = [{
-  name: 'E35_A135',
-  url: 'E35_A135.wav',
-  gainFactor: 1,
-  coef: [.1250, 0.216495, 0.21653, -0.216495],
-}, {
-  name: 'E35_A-135',
-  url: 'E35_A-135.wav',
-  gainFactor: 1,
-  coef: [.1250, -0.216495, 0.21653, -0.216495],
-}, {
-  name: 'E-35_A135',
-  url: 'E-35_A135.wav',
-  gainFactor: 1,
-  coef: [.1250, 0.216495, -0.21653, -0.216495],
-}, {
-  name: 'E-35_A-135',
-  url: 'E-35_A-135.wav',
-  gainFactor: 1,
-  coef: [.1250, -0.216495, -0.21653, -0.216495],
-}, {
-  name: 'E35_A45',
-  url: 'E35_A45.wav',
-  gainFactor: 1,
-  coef: [.1250, 0.216495, 0.21653, 0.216495],
-}, {
-  name: 'E35_A-45',
-  url: 'E35_A-45.wav',
-  gainFactor: 1,
-  coef: [.1250, -0.216495, 0.21653, 0.216495],
-}, {
-  name: 'E-35_A45',
-  url: 'E-35_A45.wav',
-  gainFactor: 1,
-  coef: [.1250, 0.216495, -0.21653, 0.216495],
-}, {
-  name: 'E-35_A-45',
-  url: 'E-35_A-45.wav',
-  gainFactor: 1,
-  coef: [.1250, -0.216495, -0.21653, 0.216495],
-}];
-
-
-module.exports = FOASpeakerData;
-
-
-/***/ }),
-/* 14 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2568,10 +1852,10 @@ module.exports = FOASpeakerData;
 
 
 const BufferList = __webpack_require__(1);
-const FOAConvolver = __webpack_require__(4);
-const FOAHrirBase64 = __webpack_require__(15);
+const FOAConvolver = __webpack_require__(2);
+const FOAHrirBase64 = __webpack_require__(10);
 const FOARotator = __webpack_require__(3);
-const FOARouter = __webpack_require__(2);
+const FOARouter = __webpack_require__(4);
 const Utils = __webpack_require__(0);
 
 
@@ -2824,7 +2108,7 @@ module.exports = FOARenderer;
 
 
 /***/ }),
-/* 15 */
+/* 10 */
 /***/ (function(module, exports) {
 
 const OmnitoneFOAHrirBase64 = [
@@ -2836,7 +2120,7 @@ module.exports = OmnitoneFOAHrirBase64;
 
 
 /***/ }),
-/* 16 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2864,10 +2148,10 @@ module.exports = OmnitoneFOAHrirBase64;
 
 
 const BufferList = __webpack_require__(1);
-const HOAConvolver = __webpack_require__(8);
-const HOARotator = __webpack_require__(9);
-const TOAHrirBase64 = __webpack_require__(17);
-const SOAHrirBase64 = __webpack_require__(18);
+const HOAConvolver = __webpack_require__(5);
+const HOARotator = __webpack_require__(6);
+const TOAHrirBase64 = __webpack_require__(12);
+const SOAHrirBase64 = __webpack_require__(13);
 const Utils = __webpack_require__(0);
 
 
@@ -3094,7 +2378,7 @@ module.exports = HOARenderer;
 
 
 /***/ }),
-/* 17 */
+/* 12 */
 /***/ (function(module, exports) {
 
 const OmnitoneTOAHrirBase64 = [
@@ -3112,7 +2396,7 @@ module.exports = OmnitoneTOAHrirBase64;
 
 
 /***/ }),
-/* 18 */
+/* 13 */
 /***/ (function(module, exports) {
 
 const OmnitoneSOAHrirBase64 = [
@@ -3127,7 +2411,7 @@ module.exports = OmnitoneSOAHrirBase64;
 
 
 /***/ }),
-/* 19 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3206,7 +2490,7 @@ exports.patchSafari = function() {
 
 
 /***/ }),
-/* 20 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3236,7 +2520,7 @@ exports.patchSafari = function() {
  * Omnitone library version
  * @type {String}
  */
-module.exports = '1.0.6';
+module.exports = '1.2.0';
 
 
 /***/ })

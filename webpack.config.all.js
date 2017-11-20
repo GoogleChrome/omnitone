@@ -22,8 +22,6 @@ const CopyPluginResource = new CopyWebpackPlugin([{
   from: './src/resources',
   to: 'resources',
   ignore: [
-    'cube.config',
-    'LICENSE',
     'omnitone-*',
     'README.md',
     'sh_*',

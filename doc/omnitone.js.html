@@ -50,21 +50,15 @@
 
 const BufferList = require('./buffer-list.js');
 const FOAConvolver = require('./foa-convolver.js');
-const FOADecoder = require('./foa-decoder.js');
-const FOAPhaseMatchedFilter = require('./foa-phase-matched-filter.js');
 const FOARenderer = require('./foa-renderer.js');
 const FOARotator = require('./foa-rotator.js');
 const FOARouter = require('./foa-router.js');
-const FOAVirtualSpeaker = require('./foa-virtual-speaker.js');
 const HOAConvolver = require('./hoa-convolver.js');
 const HOARenderer = require('./hoa-renderer.js');
 const HOARotator = require('./hoa-rotator.js');
 const Polyfill = require('./polyfill.js');
 const Utils = require('./utils.js');
 const Version = require('./version.js');
-
-// DEPRECATED in V1, in favor of BufferList.
-const AudioBufferManager = require('./audiobuffer-manager.js');
 
 
 /**
@@ -86,16 +80,6 @@ let Omnitone = {};
  * @static {BrowserInfo}
  */
 Omnitone.browserInfo = Polyfill.getBrowserInfo();
-
-
-// DEPRECATED in V1. DO. NOT. USE.
-Omnitone.loadAudioBuffers = function(context, speakerData) {
-  return new Promise(function(resolve, reject) {
-    new AudioBufferManager(context, speakerData, function(buffers) {
-      resolve(buffers);
-    }, reject);
-  });
-};
 
 
 /**
@@ -177,66 +161,6 @@ Omnitone.createFOARotator = function(context) {
 
 
 /**
- * Create an instance of FOAPhaseMatchedFilter.
- * @ignore
- * @see FOAPhaseMatchedFilter
- * @param {AudioContext} context - Associated AudioContext.
- * @return {FOAPhaseMatchedFilter}
- */
-Omnitone.createFOAPhaseMatchedFilter = function(context) {
-  return new FOAPhaseMatchedFilter(context);
-};
-
-
-/**
- * Create an instance of FOAVirtualSpeaker. For parameters, refer the
- * definition of VirtualSpeaker class.
- * @ignore
- * @param {AudioContext} context - Associated AudioContext.
- * @param {Object} options - Options.
- * @return {FOAVirtualSpeaker}
- */
-Omnitone.createFOAVirtualSpeaker = function(context, options) {
-  return new FOAVirtualSpeaker(context, options);
-};
-
-
-/**
- * DEPRECATED. Use FOARenderer instance.
- * @see FOARenderer
- * @param {AudioContext} context - Associated AudioContext.
- * @param {DOMElement} videoElement - Video or Audio DOM element to be streamed.
- * @param {Object} options - Options for FOA decoder.
- * @param {String} options.baseResourceUrl - Base URL for resources.
- * (base path for HRIR files)
- * @param {Number} [options.postGain=26.0] - Post-decoding gain compensation.
- * @param {Array} [options.routingDestination]  Custom channel layout.
- * @return {FOADecoder}
- */
-Omnitone.createFOADecoder = function(context, videoElement, options) {
-  Utils.log('WARNING: FOADecoder is deprecated in favor of FOARenderer.');
-  return new FOADecoder(context, videoElement, options);
-};
-
-
-/**
- * Create a FOARenderer, the first-order ambisonic decoder and the optimized
- * binaural renderer.
- * @param {AudioContext} context - Associated AudioContext.
- * @param {Object} config
- * @param {Array} [config.channelMap] - Custom channel routing map. Useful for
- * handling the inconsistency in browser's multichannel audio decoding.
- * @param {Array} [config.hrirPathList] - A list of paths to HRIR files. It
- * overrides the internal HRIR list if given.
- * @param {RenderingMode} [config.renderingMode='ambisonic'] - Rendering mode.
- * @return {FOARenderer}
- */
-Omnitone.createFOARenderer = function(context, config) {
-  return new FOARenderer(context, config);
-};
-
-
-/**
  * Creates HOARotator for higher-order ambisonics rotation.
  * @param {AudioContext} context - Associated AudioContext.
  * @param {Number} ambisonicOrder - Ambisonic order.
@@ -263,6 +187,23 @@ Omnitone.createHOAConvolver = function(
 
 
 /**
+ * Create a FOARenderer, the first-order ambisonic decoder and the optimized
+ * binaural renderer.
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {Object} config
+ * @param {Array} [config.channelMap] - Custom channel routing map. Useful for
+ * handling the inconsistency in browser's multichannel audio decoding.
+ * @param {Array} [config.hrirPathList] - A list of paths to HRIR files. It
+ * overrides the internal HRIR list if given.
+ * @param {RenderingMode} [config.renderingMode='ambisonic'] - Rendering mode.
+ * @return {FOARenderer}
+ */
+Omnitone.createFOARenderer = function(context, config) {
+  return new FOARenderer(context, config);
+};
+
+
+/**
  * Creates HOARenderer for higher-order ambisonic decoding and the optimized
  * binaural rendering.
  * @param {AudioContext} context - Associated AudioContext.
@@ -278,16 +219,15 @@ Omnitone.createHOARenderer = function(context, config) {
 };
 
 
-// Handler Preload Tasks.
-// - Detects the browser information.
-// - Prints out the version number.
+// Handle Pre-load Tasks: detects the browser information and prints out the
+// version number. If the browser is Safari, patch prefixed interfaces.
 (function() {
   Utils.log('Version ' + Version + ' (running ' +
       Omnitone.browserInfo.name + ' ' + Omnitone.browserInfo.version +
       ' on ' + Omnitone.browserInfo.platform +')');
   if (Omnitone.browserInfo.name.toLowerCase() === 'safari') {
     Polyfill.patchSafari();
-    Utils.log(Omnitone.browserInfo.name + ' detected. Appliying polyfill...');
+    Utils.log(Omnitone.browserInfo.name + ' detected. Polyfill applied.');
   }
 })();
 
@@ -309,7 +249,7 @@ module.exports = Omnitone;
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Tue Oct 31 2017 15:56:04 GMT-0700 (PDT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Mon Nov 20 2017 12:49:20 GMT-0800 (PST)
 </footer>
 
 <script> prettyPrint(); </script>
