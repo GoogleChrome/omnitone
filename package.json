@@ -34,6 +34,10 @@
     "watch": "webpack --progress --color --watch"
   },
   "homepage": "https://github.com/GoogleChrome/omnitone",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:GoogleChrome/omnitone.git"
+  },
   "bugs": {
     "url": "https://github.com/GoogleChrome/omnitone/issues"
   },
