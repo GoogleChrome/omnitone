@@ -22,8 +22,8 @@ const FOAHrirData = {
   filename: 'omnitone-foa-hrir-base64.js',
   sources: [
     'src/resources/omnitone-foa-1.wav',
-    'src/resources/omnitone-foa-2.wav'
-  ]
+    'src/resources/omnitone-foa-2.wav',
+  ],
 };
 
 const SOAHrirData = {
@@ -36,7 +36,7 @@ const SOAHrirData = {
     'src/resources/omnitone-soa-3.wav',
     'src/resources/omnitone-soa-4.wav',
     'src/resources/omnitone-soa-5.wav',
-  ]
+  ],
 };
 
 const TOAHrirData = {
@@ -52,10 +52,10 @@ const TOAHrirData = {
     'src/resources/omnitone-toa-6.wav',
     'src/resources/omnitone-toa-7.wav',
     'src/resources/omnitone-toa-8.wav',
-  ]
+  ],
 };
 
-exec('src/resources/sox-hrir-script.sh', (error, stdout, stderr) => {  
+exec('src/resources/sox-hrir-script.sh', (error, stdout, stderr) => {
   if (stderr) {
     console.log(`${stderr}`);
   }
@@ -71,7 +71,7 @@ exec('src/resources/sox-hrir-script.sh', (error, stdout, stderr) => {
       content += '"' + encodedData + '",\n';
     });
     content += '];\n\n';
-    content += 'module.exports = ' + hrirData.variableName + ';\n'
+    content += 'module.exports = ' + hrirData.variableName + ';\n';
 
     // Write Base64-encoded HRIR files to src/ and test/.
     hrirData.outputPath.forEach((path) => {
