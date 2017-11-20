@@ -86,7 +86,7 @@
       <div id="eDivDirection"></div>
     </div>
     <script>
-    var decoder;
+    var foaRenderer;
     var audioSources = {
       'speech': 'resources/4ch_B_FuMaNorm_FuMaOrd_speech.wav',
       'warbird': 'resources/jlwarbirds3.amb'
@@ -125,6 +125,7 @@
      * @param  {Number} phi Yaw.
      */
     var updateDirection = function (theta, psi, phi) {
+      console.log(theta, psi, phi);
       var cosTheta = Math.cos(theta);
       var cosPhi = Math.cos(phi);
       var sinPhi = Math.sin(phi);
@@ -132,8 +133,10 @@
       var sinPsi = Math.sin(psi);
       var cosPsi = Math.cos(psi);
 
-      decoder.setRotationMatrix([
-        cosTheta * cosPhi, cosTheta * sinPhi, -sinTheta,
+      foaRenderer.setRotationMatrix3([
+        cosTheta * cosPhi,
+        cosTheta * sinPhi,
+        -sinTheta,
         sinPsi * sinTheta * cosPhi - cosPsi * sinPhi,
         sinPsi * sinTheta * sinPhi + cosPsi * cosPhi,
         cosTheta * sinPsi,
@@ -144,8 +147,8 @@
 
       divDirection.innerHTML =
           'YAW = ' + Math.round(theta * 180 / Math.PI).toFixed(2) +
-          '\nPITCH = ' + Math.round(psi * 180 / Math.PI).toFixed(2) +
-          '\nROLL = ' + Math.round(phi * 180 / Math.PI).toFixed(2);
+          ' / PITCH = ' + Math.round(psi * 180 / Math.PI).toFixed(2) +
+          ' / ROLL = ' + Math.round(phi * 180 / Math.PI).toFixed(2);
     };
 
 
@@ -184,7 +187,7 @@
       audioElement.crossOrigin = 'anonymous';
       audioElement.src = audioSources['speech'];
 
-      decoder = Omnitone.createFOADecoder(audioContext, audioElement, {
+      foaRenderer = Omnitone.createFOARenderer(audioContext, {
         // The example audio is in the FuMa ordering (W,X,Y,Z). So remap the
         // channels to the ACN format.
         channelMap: [0, 3, 1, 2]
@@ -217,7 +220,7 @@
         updateDirection(direction[0], direction[1], direction[2]);
       };
 
-      decoder.initialize().then(function () {
+      foaRenderer.initialize().then(function () {
         buttonPlayback.disabled = false;
         selectSource.disabled = false;
         selectDirection.disabled = false;
