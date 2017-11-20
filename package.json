@@ -12,7 +12,6 @@
   ],
   "devDependencies": {
     "chai": "^3.5.0",
-    "copy-webpack-plugin": "^4.0.1",
     "eslint": "^4.7.0",
     "eslint-config-google": "^0.9.1",
     "jsdoc": "^3.5.4",
