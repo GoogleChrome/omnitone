@@ -15,9 +15,6 @@
 
 # This script generates a set of HRIR files for Omnitone from GoogleVR's
 # original HRIR files. It also produces a documentation on generated HRIR files.
-# 
-# Usage:
-# ./build-hrir
 
 TAG="[omnitone:build-hrir]"
 
@@ -33,7 +30,7 @@ fi
 
 # Get current directory and check if the required files exist.
 CURRENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-RESOURCE_DIR="$CURRENT_DIR/src/resources"
+RESOURCE_DIR="$CURRENT_DIR"
 FOA_HRIR_PATH="$RESOURCE_DIR/sh_hrir_order_1.wav"
 SOA_HRIR_PATH="$RESOURCE_DIR/sh_hrir_order_2.wav"
 TOA_HRIR_PATH="$RESOURCE_DIR/sh_hrir_order_3.wav"
