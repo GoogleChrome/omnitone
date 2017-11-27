@@ -1,11 +1,7 @@
 .DS_Store
 npm-debug.log
+twistd.pid
+
 node_modules/
 pvt/
 
-.firebaserc
-404.html
-database.rules.json
-firebase.json
-./index.html
-twistd.pid

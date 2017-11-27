@@ -1,18 +1,14 @@
 # Omnitone NPM module must include only the production build and resource files.
+
 doc/
 examples/
 pvt/
 src/
+
 .eslintignore
 .eslintrc.js
-.firebaserc
 .gitignore
 .travis.yml
-404.html
 CONTRIBUTING.md
-database.rules.json
-firebase.json
-generate-hrir-base64.js
-generate-hrir-wave.sh
 webpack.config.all.js
 webpack.config.js
