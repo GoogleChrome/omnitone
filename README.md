@@ -4,7 +4,7 @@
 
 Omnitone is a robust implementation of [ambisonic](https://en.wikipedia.org/wiki/Ambisonics) decoding and binaural rendering written in Web Audio API. Its rendering process is powered by the fast native features from Web Audio API (GainNode and Convolver), ensuring the optimum performance.
 
-The implementation of Omnitone is based on the [Google spatial media](https://github.com/google/spatial-media) specification, and it is the spatial audio renderer that powers the web support of [Resonance Audio](https://developers.google.com/resonance-audio/).
+The implementation of Omnitone is based on the [Google spatial media](https://github.com/google/spatial-media) specification and [SADIE's binaural filters](https://www.york.ac.uk/sadie-project/GoogleVRSADIE.html). It also powers [Resonance Audio SDK](https://github.com/resonance-audio/resonance-audio-web-sdk) for web.
 
 - [Usage](#usage)
   + [FOARenderer](#foarenderer)
