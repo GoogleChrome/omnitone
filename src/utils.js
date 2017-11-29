@@ -23,12 +23,9 @@
  * @param {any} Message to be printed out.
  */
 exports.log = function() {
-  window.console.log.apply(window.console, [
-    '%c[Omnitone]%c ' + Array.prototype.slice.call(arguments).join(' ') +
-        ' %c(@' + performance.now().toFixed(2) + 'ms)',
-    'background: #BBDEFB; color: #FF5722; font-weight: 500', 'font-weight: 300',
-    'color: #AAA',
-  ]);
+  let message = '[Omnitone] ' + Array.prototype.slice.call(arguments).join(' ')
+      + ' (' + performance.now().toFixed(2) + 'ms)';
+  window.console.log(message);
 };
 
 
@@ -37,14 +34,9 @@ exports.log = function() {
  * @param {any} Message to be printed out.
  */
 exports.throw = function() {
-  window.console.error.apply(window.console, [
-    '%c[Omnitone]%c ' + Array.prototype.slice.call(arguments).join(' ') +
-        ' %c(@' + performance.now().toFixed(2) + 'ms)',
-    'background: #C62828; color: #FFEBEE; font-weight: 800', 'font-weight: 400',
-    'color: #AAA',
-  ]);
-
-  throw new Error(false);
+  let message = '[Omnitone] ' + Array.prototype.slice.call(arguments).join(' ')
+      + ' (' + performance.now().toFixed(2) + 'ms)';
+  throw new Error(message);
 };
 
 

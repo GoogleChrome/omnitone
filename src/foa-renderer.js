@@ -151,8 +151,8 @@ FOARenderer.prototype._initializeCallback = function(resolve, reject) {
       }.bind(this),
       function() {
         const errorMessage = 'FOARenderer: HRIR loading/decoding failed.';
-        Utils.throw(errorMessage);
         reject(errorMessage);
+        Utils.throw(errorMessage);
       });
 };
 
@@ -166,9 +166,7 @@ FOARenderer.prototype.initialize = function() {
       'FOARenderer: Initializing... (mode: ' + this._config.renderingMode +
       ')');
 
-  return new Promise(this._initializeCallback.bind(this), function(error) {
-    Utils.throw('FOARenderer: Initialization failed. (' + error + ')');
-  });
+  return new Promise(this._initializeCallback.bind(this));
 };
 
 
