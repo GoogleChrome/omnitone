@@ -163,8 +163,8 @@ HOARenderer.prototype._initializeCallback = function(resolve, reject) {
       }.bind(this),
       function() {
         const errorMessage = 'HOARenderer: HRIR loading/decoding failed.';
-        Utils.throw(errorMessage);
         reject(errorMessage);
+        Utils.throw(errorMessage);
       });
 };
 
@@ -178,8 +178,7 @@ HOARenderer.prototype.initialize = function() {
       'HOARenderer: Initializing... (mode: ' + this._config.renderingMode +
       ', ambisonic order: ' + this._config.ambisonicOrder + ')');
 
-  return new Promise(this._initializeCallback.bind(this), function(error) {
-    Utils.throw('HOARenderer: Initialization failed. (' + error + ')');
+  return new Promise(this._initializeCallback.bind(this));
   });
 };
 
