@@ -179,7 +179,6 @@ HOARenderer.prototype.initialize = function() {
       ', ambisonic order: ' + this._config.ambisonicOrder + ')');
 
   return new Promise(this._initializeCallback.bind(this));
-  });
 };
 
 

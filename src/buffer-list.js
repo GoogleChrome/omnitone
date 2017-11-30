@@ -160,21 +160,21 @@ BufferList.prototype._launchAsyncLoadTaskXHR = function(taskId) {
             const message = 'BufferList: decoding "' +
                 that._bufferData[taskId] + '" failed. (' + errorMessage + ')';
             that._rejectHandler(message);
-            Utils.throw(message);
+            Utils.log(message);
           });
     } else {
       const message = 'BufferList: XHR error while loading "' +
           that._bufferData[taskId] + '". (' + xhr.status + ' ' +
           xhr.statusText + ')';
       that._rejectHandler(message);
-      Utils.throw(message);
+      Utils.log(message);
     }
   };
 
   xhr.onerror = function(event) {
     that._updateProgress(taskId, null);
     that._rejectHandler();
-    Utils.throw(
+    Utils.log(
         'BufferList: XHR network failed on loading "' +
         that._bufferData[taskId] + '".');
   };
