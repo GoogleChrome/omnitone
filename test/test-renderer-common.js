@@ -26,7 +26,7 @@ describe('Constructor', () => {
   it('FOARenderer with invalid hrirPathList URL must be rejected.', (done) => {
     let context = new AudioContext();
     let foaRenderer =
-        Omnitone.createFOARenderer(context, {hrirPathList: ['hello', 'path']});
+        Omnitone.createFOARenderer(context, {hrirPathList: ['foo', 'bar']});
     
     foaRenderer.initialize().then(() => {
       assert.isNotOk({}, 'The promise should have been rejected.');
