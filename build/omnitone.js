@@ -102,12 +102,9 @@ return /******/ (function(modules) { // webpackBootstrap
  * @param {any} Message to be printed out.
  */
 exports.log = function() {
-  window.console.log.apply(window.console, [
-    '%c[Omnitone]%c ' + Array.prototype.slice.call(arguments).join(' ') +
-        ' %c(@' + performance.now().toFixed(2) + 'ms)',
-    'background: #BBDEFB; color: #FF5722; font-weight: 500', 'font-weight: 300',
-    'color: #AAA',
-  ]);
+  let message = '[Omnitone] ' + Array.prototype.slice.call(arguments).join(' ')
+      + ' (' + performance.now().toFixed(2) + 'ms)';
+  window.console.log(message);
 };
 
 
@@ -116,14 +113,9 @@ exports.log = function() {
  * @param {any} Message to be printed out.
  */
 exports.throw = function() {
-  window.console.error.apply(window.console, [
-    '%c[Omnitone]%c ' + Array.prototype.slice.call(arguments).join(' ') +
-        ' %c(@' + performance.now().toFixed(2) + 'ms)',
-    'background: #C62828; color: #FFEBEE; font-weight: 800', 'font-weight: 400',
-    'color: #AAA',
-  ]);
-
-  throw new Error(false);
+  let message = '[Omnitone] ' + Array.prototype.slice.call(arguments).join(' ')
+      + ' (' + performance.now().toFixed(2) + 'ms)';
+  throw new Error(message);
 };
 
 
@@ -495,8 +487,8 @@ BufferList.prototype._launchAsyncLoadTask = function(taskId) {
         that._updateProgress(taskId, null);
         const message = 'BufferList: decoding ArrayByffer("' + taskId +
             '" from Base64-encoded data failed. (' + errorMessage + ')';
-        Utils.throw(message);
         that._rejectHandler(message);
+        Utils.throw(message);
       });
 };
 
@@ -523,23 +515,24 @@ BufferList.prototype._launchAsyncLoadTaskXHR = function(taskId) {
             that._updateProgress(taskId, null);
             const message = 'BufferList: decoding "' +
                 that._bufferData[taskId] + '" failed. (' + errorMessage + ')';
-            Utils.throw(message);
             that._rejectHandler(message);
+            Utils.log(message);
           });
     } else {
       const message = 'BufferList: XHR error while loading "' +
-          that._bufferData[taskId] + '(' + xhr.statusText + ')';
-      Utils.throw(message);
+          that._bufferData[taskId] + '". (' + xhr.status + ' ' +
+          xhr.statusText + ')';
       that._rejectHandler(message);
+      Utils.log(message);
     }
   };
 
   xhr.onerror = function(event) {
-    Utils.throw(
-        'BufferList: XHR network failed on loading "' +
-        that._bufferData[taskId] + '".');
     that._updateProgress(taskId, null);
     that._rejectHandler();
+    Utils.log(
+        'BufferList: XHR network failed on loading "' +
+        that._bufferData[taskId] + '".');
   };
 
   xhr.send();
@@ -1981,8 +1974,8 @@ FOARenderer.prototype._initializeCallback = function(resolve, reject) {
       }.bind(this),
       function() {
         const errorMessage = 'FOARenderer: HRIR loading/decoding failed.';
-        Utils.throw(errorMessage);
         reject(errorMessage);
+        Utils.throw(errorMessage);
       });
 };
 
@@ -1996,9 +1989,7 @@ FOARenderer.prototype.initialize = function() {
       'FOARenderer: Initializing... (mode: ' + this._config.renderingMode +
       ')');
 
-  return new Promise(this._initializeCallback.bind(this), function(error) {
-    Utils.throw('FOARenderer: Initialization failed. (' + error + ')');
-  });
+  return new Promise(this._initializeCallback.bind(this));
 };
 
 
@@ -2289,8 +2280,8 @@ HOARenderer.prototype._initializeCallback = function(resolve, reject) {
       }.bind(this),
       function() {
         const errorMessage = 'HOARenderer: HRIR loading/decoding failed.';
-        Utils.throw(errorMessage);
         reject(errorMessage);
+        Utils.throw(errorMessage);
       });
 };
 
@@ -2304,9 +2295,7 @@ HOARenderer.prototype.initialize = function() {
       'HOARenderer: Initializing... (mode: ' + this._config.renderingMode +
       ', ambisonic order: ' + this._config.ambisonicOrder + ')');
 
-  return new Promise(this._initializeCallback.bind(this), function(error) {
-    Utils.throw('HOARenderer: Initialization failed. (' + error + ')');
-  });
+  return new Promise(this._initializeCallback.bind(this));
 };
 
 

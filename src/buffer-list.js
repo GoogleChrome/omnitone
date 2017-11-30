@@ -131,8 +131,8 @@ BufferList.prototype._launchAsyncLoadTask = function(taskId) {
         that._updateProgress(taskId, null);
         const message = 'BufferList: decoding ArrayByffer("' + taskId +
             '" from Base64-encoded data failed. (' + errorMessage + ')';
-        Utils.throw(message);
         that._rejectHandler(message);
+        Utils.throw(message);
       });
 };
 
@@ -159,23 +159,24 @@ BufferList.prototype._launchAsyncLoadTaskXHR = function(taskId) {
             that._updateProgress(taskId, null);
             const message = 'BufferList: decoding "' +
                 that._bufferData[taskId] + '" failed. (' + errorMessage + ')';
-            Utils.throw(message);
             that._rejectHandler(message);
+            Utils.log(message);
           });
     } else {
       const message = 'BufferList: XHR error while loading "' +
-          that._bufferData[taskId] + '(' + xhr.statusText + ')';
-      Utils.throw(message);
+          that._bufferData[taskId] + '". (' + xhr.status + ' ' +
+          xhr.statusText + ')';
       that._rejectHandler(message);
+      Utils.log(message);
     }
   };
 
   xhr.onerror = function(event) {
-    Utils.throw(
-        'BufferList: XHR network failed on loading "' +
-        that._bufferData[taskId] + '".');
     that._updateProgress(taskId, null);
     that._rejectHandler();
+    Utils.log(
+        'BufferList: XHR network failed on loading "' +
+        that._bufferData[taskId] + '".');
   };
 
   xhr.send();
