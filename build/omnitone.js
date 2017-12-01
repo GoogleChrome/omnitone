@@ -1079,6 +1079,6 @@
         };
     }, function(A, t, e) {
         "use strict";
-        A.exports = "1.2.0";
+        A.exports = "1.2.1";
     } ]);
 });
