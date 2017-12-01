@@ -13,6 +13,10 @@
  * limitations under the License.
  */
 
+const fs = require('fs');
+const licenseBanner = fs.readFileSync('src/LICENSE', 'utf8');
+
+const webpack = require('webpack');
 const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 
 module.exports = {
@@ -24,14 +28,21 @@ module.exports = {
   },
   plugins: [
     new UglifyJSPlugin({
-      sourceMap: true,
       uglifyOptions: {
+        compress: true,
+        output: {
+          comments: false,
+        },
         mangle: {
           // To address the 'let' bug in Safari 10. See:
           // https://github.com/mishoo/UglifyJS2/issues/1753
           'safari10': true
         }
       }
-    })
+    }),
+    new webpack.BannerPlugin({
+      banner: licenseBanner,
+      raw: true,
+    }),
   ]
 };
