@@ -13,11 +13,32 @@
  * limitations under the License.
  */
 
+const fs = require('fs');
+const licenseBanner = fs.readFileSync('src/LICENSE', 'utf8');
+
+const webpack = require('webpack');
+const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
+
 module.exports = {
   entry: './src/main.js',
   output: {
     path: __dirname + '/build',
     filename: 'omnitone.js',
-    libraryTarget: 'umd'
-  }
+    libraryTarget: 'umd',
+  },
+  plugins: [
+    new UglifyJSPlugin({
+      uglifyOptions: {
+        compress: false,
+        output: {
+          comments: false,
+          beautify: true,
+        }
+      },
+    }),
+    new webpack.BannerPlugin({
+      banner: licenseBanner,
+      raw: true,
+    }),
+  ],
 };
