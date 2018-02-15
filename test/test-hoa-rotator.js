@@ -340,8 +340,8 @@ describe('HOARotator', function() {
    */
   function generateRotationMatrix(azimuth, elevation) {
     var forward = [
-      Math.sin(azimuth) * Math.cos(elevation), Math.sin(elevation),
-      Math.cos(azimuth) * Math.cos(elevation)
+      -Math.sin(azimuth) * Math.cos(elevation), Math.sin(elevation),
+      -Math.cos(azimuth) * Math.cos(elevation)
     ];
     var right = normalize(crossProduct([0, 1, 0], forward));
     var up = normalize(crossProduct(forward, right));
@@ -378,26 +378,26 @@ describe('HOARotator', function() {
    */
   function computeRotationAndTest(index) {
     it('#setRotationMatrix: rotate the incoming stream using direction [' +
-           sphericalDirections[index] + '].',
-       function(done) {
-         hoaRotator.setRotationMatrix3(generateRotationMatrix(
-             sphericalDirections[index][0], sphericalDirections[index][1]));
-         expectedValues = sphericalHarmonicsPerDirection[index];
-         context.startRendering().then(function(renderedBuffer) {
-           var vectorNomal = 0;
-           var numberOfChannels = renderedBuffer.numberOfChannels;
-           for (var channel = 0; channel < numberOfChannels; ++channel) {
-             var channelData = renderedBuffer.getChannelData(channel);
-             for (var i = 0; i < channelData.length; ++i)
-               vectorNomal +=
-                   Math.abs(channelData[i] - expectedValues[channel]);
-           }
-           vectorNomal /= renderedBuffer.getChannelData(0).length *
-               renderedBuffer.numberOfChannels * vectorMagnitude;
-           expect(vectorNomal).to.be.below(THRESHOLD);
-           done();
-         });
-       });
+        sphericalDirections[index] + '].',
+      function(done) {
+        hoaRotator.setRotationMatrix3(generateRotationMatrix(
+          sphericalDirections[index][0], sphericalDirections[index][1]));
+        expectedValues = sphericalHarmonicsPerDirection[index];
+        context.startRendering().then(function(renderedBuffer) {
+          var vectorNomal = 0;
+          var numberOfChannels = renderedBuffer.numberOfChannels;
+          for (var channel = 0; channel < numberOfChannels; ++channel) {
+            var channelData = renderedBuffer.getChannelData(channel);
+            for (var i = 0; i < channelData.length; ++i)
+              vectorNomal +=
+                Math.abs(channelData[i] - expectedValues[channel]);
+          }
+          vectorNomal /= renderedBuffer.getChannelData(0).length *
+              renderedBuffer.numberOfChannels * vectorMagnitude;
+          expect(vectorNomal).to.be.below(THRESHOLD);
+          done();
+        });
+    });
   }
 
 
