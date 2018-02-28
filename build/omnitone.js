@@ -79,11 +79,11 @@
         let f;
         let c;
         let h;
+        let g;
         let D;
         let w;
-        let g;
-        let P;
         let v;
+        let P;
         let l;
         let u;
         let B;
@@ -109,11 +109,11 @@
             f = t[7];
             c = t[8];
             h = t[9];
-            D = t[10];
-            w = t[11];
-            g = t[12];
-            P = t[13];
-            v = t[14];
+            g = t[10];
+            D = t[11];
+            w = t[12];
+            v = t[13];
+            P = t[14];
             l = t[15];
             u = e * s - i * o;
             B = e * a - n * o;
@@ -121,12 +121,12 @@
             _ = i * a - n * s;
             C = i * f - r * s;
             d = n * f - r * a;
-            p = c * P - h * g;
-            E = c * v - D * g;
-            M = c * l - w * g;
-            x = h * v - D * P;
-            I = h * l - w * P;
-            m = D * l - w * v;
+            p = c * v - h * w;
+            E = c * P - g * w;
+            M = c * l - D * w;
+            x = h * P - g * v;
+            I = h * l - D * v;
+            m = g * l - D * P;
             b = u * m - B * I + Q * x + _ * M - C * E + d * p;
             if (!b) {
                 return null;
@@ -134,20 +134,20 @@
             b = 1 / b;
             A[0] = (s * m - a * I + f * x) * b;
             A[1] = (n * I - i * m - r * x) * b;
-            A[2] = (P * d - v * C + l * _) * b;
-            A[3] = (D * C - h * d - w * _) * b;
+            A[2] = (v * d - P * C + l * _) * b;
+            A[3] = (g * C - h * d - D * _) * b;
             A[4] = (a * M - o * m - f * E) * b;
             A[5] = (e * m - n * M + r * E) * b;
-            A[6] = (v * Q - g * d - l * B) * b;
-            A[7] = (c * d - D * Q + w * B) * b;
+            A[6] = (P * Q - w * d - l * B) * b;
+            A[7] = (c * d - g * Q + D * B) * b;
             A[8] = (o * I - s * M + f * p) * b;
             A[9] = (i * M - e * I - r * p) * b;
-            A[10] = (g * C - P * Q + l * u) * b;
-            A[11] = (h * Q - c * C - w * u) * b;
+            A[10] = (w * C - v * Q + l * u) * b;
+            A[11] = (h * Q - c * C - D * u) * b;
             A[12] = (s * E - o * x - a * p) * b;
             A[13] = (e * x - i * E + n * p) * b;
-            A[14] = (P * B - g * _ - v * u) * b;
-            A[15] = (c * _ - h * B + D * u) * b;
+            A[14] = (v * B - w * _ - P * u) * b;
+            A[15] = (c * _ - h * B + g * u) * b;
             return A;
         };
         t.isDefinedENUMEntry = function(A, t) {
@@ -628,12 +628,12 @@
                 }
             }
         }
-        function D(A) {
+        function g(A) {
             for (let t = 2; t <= A.length; t++) {
                 h(A, t);
             }
         }
-        function w(A, t) {
+        function D(A, t) {
             this._context = A;
             this._ambisonicOrder = t;
             const e = (t + 1) * (t + 1);
@@ -665,48 +665,60 @@
             this.input = this._splitter;
             this.output = this._merger;
         }
-        w.prototype.setRotationMatrix3 = function(A) {
-            for (let t = 0; t < 9; ++t) {
-                this._gainNodeMatrix[0][t].gain.value = A[t];
-            }
-            D(this._gainNodeMatrix);
-        };
-        w.prototype.setRotationMatrix4 = function(A) {
-            this._gainNodeMatrix[0][0].gain.value = A[0];
+        D.prototype.setRotationMatrix3 = function(A) {
+            this._gainNodeMatrix[0][0].gain.value = -A[0];
             this._gainNodeMatrix[0][1].gain.value = A[1];
-            this._gainNodeMatrix[0][2].gain.value = A[2];
-            this._gainNodeMatrix[0][3].gain.value = A[4];
+            this._gainNodeMatrix[0][2].gain.value = -A[2];
+            this._gainNodeMatrix[0][3].gain.value = -A[3];
+            this._gainNodeMatrix[0][4].gain.value = A[4];
+            this._gainNodeMatrix[0][5].gain.value = -A[5];
+            this._gainNodeMatrix[0][6].gain.value = -A[6];
+            this._gainNodeMatrix[0][7].gain.value = A[7];
+            this._gainNodeMatrix[0][8].gain.value = -A[8];
+            g(this._gainNodeMatrix);
+        };
+        D.prototype.setRotationMatrix4 = function(A) {
+            this._gainNodeMatrix[0][0].gain.value = -A[0];
+            this._gainNodeMatrix[0][1].gain.value = A[1];
+            this._gainNodeMatrix[0][2].gain.value = -A[2];
+            this._gainNodeMatrix[0][3].gain.value = -A[4];
             this._gainNodeMatrix[0][4].gain.value = A[5];
-            this._gainNodeMatrix[0][5].gain.value = A[6];
-            this._gainNodeMatrix[0][6].gain.value = A[8];
+            this._gainNodeMatrix[0][5].gain.value = -A[6];
+            this._gainNodeMatrix[0][6].gain.value = -A[8];
             this._gainNodeMatrix[0][7].gain.value = A[9];
-            this._gainNodeMatrix[0][8].gain.value = A[10];
-            D(this._gainNodeMatrix);
+            this._gainNodeMatrix[0][8].gain.value = -A[10];
+            g(this._gainNodeMatrix);
         };
-        w.prototype.getRotationMatrix3 = function() {
+        D.prototype.getRotationMatrix3 = function() {
             let A = new Float32Array(9);
-            for (let t = 0; t < 9; ++t) {
-                A[t] = this._gainNodeMatrix[0][t].gain.value;
-            }
-            return A;
-        };
-        w.prototype.getRotationMatrix4 = function() {
-            let A = new Float32Array(16);
-            A[0] = this._gainNodeMatrix[0][0].gain.value;
+            A[0] = -this._gainNodeMatrix[0][0].gain.value;
             A[1] = this._gainNodeMatrix[0][1].gain.value;
-            A[2] = this._gainNodeMatrix[0][2].gain.value;
-            A[4] = this._gainNodeMatrix[0][3].gain.value;
-            A[5] = this._gainNodeMatrix[0][4].gain.value;
-            A[6] = this._gainNodeMatrix[0][5].gain.value;
-            A[8] = this._gainNodeMatrix[0][6].gain.value;
-            A[9] = this._gainNodeMatrix[0][7].gain.value;
-            A[10] = this._gainNodeMatrix[0][8].gain.value;
+            A[2] = -this._gainNodeMatrix[0][2].gain.value;
+            A[3] = -this._gainNodeMatrix[0][3].gain.value;
+            A[4] = this._gainNodeMatrix[0][4].gain.value;
+            A[5] = -this._gainNodeMatrix[0][5].gain.value;
+            A[6] = -this._gainNodeMatrix[0][6].gain.value;
+            A[7] = this._gainNodeMatrix[0][7].gain.value;
+            A[8] = -this._gainNodeMatrix[0][8].gain.value;
             return A;
         };
-        w.prototype.getAmbisonicOrder = function() {
+        D.prototype.getRotationMatrix4 = function() {
+            let A = new Float32Array(16);
+            A[0] = -this._gainNodeMatrix[0][0].gain.value;
+            A[1] = this._gainNodeMatrix[0][1].gain.value;
+            A[2] = -this._gainNodeMatrix[0][2].gain.value;
+            A[4] = -this._gainNodeMatrix[0][3].gain.value;
+            A[5] = this._gainNodeMatrix[0][4].gain.value;
+            A[6] = -this._gainNodeMatrix[0][5].gain.value;
+            A[8] = -this._gainNodeMatrix[0][6].gain.value;
+            A[9] = this._gainNodeMatrix[0][7].gain.value;
+            A[10] = -this._gainNodeMatrix[0][8].gain.value;
+            return A;
+        };
+        D.prototype.getAmbisonicOrder = function() {
             return this._ambisonicOrder;
         };
-        A.exports = w;
+        A.exports = D;
     }, function(A, t, e) {
         "use strict";
         t.Omnitone = e(8);
@@ -721,47 +733,47 @@
         const f = e(11);
         const c = e(6);
         const h = e(14);
-        const D = e(0);
-        const w = e(15);
-        let g = {};
-        g.browserInfo = h.getBrowserInfo();
-        g.createBufferList = function(A, t, e) {
+        const g = e(0);
+        const D = e(15);
+        let w = {};
+        w.browserInfo = h.getBrowserInfo();
+        w.createBufferList = function(A, t, e) {
             const n = new i(A, t, e || {
                 dataType: "url"
             });
             return n.load();
         };
-        g.mergeBufferListByChannel = D.mergeBufferListByChannel;
-        g.splitBufferbyChannel = D.splitBufferbyChannel;
-        g.createFOAConvolver = function(A, t) {
+        w.mergeBufferListByChannel = g.mergeBufferListByChannel;
+        w.splitBufferbyChannel = g.splitBufferbyChannel;
+        w.createFOAConvolver = function(A, t) {
             return new n(A, t);
         };
-        g.createFOARouter = function(A, t) {
+        w.createFOARouter = function(A, t) {
             return new s(A, t);
         };
-        g.createFOARotator = function(A) {
+        w.createFOARotator = function(A) {
             return new o(A);
         };
-        g.createHOARotator = function(A, t) {
+        w.createHOARotator = function(A, t) {
             return new c(A, t);
         };
-        g.createHOAConvolver = function(A, t, e) {
+        w.createHOAConvolver = function(A, t, e) {
             return new a(A, t, e);
         };
-        g.createFOARenderer = function(A, t) {
+        w.createFOARenderer = function(A, t) {
             return new r(A, t);
         };
-        g.createHOARenderer = function(A, t) {
+        w.createHOARenderer = function(A, t) {
             return new f(A, t);
         };
         (function() {
-            D.log("Version " + w + " (running " + g.browserInfo.name + " " + g.browserInfo.version + " on " + g.browserInfo.platform + ")");
-            if (g.browserInfo.name.toLowerCase() === "safari") {
+            g.log("Version " + D + " (running " + w.browserInfo.name + " " + w.browserInfo.version + " on " + w.browserInfo.platform + ")");
+            if (w.browserInfo.name.toLowerCase() === "safari") {
                 h.patchSafari();
-                D.log(g.browserInfo.name + " detected. Polyfill applied.");
+                g.log(w.browserInfo.name + " detected. Polyfill applied.");
             }
         })();
-        A.exports = g;
+        A.exports = w;
     }, function(A, t, e) {
         "use strict";
         const i = e(1);
