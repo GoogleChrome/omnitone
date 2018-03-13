@@ -340,8 +340,8 @@ describe('HOARotator', function() {
    */
   function generateRotationMatrix(azimuth, elevation) {
     var forward = [
-      Math.sin(azimuth) * Math.cos(elevation), Math.sin(elevation),
-      Math.cos(azimuth) * Math.cos(elevation)
+      -Math.sin(azimuth) * Math.cos(elevation), Math.sin(elevation),
+      -Math.cos(azimuth) * Math.cos(elevation)
     ];
     var right = normalize(crossProduct([0, 1, 0], forward));
     var up = normalize(crossProduct(forward, right));
