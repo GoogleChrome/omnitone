@@ -330,9 +330,15 @@ function HOARotator(context, ambisonicOrder) {
  * @param {Number[]} rotationMatrix3 - A 3x3 rotation matrix. (column-major)
  */
 HOARotator.prototype.setRotationMatrix3 = function(rotationMatrix3) {
-  for (let i = 0; i < 9; ++i) {
-    this._gainNodeMatrix[0][i].gain.value = rotationMatrix3[i];
-  }
+  this._gainNodeMatrix[0][0].gain.value = -rotationMatrix3[0];
+  this._gainNodeMatrix[0][1].gain.value = rotationMatrix3[1];
+  this._gainNodeMatrix[0][2].gain.value = -rotationMatrix3[2];
+  this._gainNodeMatrix[0][3].gain.value = -rotationMatrix3[3];
+  this._gainNodeMatrix[0][4].gain.value = rotationMatrix3[4];
+  this._gainNodeMatrix[0][5].gain.value = -rotationMatrix3[5];
+  this._gainNodeMatrix[0][6].gain.value = -rotationMatrix3[6];
+  this._gainNodeMatrix[0][7].gain.value = rotationMatrix3[7];
+  this._gainNodeMatrix[0][8].gain.value = -rotationMatrix3[8];
   computeHOAMatrices(this._gainNodeMatrix);
 };
 
@@ -342,15 +348,15 @@ HOARotator.prototype.setRotationMatrix3 = function(rotationMatrix3) {
  * @param {Number[]} rotationMatrix4 - A 4x4 rotation matrix. (column-major)
  */
 HOARotator.prototype.setRotationMatrix4 = function(rotationMatrix4) {
-  this._gainNodeMatrix[0][0].gain.value = rotationMatrix4[0];
+  this._gainNodeMatrix[0][0].gain.value = -rotationMatrix4[0];
   this._gainNodeMatrix[0][1].gain.value = rotationMatrix4[1];
-  this._gainNodeMatrix[0][2].gain.value = rotationMatrix4[2];
-  this._gainNodeMatrix[0][3].gain.value = rotationMatrix4[4];
+  this._gainNodeMatrix[0][2].gain.value = -rotationMatrix4[2];
+  this._gainNodeMatrix[0][3].gain.value = -rotationMatrix4[4];
   this._gainNodeMatrix[0][4].gain.value = rotationMatrix4[5];
-  this._gainNodeMatrix[0][5].gain.value = rotationMatrix4[6];
-  this._gainNodeMatrix[0][6].gain.value = rotationMatrix4[8];
+  this._gainNodeMatrix[0][5].gain.value = -rotationMatrix4[6];
+  this._gainNodeMatrix[0][6].gain.value = -rotationMatrix4[8];
   this._gainNodeMatrix[0][7].gain.value = rotationMatrix4[9];
-  this._gainNodeMatrix[0][8].gain.value = rotationMatrix4[10];
+  this._gainNodeMatrix[0][8].gain.value = -rotationMatrix4[10];
   computeHOAMatrices(this._gainNodeMatrix);
 };
 
@@ -361,9 +367,15 @@ HOARotator.prototype.setRotationMatrix4 = function(rotationMatrix4) {
  */
 HOARotator.prototype.getRotationMatrix3 = function() {
   let rotationMatrix3 = new Float32Array(9);
-  for (let i = 0; i < 9; ++i) {
-    rotationMatrix3[i] = this._gainNodeMatrix[0][i].gain.value;
-  }
+  rotationMatrix3[0] = -this._gainNodeMatrix[0][0].gain.value;
+  rotationMatrix3[1] = this._gainNodeMatrix[0][1].gain.value;
+  rotationMatrix3[2] = -this._gainNodeMatrix[0][2].gain.value;
+  rotationMatrix3[4] = -this._gainNodeMatrix[0][3].gain.value;
+  rotationMatrix3[5] = this._gainNodeMatrix[0][4].gain.value;
+  rotationMatrix3[6] = -this._gainNodeMatrix[0][5].gain.value;
+  rotationMatrix3[8] = -this._gainNodeMatrix[0][6].gain.value;
+  rotationMatrix3[9] = this._gainNodeMatrix[0][7].gain.value;
+  rotationMatrix3[10] = -this._gainNodeMatrix[0][8].gain.value;
   return rotationMatrix3;
 };
 
@@ -374,15 +386,15 @@ HOARotator.prototype.getRotationMatrix3 = function() {
  */
 HOARotator.prototype.getRotationMatrix4 = function() {
   let rotationMatrix4 = new Float32Array(16);
-  rotationMatrix4[0] = this._gainNodeMatrix[0][0].gain.value;
+  rotationMatrix4[0] = -this._gainNodeMatrix[0][0].gain.value;
   rotationMatrix4[1] = this._gainNodeMatrix[0][1].gain.value;
-  rotationMatrix4[2] = this._gainNodeMatrix[0][2].gain.value;
-  rotationMatrix4[4] = this._gainNodeMatrix[0][3].gain.value;
+  rotationMatrix4[2] = -this._gainNodeMatrix[0][2].gain.value;
+  rotationMatrix4[4] = -this._gainNodeMatrix[0][3].gain.value;
   rotationMatrix4[5] = this._gainNodeMatrix[0][4].gain.value;
-  rotationMatrix4[6] = this._gainNodeMatrix[0][5].gain.value;
-  rotationMatrix4[8] = this._gainNodeMatrix[0][6].gain.value;
+  rotationMatrix4[6] = -this._gainNodeMatrix[0][5].gain.value;
+  rotationMatrix4[8] = -this._gainNodeMatrix[0][6].gain.value;
   rotationMatrix4[9] = this._gainNodeMatrix[0][7].gain.value;
-  rotationMatrix4[10] = this._gainNodeMatrix[0][8].gain.value;
+  rotationMatrix4[10] = -this._gainNodeMatrix[0][8].gain.value;
   return rotationMatrix4;
 };
 

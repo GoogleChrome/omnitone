@@ -1,6 +1,6 @@
 {
   "name": "omnitone",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Spatial Audio Decoder in Web Audio API",
   "main": "build/omnitone.js",
   "keywords": [
@@ -43,5 +43,8 @@
     "url": "https://github.com/GoogleChrome/omnitone/issues"
   },
   "author": "The Chromium Authors",
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "dependencies": {
+    "npm": "^5.7.1"
+  }
 }
