@@ -40,16 +40,35 @@
         A.d = function(n, e, t) {
             if (!A.o(n, e)) {
                 Object.defineProperty(n, e, {
-                    configurable: false,
                     enumerable: true,
                     get: t
                 });
             }
         };
         A.r = function(n) {
+            if (typeof Symbol !== "undefined" && Symbol.toStringTag) {
+                Object.defineProperty(n, Symbol.toStringTag, {
+                    value: "Module"
+                });
+            }
             Object.defineProperty(n, "__esModule", {
                 value: true
             });
+        };
+        A.t = function(n, e) {
+            if (e & 1) n = A(n);
+            if (e & 8) return n;
+            if (e & 4 && typeof n === "object" && n && n.__esModule) return n;
+            var t = Object.create(null);
+            A.r(t);
+            Object.defineProperty(t, "default", {
+                enumerable: true,
+                value: n
+            });
+            if (e & 2 && typeof n != "string") for (var i in n) A.d(t, i, function(e) {
+                return n[e];
+            }.bind(null, i));
+            return t;
         };
         A.n = function(n) {
             var e = n && n.__esModule ? function e() {
