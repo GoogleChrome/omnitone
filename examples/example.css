@@ -74,9 +74,15 @@ dd>input[type=range] {
 .label {
     display: inline-block;
     text-align: center;
-
     width: 140px;
     height: 40px;
+}
+
+#eDropZone {
+    height: 100px;
+    border-radius: 10px;
+    border: #AAA 2px dotted;
+    padding: 10px;
 }
 
 #footer {

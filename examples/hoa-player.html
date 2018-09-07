@@ -17,21 +17,18 @@
   <head>
     <meta charset="utf-8">
     <title>
-      Example: HOARenderer
+      Example: HOA Player
     </title>
     <script src="../build/omnitone.min.js"></script>
     <link rel="stylesheet" href="example.css">
   </head>
   <body>
     <h1>
-      Example: HOARenderer
+      Example: HOA Player
     </h1>
     <p>
-      <code>HOARenderer</code> is an optimized higher-order ambisonic renderer
-      based on the integrated convolution (SH-MaxRe HRIR). This renderer
-      supports arbitrary order ambisonic rendering, provided the user supplies
-      the appropriate SH-MaxRe HRIRs. You may toggle between 2nd and 3rd order
-      ambisonic renderer.
+      Drag and drop a TOA ambisonic encoded file. You may toggle between 2nd
+      and 3rd order ambisonic renderer.
     </p>
     <div id="secSource">
       <p>
@@ -65,6 +62,10 @@
       </dl>
       <button id="eButtonPlayback" disabled>Play</button>
       <button id="eButtonAmbisonicOrder" disabled>3rd Order</button>
+      <br><br>
+      <div id="eDropZone">
+        Currently playing: <span id="eFileUrl"></span>
+      </div>
     </div>
     <div id="footer">
       <p>
@@ -80,23 +81,22 @@
       var exampleInitialized = false;
 
       var audioContext;
+      var audioElement;
+      var audioElementSource;
       var toaRenderer;
       var soaRenderer;
       var currentBufferSource;
       var inputGain;
       var contentBuffer;
       var rotationMatrix3 = new Float32Array(9);
+      rotationMatrix3.set([-1, 0, 0, 0, 1, -0, 0, 0, 1]);
 
       var eButtonPlayback;
       var eButtonAmbisonicOrder;
       var eRangeAzimuth;
       var eRangeElevation;
       var eRangeGain;
-
-      var exampleSoundPathList = [
-        'resources/3oa_example_ch0-ch7.wav',
-        'resources/3oa_example_ch8-ch15.wav'
-      ];
+      var eFileUrl;
 
       function crossProduct(a, b) {
         return [
@@ -166,16 +166,11 @@
 
         switch (event.target.textContent) {
           case 'Play':
-            currentBufferSource = audioContext.createBufferSource();
-            currentBufferSource.buffer = contentBuffer;
-            currentBufferSource.loop = true;
-            currentBufferSource.connect(inputGain);
-            currentBufferSource.start();
+            audioElement.play();
             event.target.textContent = 'Stop';
             break;
           case 'Stop':
-            currentBufferSource.stop();
-            currentBufferSource.disconnect();
+            audioElement.pause();
             event.target.textContent = 'Play';
             break;
         }
@@ -201,13 +196,50 @@
         }
       }
 
+      function handleFileDrop(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        eFileUrl.textContent = event.dataTransfer.files[0].name;
+
+        const file = event.dataTransfer.files[0];
+        if (!file.type.match('audio.*')) {
+          eFileUrl.textContent = 'ERROR! ' + file.name +
+              'is not a valid audio file.';
+          return;
+        } else {
+          eFileUrl.textContent = file.name + ' (' + file.type + ',  ' +
+              file.size + ' bytes)';
+        }
+
+        audioElement.src = window.URL.createObjectURL(file);
+        eButtonPlayback.disabled = false;
+      }
+
+      function handleDragOver(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'copy';
+      }
+
       function onLoad() {
+        audioContext = new AudioContext();
+        audioElement = document.createElement('audio');
+        audioElementSource =
+            audioContext.createMediaElementSource(audioElement);
+        audioElement.loop = true;
+        audioElement.crossOrigin = 'anonymous';
+
         eButtonPlayback = document.getElementById('eButtonPlayback');
         eButtonAmbisonicOrder =
             document.getElementById('eButtonAmbisonicOrder');
         eRangeAzimuth = document.getElementById('eRangeAzimuth');
         eRangeElevation = document.getElementById('eRangeElevation');
         eRangeGain = document.getElementById('eRangeGain');
+        eFileUrl = document.getElementById('eFileUrl');
+        document.getElementById('eDropZone').addEventListener(
+            'drop', handleFileDrop, false);
+        document.getElementById('eDropZone').addEventListener(
+            'dragover', handleDragOver, false);
 
         eButtonPlayback.onclick = onTogglePlayback;
         eButtonAmbisonicOrder.onclick = onToggleAmbisonicOrder;
@@ -215,27 +247,24 @@
         eRangeAzimuth.oninput = onDirectionChange;
         eRangeElevation.oninput = onDirectionChange;
 
-        audioContext = new AudioContext();
         inputGain = audioContext.createGain();
         toaRenderer = Omnitone.createHOARenderer(audioContext);
         soaRenderer = Omnitone.createHOARenderer(audioContext,
                                                  {ambisonicOrder: 2});
 
         Promise.all([
-          Omnitone.createBufferList(audioContext, exampleSoundPathList),
           toaRenderer.initialize(),
           soaRenderer.initialize()
           ]).then((results) => {
-            contentBuffer =
-                Omnitone.mergeBufferListByChannel(audioContext, results[0]);
+            audioElementSource.connect(inputGain);
             inputGain.connect(soaRenderer.input);
             inputGain.connect(toaRenderer.input);
             soaRenderer.output.connect(audioContext.destination);
             toaRenderer.output.connect(audioContext.destination);
             soaRenderer.setRenderingMode('off');
-            eButtonPlayback.disabled = false;
             eButtonAmbisonicOrder.disabled = false;
             exampleInitialized = true;
+            eFileUrl.textContent = 'Drop an ambisonic file here.';
           });
       }
 
