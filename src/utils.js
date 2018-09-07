@@ -207,9 +207,8 @@ exports.mergeBufferListByChannel = function(context, bufferList) {
     bufferNumberOfChannel += bufferList[i].numberOfChannels;
   }
 
-  const buffer = context.createBuffer(bufferNumberOfChannel,
-                                      bufferLength,
-                                      bufferSampleRate);
+  const buffer = context.createBuffer(
+      bufferNumberOfChannel, bufferLength, bufferSampleRate);
   let destinationChannelIndex = 0;
   for (let i = 0; i < bufferList.length; ++i) {
     for (let j = 0; j < bufferList[i].numberOfChannels; ++j) {
@@ -241,13 +240,12 @@ exports.splitBufferbyChannel = function(context, audioBuffer, splitBy) {
   const numberOfSplittedBuffer =
       Math.ceil(audioBuffer.numberOfChannels / splitBy);
   for (let i = 0; i < numberOfSplittedBuffer; ++i) {
-    let buffer = context.createBuffer(splitBy,
-                                      audioBuffer.length,
-                                      audioBuffer.sampleRate);
+    let buffer = context.createBuffer(
+        splitBy, audioBuffer.length, audioBuffer.sampleRate);
     for (let j = 0; j < splitBy; ++j) {
       if (sourceChannelIndex < audioBuffer.numberOfChannels) {
         buffer.getChannelData(j).set(
-          audioBuffer.getChannelData(sourceChannelIndex++));
+            audioBuffer.getChannelData(sourceChannelIndex++));
       }
     }
     bufflerList.push(buffer);
@@ -266,6 +264,6 @@ exports.getArrayBufferFromBase64String = function(base64String) {
   let binaryString = window.atob(base64String);
   let byteArray = new Uint8Array(binaryString.length);
   byteArray.forEach(
-    (value, index) => byteArray[index] = binaryString.charCodeAt(index));
+      (value, index) => byteArray[index] = binaryString.charCodeAt(index));
   return byteArray.buffer;
 };

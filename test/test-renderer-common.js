@@ -27,7 +27,7 @@ describe('Constructor', () => {
     let context = new AudioContext();
     let foaRenderer =
         Omnitone.createFOARenderer(context, {hrirPathList: ['foo', 'bar']});
-    
+
     foaRenderer.initialize().then(() => {
       assert.isNotOk({}, 'The promise should have been rejected.');
       done();
