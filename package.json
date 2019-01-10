@@ -1,6 +1,6 @@
 {
   "name": "omnitone",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "description": "Spatial Audio Decoder in Web Audio API",
   "main": "build/omnitone.js",
   "keywords": [
@@ -20,6 +20,7 @@
     "karma-chrome-launcher": "^2.2.0",
     "karma-mocha": "^1.3.0",
     "karma-mocha-reporter": "^2.2.5",
+    "lodash": ">=4.17.5",
     "marked": "^0.5.0",
     "mocha": "^5.2.0",
     "uglifyjs-webpack-plugin": "^1.3.0",
