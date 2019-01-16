@@ -19,9 +19,7 @@
  */
 
 
-'use strict';
-
-const Utils = require('./utils.js');
+import Utils from './utils.js';
 
 /**
  * @typedef {string} BufferDataType
@@ -209,4 +207,4 @@ BufferList.prototype._updateProgress = function(taskId, audioBuffer) {
 };
 
 
-module.exports = BufferList;
+export default BufferList;

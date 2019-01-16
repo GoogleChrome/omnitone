@@ -20,14 +20,13 @@
  * ambisonic decoder and the optimized binaural renderer.
  */
 
-'use strict';
 
-const BufferList = require('./buffer-list.js');
-const FOAConvolver = require('./foa-convolver.js');
-const FOAHrirBase64 = require('./resources/omnitone-foa-hrir-base64.js');
-const FOARotator = require('./foa-rotator.js');
-const FOARouter = require('./foa-router.js');
-const Utils = require('./utils.js');
+import BufferList from './buffer-list.js';
+import FOAConvolver from './foa-convolver.js';
+import FOAHrirBase64 from './resources/omnitone-foa-hrir-base64.js';
+import FOARotator from './foa-rotator.js';
+import FOARouter from './foa-router.js';
+import Utils from './utils.js';
 
 
 /**
@@ -273,4 +272,4 @@ FOARenderer.prototype.setRenderingMode = function(mode) {
 };
 
 
-module.exports = FOARenderer;
+export default FOARenderer;

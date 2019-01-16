@@ -19,8 +19,6 @@
  * browsers.
  */
 
-'use strict';
-
 
 /**
  * @typedef {Number[]} ChannelMap
@@ -86,4 +84,4 @@ FOARouter.prototype.setChannelMap = function(channelMap) {
 FOARouter.ChannelMap = ChannelMap;
 
 
-module.exports = FOARouter;
+export default FOARouter;

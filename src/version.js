@@ -18,11 +18,12 @@
  * @file Omnitone version.
  */
 
-'use strict';
-
 
 /**
  * Omnitone library version
  * @type {String}
  */
-module.exports = '1.2.6';
+const Version = '1.2.6';
+
+
+export default Version;

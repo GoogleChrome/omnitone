@@ -20,12 +20,20 @@
 
 
 /**
+ * Utility namespace.
+ * @namespace
+ */
+const Utils = {};
+
+
+/**
  * Omnitone library logging function.
  * @param {any} Message to be printed out.
  */
-exports.log = function() {
-  let message = '[Omnitone] ' + Array.prototype.slice.call(arguments).join(' ')
-      + ' (' + performance.now().toFixed(2) + 'ms)';
+Utils.log = function() {
+  const message = `[Omnitone] \
+${Array.prototype.slice.call(arguments).join(' ')} \
+(${performance.now().toFixed(2)}ms)`;
   window.console.log(message);
 };
 
@@ -34,9 +42,10 @@ exports.log = function() {
  * Omnitone library error-throwing function.
  * @param {any} Message to be printed out.
  */
-exports.throw = function() {
-  let message = '[Omnitone] ' + Array.prototype.slice.call(arguments).join(' ')
-      + ' (' + performance.now().toFixed(2) + 'ms)';
+Utils.throw = function() {
+  const message = `[Omnitone] \
+${Array.prototype.slice.call(arguments).join(' ')} \
+(${performance.now().toFixed(2)}ms)`;
   throw new Error(message);
 };
 
@@ -80,7 +89,7 @@ let det;
  * @param {Float32Array} a     The source matrix.
  * @return {Float32Array} out
  */
-exports.invertMatrix4 = function(out, a) {
+Utils.invertMatrix4 = function(out, a) {
   a00 = a[0];
   a01 = a[1];
   a02 = a[2];
@@ -143,7 +152,7 @@ exports.invertMatrix4 = function(out, a) {
  * @param {Number|String} entryValue - a value to probe.
  * @return {Boolean}
  */
-exports.isDefinedENUMEntry = function(enumDictionary, entryValue) {
+Utils.isDefinedENUMEntry = function(enumDictionary, entryValue) {
   for (let enumKey in enumDictionary) {
     if (entryValue === enumDictionary[enumKey]) {
       return true;
@@ -158,7 +167,7 @@ exports.isDefinedENUMEntry = function(enumDictionary, entryValue) {
  * @param {AudioContext} context - A context object to be checked.
  * @return {Boolean}
  */
-exports.isAudioContext = function(context) {
+Utils.isAudioContext = function(context) {
   // TODO(hoch): Update this when BaseAudioContext is available for all
   // browsers.
   return context instanceof AudioContext ||
@@ -171,7 +180,7 @@ exports.isAudioContext = function(context) {
  * @param {Object} audioBuffer An AudioBuffer object to be checked.
  * @return {Boolean}
  */
-exports.isAudioBuffer = function(audioBuffer) {
+Utils.isAudioBuffer = function(audioBuffer) {
   return audioBuffer instanceof AudioBuffer;
 };
 
@@ -184,23 +193,23 @@ exports.isAudioBuffer = function(audioBuffer) {
  * channel-wise.
  * @return {AudioBuffer} - A single merged AudioBuffer.
  */
-exports.mergeBufferListByChannel = function(context, bufferList) {
+Utils.mergeBufferListByChannel = function(context, bufferList) {
   const bufferLength = bufferList[0].length;
   const bufferSampleRate = bufferList[0].sampleRate;
   let bufferNumberOfChannel = 0;
 
   for (let i = 0; i < bufferList.length; ++i) {
     if (bufferNumberOfChannel > 32) {
-      exports.throw('Utils.mergeBuffer: Number of channels cannot exceed 32.' +
+      Utils.throw('Utils.mergeBuffer: Number of channels cannot exceed 32.' +
           '(got ' + bufferNumberOfChannel + ')');
     }
     if (bufferLength !== bufferList[i].length) {
-      exports.throw('Utils.mergeBuffer: AudioBuffer lengths are ' +
+      Utils.throw('Utils.mergeBuffer: AudioBuffer lengths are ' +
           'inconsistent. (expected ' + bufferLength + ' but got ' +
           bufferList[i].length + ')');
     }
     if (bufferSampleRate !== bufferList[i].sampleRate) {
-      exports.throw('Utils.mergeBuffer: AudioBuffer sample rates are ' +
+      Utils.throw('Utils.mergeBuffer: AudioBuffer sample rates are ' +
           'inconsistent. (expected ' + bufferSampleRate + ' but got ' +
           bufferList[i].sampleRate + ')');
     }
@@ -229,9 +238,9 @@ exports.mergeBufferListByChannel = function(context, bufferList) {
  * @param {Number} splitBy - Number of channels to be splitted.
  * @return {AudioBuffer[]} - An array of splitted AudioBuffers.
  */
-exports.splitBufferbyChannel = function(context, audioBuffer, splitBy) {
+Utils.splitBufferbyChannel = function(context, audioBuffer, splitBy) {
   if (audioBuffer.numberOfChannels <= splitBy) {
-    exports.throw('Utils.splitBuffer: Insufficient number of channels. (' +
+    Utils.throw('Utils.splitBuffer: Insufficient number of channels. (' +
         audioBuffer.numberOfChannels + ' splitted by ' + splitBy + ')');
   }
 
@@ -260,10 +269,13 @@ exports.splitBufferbyChannel = function(context, audioBuffer, splitBy) {
  * @param {string} base64String - Base64-encdoed string.
  * @return {ArrayByuffer} Converted ArrayBuffer object.
  */
-exports.getArrayBufferFromBase64String = function(base64String) {
+Utils.getArrayBufferFromBase64String = function(base64String) {
   let binaryString = window.atob(base64String);
   let byteArray = new Uint8Array(binaryString.length);
   byteArray.forEach(
       (value, index) => byteArray[index] = binaryString.charCodeAt(index));
   return byteArray.buffer;
 };
+
+
+export default Utils;

@@ -18,8 +18,6 @@
  * @file Sound field rotator for first-order-ambisonics decoding.
  */
 
-'use strict';
-
 
 /**
  * First-order-ambisonic decoder based on gain node network.
@@ -166,4 +164,4 @@ FOARotator.prototype.getRotationMatrix4 = function() {
 };
 
 
-module.exports = FOARotator;
+export default FOARotator;

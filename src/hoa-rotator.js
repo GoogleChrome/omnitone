@@ -18,8 +18,6 @@
  * @file Sound field rotator for higher-order-ambisonics decoding.
  */
 
-'use strict';
-
 
 /**
  * Kronecker Delta function.
@@ -408,4 +406,4 @@ HOARotator.prototype.getAmbisonicOrder = function() {
 };
 
 
-module.exports = HOARotator;
+export default HOARotator;

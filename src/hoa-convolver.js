@@ -20,8 +20,6 @@
  * rendering. (e.g. SH-MaxRe HRTFs)
  */
 
-'use strict';
-
 
 /**
  * A convolver network for N-channel HOA stream.
@@ -169,4 +167,4 @@ HOAConvolver.prototype.disable = function() {
 };
 
 
-module.exports = HOAConvolver;
+export default HOAConvolver;
