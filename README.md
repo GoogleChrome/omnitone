@@ -45,12 +45,26 @@ The first step is to include the library file in an HTML document. Omnitone is a
 
 ```html
 <script src="https://www.gstatic.com/external_hosted/omnitone/build/omnitone.min.js"></script>
+<script>
+  // `Omnitone` object is loaded and ready.
+  var audioContext = new AudioContext();
+  var foaRenderer = Omnitone.createFOARenderer(audioContext);
+</script>
 ```
 
 Alternatively, you can install Omnitone as a part of your local development via [NPM](https://www.npmjs.com/package/omnitone).
 
 ```bash
 npm install omnitone
+```
+
+As of version 1.3.0, Omnitone library includes an ES6 module. This is convenient when you integrate Omnitone into your project.
+
+```js
+import Omnitone from './omnitone/build/omnitone.min.esm.js';
+
+const audioContext = new AudioContext();
+const foaRenderer = Omnitone.createFOARenderer(audioContext);
 ```
 
 You can also `git clone` the repository and use the library file as usual.
