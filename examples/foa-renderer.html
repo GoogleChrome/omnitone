@@ -94,10 +94,12 @@
       buttonPlayback.onclick = function (event) {
         if (event.target.textContent === 'Play') {
           event.target.textContent = 'Pause';
+          audioContext.resume();
           audioElement.play();
         } else {
           event.target.textContent = 'Play';
           audioElement.pause();
+          audioContext.suspend();
         }
       };
 

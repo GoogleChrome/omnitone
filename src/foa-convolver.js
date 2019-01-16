@@ -20,8 +20,6 @@
  * rendering. (e.g. SH-MaxRe HRTFs)
  */
 
-'use strict';
-
 
 /**
  * FOAConvolver. A collection of 2 stereo convolvers for 4-channel FOA stream.
@@ -142,4 +140,4 @@ FOAConvolver.prototype.disable = function() {
 };
 
 
-module.exports = FOAConvolver;
+export default FOAConvolver;

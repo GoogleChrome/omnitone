@@ -21,24 +21,24 @@
 
 'use strict';
 
-const BufferList = require('./buffer-list.js');
-const FOAConvolver = require('./foa-convolver.js');
-const FOARenderer = require('./foa-renderer.js');
-const FOARotator = require('./foa-rotator.js');
-const FOARouter = require('./foa-router.js');
-const HOAConvolver = require('./hoa-convolver.js');
-const HOARenderer = require('./hoa-renderer.js');
-const HOARotator = require('./hoa-rotator.js');
-const Polyfill = require('./polyfill.js');
-const Utils = require('./utils.js');
-const Version = require('./version.js');
+import BufferList from './buffer-list.js';
+import FOARouter from './foa-router.js';
+import FOARotator from './foa-rotator.js';
+import FOAConvolver from './foa-convolver.js';
+import FOARenderer from './foa-renderer.js';
+import HOAConvolver from './hoa-convolver.js';
+import HOARenderer from './hoa-renderer.js';
+import HOARotator from './hoa-rotator.js';
+import Polyfill from './polyfill.js';
+import Version from './version.js';
+import Utils from './utils.js';
 
 
 /**
  * Omnitone namespace.
  * @namespace
  */
-let Omnitone = {};
+const Omnitone = {};
 
 
 /**
@@ -195,14 +195,12 @@ Omnitone.createHOARenderer = function(context, config) {
 // Handle Pre-load Tasks: detects the browser information and prints out the
 // version number. If the browser is Safari, patch prefixed interfaces.
 (function() {
-  Utils.log('Version ' + Version + ' (running ' +
-      Omnitone.browserInfo.name + ' ' + Omnitone.browserInfo.version +
-      ' on ' + Omnitone.browserInfo.platform +')');
+  Utils.log(`Version ${Version} (running ${Omnitone.browserInfo.name} \
+${Omnitone.browserInfo.version} on ${Omnitone.browserInfo.platform})`);
   if (Omnitone.browserInfo.name.toLowerCase() === 'safari') {
     Polyfill.patchSafari();
-    Utils.log(Omnitone.browserInfo.name + ' detected. Polyfill applied.');
+    Utils.log(`${Omnitone.browserInfo.name} detected. Polyfill applied.`);
   }
 })();
 
-
-module.exports = Omnitone;
+export default Omnitone;

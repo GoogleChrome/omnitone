@@ -18,14 +18,18 @@
  * @file Cross-browser support polyfill for Omnitone library.
  */
 
-'use strict';
+/**
+ * Compat utility namespace.
+ * @namespace
+ */
+const Polyfill = {};
 
 
 /**
  * Detects browser type and version.
  * @return {string[]} - An array contains the detected browser name and version.
  */
-exports.getBrowserInfo = function() {
+Polyfill.getBrowserInfo = function() {
   const ua = navigator.userAgent;
   let M = ua.match(
       /(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*([\d\.]+)/i) ||
@@ -65,9 +69,12 @@ exports.getBrowserInfo = function() {
 /**
  * Patches AudioContext if the prefixed API is found.
  */
-exports.patchSafari = function() {
+Polyfill.patchSafari = function() {
   if (window.webkitAudioContext && window.webkitOfflineAudioContext) {
     window.AudioContext = window.webkitAudioContext;
     window.OfflineAudioContext = window.webkitOfflineAudioContext;
   }
 };
+
+
+export default Polyfill;

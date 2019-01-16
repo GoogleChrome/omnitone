@@ -45,12 +45,26 @@ The first step is to include the library file in an HTML document. Omnitone is a
 
 ```html
 <script src="https://www.gstatic.com/external_hosted/omnitone/build/omnitone.min.js"></script>
+<script>
+  // `Omnitone` object is loaded and ready.
+  var audioContext = new AudioContext();
+  var foaRenderer = Omnitone.createFOARenderer(audioContext);
+</script>
 ```
 
 Alternatively, you can install Omnitone as a part of your local development via [NPM](https://www.npmjs.com/package/omnitone).
 
 ```bash
 npm install omnitone
+```
+
+As of version 1.3.0, Omnitone library includes an ES6 module. This is convenient when you integrate Omnitone into your project.
+
+```js
+import Omnitone from './omnitone/build/omnitone.min.esm.js';
+
+const audioContext = new AudioContext();
+const foaRenderer = Omnitone.createFOARenderer(audioContext);
 ```
 
 You can also `git clone` the repository and use the library file as usual.
@@ -65,20 +79,24 @@ git clone https://github.com/GoogleChrome/omnitone.git
 
 ```js
 // Set up an audio element to feed the ambisonic source audio feed.
-var audioElement = document.createElement('audio');
+const audioElement = document.createElement('audio');
 audioElement.src = 'audio-file-foa-acn.wav';
 
 // Create AudioContext, MediaElementSourceNode and FOARenderer.
-var audioContext = new AudioContext();
-var audioElementSource =
-    audioContext.createMediaElementSource(audioElement);
-var foaRenderer = Omnitone.createFOARenderer(audioContext);
+const audioContext = new AudioContext();
+const audioElementSource = audioContext.createMediaElementSource(audioElement);
+const foaRenderer = Omnitone.createFOARenderer(audioContext);
 
-// Make connection and start play.
+// Make connection and start play. Hook up the user input for the playback.
 foaRenderer.initialize().then(function() {
   audioElementSource.connect(foaRenderer.input);
   foaRenderer.output.connect(audioContext.destination);
-  audioElement.play();
+
+  // This is necessary to activate audio playback out of autoplay block.
+  someButton.onclick = () => {
+    audioContext.resume();
+    audioElement.play();
+  };
 });
 ```
 
@@ -94,8 +112,6 @@ var hoaRenderer = Omnitone.createHOARenderer(audioContext);
 ### Rotation and Rendering Mode
 
 The rotation matrix in Omnitone renderer can be updated inside of the application's animation loop to rotate the entire sound field. Omnitone supports both 3x3 and 4x4 rotation matrices(column-major).
-
-Note that 
 
 ```js
 // Rotation with 3x3 or 4x4 matrix.
@@ -130,9 +146,7 @@ renderer.setRenderingMode('off');
 For the development, get a copy of the repository first and run the following script to build the library. Omnitone uses [WebPack](https://webpack.github.io/) to compile the sources.
 
 ```bash
-npm run build       # build a non-minified library.
-npm run watch       # recompile whenever any source file changes.
-npm run build-all   # build a minified library and copy static resources.
+npm run build       # build omnitone library files.
 npm run build-doc   # build JSDoc3 documentation.
 npm run eslint      # Run ESLint against source files.
 ```

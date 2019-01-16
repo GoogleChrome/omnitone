@@ -19,9 +19,7 @@
  */
 
 
-'use strict';
-
-const Utils = require('./utils.js');
+import Utils from './utils.js';
 
 /**
  * @typedef {string} BufferDataType
@@ -193,14 +191,14 @@ BufferList.prototype._updateProgress = function(taskId, audioBuffer) {
   this._bufferList[taskId] = audioBuffer;
 
   if (this._options.verbose) {
-    let messageString = this._options.dataType === BufferDataType.BASE64
+    const messageString = this._options.dataType === BufferDataType.BASE64
         ? 'ArrayBuffer(' + taskId + ') from Base64-encoded HRIR'
         : '"' + this._bufferData[taskId] + '"';
     Utils.log('BufferList: ' + messageString + ' successfully loaded.');
   }
 
   if (--this._numberOfTasks === 0) {
-    let messageString = this._options.dataType === BufferDataType.BASE64
+    const messageString = this._options.dataType === BufferDataType.BASE64
         ? this._bufferData.length + ' AudioBuffers from Base64-encoded HRIRs'
         : this._bufferData.length + ' files via XHR';
     Utils.log('BufferList: ' + messageString + ' loaded successfully.');
@@ -209,4 +207,4 @@ BufferList.prototype._updateProgress = function(taskId, audioBuffer) {
 };
 
 
-module.exports = BufferList;
+export default BufferList;

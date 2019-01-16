@@ -18,8 +18,6 @@
  * @file Sound field rotator for first-order-ambisonics decoding.
  */
 
-'use strict';
-
 
 /**
  * First-order-ambisonic decoder based on gain node network.
@@ -152,7 +150,7 @@ FOARotator.prototype.getRotationMatrix3 = function() {
  * @return {Number[]} - A 4x4 rotation matrix. (column-major)
  */
 FOARotator.prototype.getRotationMatrix4 = function() {
-  let rotationMatrix4 = new Float32Array(16);
+  const rotationMatrix4 = new Float32Array(16);
   rotationMatrix4[0] = this._m0.gain.value;
   rotationMatrix4[1] = this._m1.gain.value;
   rotationMatrix4[2] = this._m2.gain.value;
@@ -166,4 +164,4 @@ FOARotator.prototype.getRotationMatrix4 = function() {
 };
 
 
-module.exports = FOARotator;
+export default FOARotator;

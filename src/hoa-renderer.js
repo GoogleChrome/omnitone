@@ -20,14 +20,13 @@
  * ambisonic decoder and the optimized binaural renderer.
  */
 
-'use strict';
 
-const BufferList = require('./buffer-list.js');
-const HOAConvolver = require('./hoa-convolver.js');
-const HOARotator = require('./hoa-rotator.js');
-const TOAHrirBase64 = require('./resources/omnitone-toa-hrir-base64.js');
-const SOAHrirBase64 = require('./resources/omnitone-soa-hrir-base64.js');
-const Utils = require('./utils.js');
+import BufferList from './buffer-list.js';
+import HOAConvolver from './hoa-convolver.js';
+import HOARotator from './hoa-rotator.js';
+import TOAHrirBase64 from './resources/omnitone-toa-hrir-base64.js';
+import SOAHrirBase64 from './resources/omnitone-soa-hrir-base64.js';
+import Utils from './utils.js';
 
 
 /**
@@ -247,4 +246,4 @@ HOARenderer.prototype.setRenderingMode = function(mode) {
 };
 
 
-module.exports = HOARenderer;
+export default HOARenderer;

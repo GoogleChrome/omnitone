@@ -19,8 +19,6 @@
  * structure, see src/resources/README.md for the detail.
  */
 
-'use strict';
-
 
 const HRIRList = [
   // Zero-order ambisonic. Not supported. (0 files, 1 channel)

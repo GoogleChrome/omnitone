@@ -66,8 +66,8 @@ exec('src/resources/sox-hrir-script.sh', (error, stdout, stderr) => {
   [FOAHrirData, SOAHrirData, TOAHrirData].forEach((hrirData) => {
     let content = 'const ' + hrirData.variableName + ' = [\n';
     hrirData.sources.forEach((path) => {
-      let file = fs.readFileSync(path);
-      let encodedData = new Buffer(file).toString('base64');
+      const file = fs.readFileSync(path);
+      const encodedData = new Buffer(file).toString('base64');
       content += '"' + encodedData + '",\n';
     });
     content += '];\n\n';
