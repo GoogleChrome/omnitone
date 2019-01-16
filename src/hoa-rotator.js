@@ -364,7 +364,7 @@ HOARotator.prototype.setRotationMatrix4 = function(rotationMatrix4) {
  * @return {Number[]} - A 3x3 rotation matrix. (column-major)
  */
 HOARotator.prototype.getRotationMatrix3 = function() {
-  let rotationMatrix3 = new Float32Array(9);
+  const rotationMatrix3 = new Float32Array(9);
   rotationMatrix3[0] = -this._gainNodeMatrix[0][0].gain.value;
   rotationMatrix3[1] = this._gainNodeMatrix[0][1].gain.value;
   rotationMatrix3[2] = -this._gainNodeMatrix[0][2].gain.value;
@@ -383,7 +383,7 @@ HOARotator.prototype.getRotationMatrix3 = function() {
  * @return {Number[]} - A 4x4 rotation matrix. (column-major)
  */
 HOARotator.prototype.getRotationMatrix4 = function() {
-  let rotationMatrix4 = new Float32Array(16);
+  const rotationMatrix4 = new Float32Array(16);
   rotationMatrix4[0] = -this._gainNodeMatrix[0][0].gain.value;
   rotationMatrix4[1] = this._gainNodeMatrix[0][1].gain.value;
   rotationMatrix4[2] = -this._gainNodeMatrix[0][2].gain.value;

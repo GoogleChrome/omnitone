@@ -153,7 +153,7 @@ Utils.invertMatrix4 = function(out, a) {
  * @return {Boolean}
  */
 Utils.isDefinedENUMEntry = function(enumDictionary, entryValue) {
-  for (let enumKey in enumDictionary) {
+  for (const enumKey in enumDictionary) {
     if (entryValue === enumDictionary[enumKey]) {
       return true;
     }
@@ -244,12 +244,12 @@ Utils.splitBufferbyChannel = function(context, audioBuffer, splitBy) {
         audioBuffer.numberOfChannels + ' splitted by ' + splitBy + ')');
   }
 
-  let bufflerList = [];
+  const bufflerList = [];
   let sourceChannelIndex = 0;
   const numberOfSplittedBuffer =
       Math.ceil(audioBuffer.numberOfChannels / splitBy);
   for (let i = 0; i < numberOfSplittedBuffer; ++i) {
-    let buffer = context.createBuffer(
+    const buffer = context.createBuffer(
         splitBy, audioBuffer.length, audioBuffer.sampleRate);
     for (let j = 0; j < splitBy; ++j) {
       if (sourceChannelIndex < audioBuffer.numberOfChannels) {
@@ -270,8 +270,8 @@ Utils.splitBufferbyChannel = function(context, audioBuffer, splitBy) {
  * @return {ArrayByuffer} Converted ArrayBuffer object.
  */
 Utils.getArrayBufferFromBase64String = function(base64String) {
-  let binaryString = window.atob(base64String);
-  let byteArray = new Uint8Array(binaryString.length);
+  const binaryString = window.atob(base64String);
+  const byteArray = new Uint8Array(binaryString.length);
   byteArray.forEach(
       (value, index) => byteArray[index] = binaryString.charCodeAt(index));
   return byteArray.buffer;

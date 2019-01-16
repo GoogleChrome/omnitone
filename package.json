@@ -1,6 +1,6 @@
 {
   "name": "omnitone",
-  "version": "1.2.6",
+  "version": "1.3.0",
   "description": "Spatial Audio Decoder in Web Audio API",
   "main": "build/omnitone.js",
   "keywords": [
@@ -11,22 +11,20 @@
     "Web Audio API"
   ],
   "devDependencies": {
-    "chai": "^4.1.2",
-    "eslint": "^5.5.0",
-    "eslint-config-google": "^0.10.0",
+    "eslint": "^5.12.0",
+    "eslint-config-google": "^0.11.0",
     "jsdoc": "^3.5.5",
-    "karma": "^3.0.0",
+    "karma": "^3.1.4",
     "karma-chai": "^0.1.0",
     "karma-chrome-launcher": "^2.2.0",
     "karma-mocha": "^1.3.0",
     "karma-mocha-reporter": "^2.2.5",
-    "lodash": ">=4.17.5",
-    "marked": "^0.5.0",
-    "mocha": "^5.2.0",
+    "lodash": "^4.17.11",
+    "marked": "^0.6.0",
     "rollup": "^1.1.0",
     "rollup-plugin-cleanup": "^3.1.0",
     "rollup-plugin-terser": "^4.0.2",
-    "rollup-plugin-uglify": "^6.0.1",
+    "rollup-plugin-uglify": "^6.0.1"
   },
   "scripts": {
     "build": "rollup -c",

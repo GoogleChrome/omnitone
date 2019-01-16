@@ -112,7 +112,7 @@ ${Array.prototype.slice.call(arguments).join(' ')} \
     return out;
   };
   Utils.isDefinedENUMEntry = function(enumDictionary, entryValue) {
-    for (let enumKey in enumDictionary) {
+    for (const enumKey in enumDictionary) {
       if (entryValue === enumDictionary[enumKey]) {
         return true;
       }
@@ -167,7 +167,7 @@ ${Array.prototype.slice.call(arguments).join(' ')} \
     const numberOfSplittedBuffer =
         Math.ceil(audioBuffer.numberOfChannels / splitBy);
     for (let i = 0; i < numberOfSplittedBuffer; ++i) {
-      let buffer = context.createBuffer(
+      const buffer = context.createBuffer(
           splitBy, audioBuffer.length, audioBuffer.sampleRate);
       for (let j = 0; j < splitBy; ++j) {
         if (sourceChannelIndex < audioBuffer.numberOfChannels) {
@@ -179,8 +179,8 @@ ${Array.prototype.slice.call(arguments).join(' ')} \
     return bufferList;
   };
   Utils.getArrayBufferFromBase64String = function(base64String) {
-    let binaryString = window.atob(base64String);
-    let byteArray = new Uint8Array(binaryString.length);
+    const binaryString = window.atob(base64String);
+    const byteArray = new Uint8Array(binaryString.length);
     byteArray.forEach(
         (value, index) => byteArray[index] = binaryString.charCodeAt(index));
     return byteArray.buffer;
@@ -287,13 +287,13 @@ ${Array.prototype.slice.call(arguments).join(' ')} \
   BufferList.prototype._updateProgress = function(taskId, audioBuffer) {
     this._bufferList[taskId] = audioBuffer;
     if (this._options.verbose) {
-      let messageString = this._options.dataType === BufferDataType.BASE64
+      const messageString = this._options.dataType === BufferDataType.BASE64
           ? 'ArrayBuffer(' + taskId + ') from Base64-encoded HRIR'
           : '"' + this._bufferData[taskId] + '"';
       Utils.log('BufferList: ' + messageString + ' successfully loaded.');
     }
     if (--this._numberOfTasks === 0) {
-      let messageString = this._options.dataType === BufferDataType.BASE64
+      const messageString = this._options.dataType === BufferDataType.BASE64
           ? this._bufferData.length + ' AudioBuffers from Base64-encoded HRIRs'
           : this._bufferData.length + ' files via XHR';
       Utils.log('BufferList: ' + messageString + ' loaded successfully.');
@@ -409,7 +409,7 @@ ${Array.prototype.slice.call(arguments).join(' ')} \
     ];
   };
   FOARotator.prototype.getRotationMatrix4 = function() {
-    let rotationMatrix4 = new Float32Array(16);
+    const rotationMatrix4 = new Float32Array(16);
     rotationMatrix4[0] = this._m0.gain.value;
     rotationMatrix4[1] = this._m1.gain.value;
     rotationMatrix4[2] = this._m2.gain.value;
@@ -855,7 +855,7 @@ ${Array.prototype.slice.call(arguments).join(' ')} \
     computeHOAMatrices(this._gainNodeMatrix);
   };
   HOARotator.prototype.getRotationMatrix3 = function() {
-    let rotationMatrix3 = new Float32Array(9);
+    const rotationMatrix3 = new Float32Array(9);
     rotationMatrix3[0] = -this._gainNodeMatrix[0][0].gain.value;
     rotationMatrix3[1] = this._gainNodeMatrix[0][1].gain.value;
     rotationMatrix3[2] = -this._gainNodeMatrix[0][2].gain.value;
@@ -868,7 +868,7 @@ ${Array.prototype.slice.call(arguments).join(' ')} \
     return rotationMatrix3;
   };
   HOARotator.prototype.getRotationMatrix4 = function() {
-    let rotationMatrix4 = new Float32Array(16);
+    const rotationMatrix4 = new Float32Array(16);
     rotationMatrix4[0] = -this._gainNodeMatrix[0][0].gain.value;
     rotationMatrix4[1] = this._gainNodeMatrix[0][1].gain.value;
     rotationMatrix4[2] = -this._gainNodeMatrix[0][2].gain.value;
