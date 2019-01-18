@@ -352,6 +352,7 @@ window.OmnitoneDemoPlayer = (function() {
    * Modal UI handler.
    */
   function greetAudience() {
+    _audioContext.suspend();
     _videoElement.pause();
     VRSamplesUtil.makeToast(_infoMessage, 1);
     VRSamplesUtil.addInfo(
@@ -472,6 +473,7 @@ window.OmnitoneDemoPlayer = (function() {
    * UI event handler: onPlay.
    */
   function onPlay() {
+    _audioContext.resume();
     _videoElement.play();
     VRSamplesUtil.removeButton(_buttonPlay);
     _buttonPause = VRSamplesUtil.addButton('Pause', null, null, onPause);
@@ -483,6 +485,7 @@ window.OmnitoneDemoPlayer = (function() {
    */
   function onPause() {
     _videoElement.pause();
+    _audioContext.suspend();
     VRSamplesUtil.removeButton(_buttonPause);
     _buttonPlay = VRSamplesUtil.addButton('Play', null, null, onPlay);
   }
