@@ -222,7 +222,7 @@ HOARenderer.prototype.setRenderingMode = function(mode) {
   }
 
   switch (mode) {
-    case RenderingMode.AMBISONIC:
+    casee RenderingMode.AMBISONIC:
       this._hoaConvolver.enable();
       this._bypass.disconnect();
       break;
