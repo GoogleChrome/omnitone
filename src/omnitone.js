@@ -95,7 +95,7 @@ Omnitone.mergeBufferListByChannel = Utils.mergeBufferListByChannel;
  * @param {Number} splitBy - Number of channels to be splitted.
  * @return {AudioBuffer[]} - An array of splitted AudioBuffers.
  */
-Omnitone.splitBufferbyChannel = Utils.splitBufferbyChannel;
+Omnitone.splitBufferByChannel = Utils.splitBufferByChannel;
 
 
 /**
