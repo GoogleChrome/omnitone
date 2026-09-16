@@ -238,13 +238,13 @@ Utils.mergeBufferListByChannel = function(context, bufferList) {
  * @param {Number} splitBy - Number of channels to be splitted.
  * @return {AudioBuffer[]} - An array of splitted AudioBuffers.
  */
-Utils.splitBufferbyChannel = function(context, audioBuffer, splitBy) {
+Utils.splitBufferByChannel = function(context, audioBuffer, splitBy) {
   if (audioBuffer.numberOfChannels <= splitBy) {
     Utils.throw('Utils.splitBuffer: Insufficient number of channels. (' +
         audioBuffer.numberOfChannels + ' splitted by ' + splitBy + ')');
   }
 
-  const bufflerList = [];
+  const bufferList = [];
   let sourceChannelIndex = 0;
   const numberOfSplittedBuffer =
       Math.ceil(audioBuffer.numberOfChannels / splitBy);
@@ -257,7 +257,7 @@ Utils.splitBufferbyChannel = function(context, audioBuffer, splitBy) {
             audioBuffer.getChannelData(sourceChannelIndex++));
       }
     }
-    bufflerList.push(buffer);
+    bufferList.push(buffer);
   }
 
   return bufferList;
