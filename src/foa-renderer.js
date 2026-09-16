@@ -151,10 +151,11 @@ FOARenderer.prototype._initializeCallback = function(resolve, reject) {
         Utils.log('FOARenderer: HRIRs loaded successfully. Ready.');
         resolve();
       }.bind(this),
-      function() {
-        const errorMessage = 'FOARenderer: HRIR loading/decoding failed.';
-        reject(errorMessage);
-        Utils.throw(errorMessage);
+      function(reason) {
+        const errorMessage = 'FOARenderer: HRIR loading/decoding failed.' +
+            (reason ? ' (' + reason + ')' : '');
+        Utils.log(errorMessage);
+        reject(new Error(errorMessage));
       });
 };
 

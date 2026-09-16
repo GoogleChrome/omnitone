@@ -20,20 +20,30 @@
 
 describe('Constructor', () => {
 
-  // Test invalid URLs in constructor options. Check if the promise rejection
-  // occurs correctly.
+  // Test invalid URLs in constructor options. Verify that initialize() rejects
+  // with an Error instance and does not leak an unhandledrejection event.
   // ISSUE: https://github.com/GoogleChrome/omnitone/issues/80
   it('FOARenderer with invalid hrirPathList URL must be rejected.', (done) => {
     let context = new AudioContext();
     let foaRenderer =
         Omnitone.createFOARenderer(context, {hrirPathList: ['foo', 'bar']});
+    let leaked = false;
+    const onUnhandled = () => {
+      leaked = true;
+    };
+    window.addEventListener('unhandledrejection', onUnhandled);
 
     foaRenderer.initialize().then(() => {
+      window.removeEventListener('unhandledrejection', onUnhandled);
       assert.isNotOk({}, 'The promise should have been rejected.');
       done();
-    }, (errorMessage) => {
-      assert.isOk(errorMessage, 'The promise is rejected as expected.');
-      done();
+    }, (error) => {
+      setTimeout(() => {
+        window.removeEventListener('unhandledrejection', onUnhandled);
+        expect(error).to.be.an.instanceof(Error);
+        expect(leaked).to.equal(false);
+        done();
+      }, 0);
     });
   });
 
@@ -43,13 +53,23 @@ describe('Constructor', () => {
         Omnitone.createHOARenderer(context, {
           hrirPathList: ['0', '1', '2', '3', '4', '5', '6', '7']
         });
+    let leaked = false;
+    const onUnhandled = () => {
+      leaked = true;
+    };
+    window.addEventListener('unhandledrejection', onUnhandled);
 
     hoaRenderer.initialize().then(() => {
+      window.removeEventListener('unhandledrejection', onUnhandled);
       assert.isNotOk({}, 'The promise should have been rejected.');
       done();
-    }, (errorMessage) => {
-      assert.isOk(errorMessage, 'The promise is rejected as expected.');
-      done();
+    }, (error) => {
+      setTimeout(() => {
+        window.removeEventListener('unhandledrejection', onUnhandled);
+        expect(error).to.be.an.instanceof(Error);
+        expect(leaked).to.equal(false);
+        done();
+      }, 0);
     });
   });
 
