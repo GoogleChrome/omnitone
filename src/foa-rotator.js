@@ -160,6 +160,8 @@ FOARotator.prototype.getRotationMatrix4 = function() {
   rotationMatrix4[8] = this._m6.gain.value;
   rotationMatrix4[9] = this._m7.gain.value;
   rotationMatrix4[10] = this._m8.gain.value;
+  // Homogeneous coordinate scale factor w=1 for 4x4 affine transforms.
+  rotationMatrix4[15] = 1;
   return rotationMatrix4;
 };
 

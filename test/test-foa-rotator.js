@@ -99,4 +99,27 @@ describe('FOARotator', function () {
   );
 
 
+  // Verify that the 3x3 and 4x4 rotation matrix getters return well-formed
+  // column-major matrices and invert setRotationMatrix3().
+  describe('getRotationMatrix3 / getRotationMatrix4', function() {
+    it('returns identity by default', function() {
+      var rotator = Omnitone.createFOARotator(context);
+      expect(Array.from(rotator.getRotationMatrix3())).to.deep.equal(
+          [1, 0, 0, 0, 1, 0, 0, 0, 1]);
+
+      // Homogeneous coordinate scale factor w at index 15 must be 1.
+      var m4 = rotator.getRotationMatrix4();
+      expect(m4[15]).to.equal(1);
+    });
+
+    it('round-trips an arbitrary 3x3 matrix exactly', function() {
+      var rotator = Omnitone.createFOARotator(context);
+      var input = new Float32Array(
+          [0.5, -0.25, 0.125, -0.0625, 0.75, -0.375, 0.875, -0.5, 0.25]);
+      rotator.setRotationMatrix3(input);
+      expect(Array.from(rotator.getRotationMatrix3())).to.deep.equal(
+          Array.from(input));
+    });
+  });
+
 });

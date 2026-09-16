@@ -364,17 +364,22 @@ HOARotator.prototype.setRotationMatrix4 = function(rotationMatrix4) {
  * @return {Number[]} - A 3x3 rotation matrix. (column-major)
  */
 HOARotator.prototype.getRotationMatrix3 = function() {
-  const rotationMatrix3 = new Float32Array(9);
-  rotationMatrix3[0] = -this._gainNodeMatrix[0][0].gain.value;
-  rotationMatrix3[1] = this._gainNodeMatrix[0][1].gain.value;
-  rotationMatrix3[2] = -this._gainNodeMatrix[0][2].gain.value;
-  rotationMatrix3[4] = -this._gainNodeMatrix[0][3].gain.value;
-  rotationMatrix3[5] = this._gainNodeMatrix[0][4].gain.value;
-  rotationMatrix3[6] = -this._gainNodeMatrix[0][5].gain.value;
-  rotationMatrix3[8] = -this._gainNodeMatrix[0][6].gain.value;
-  rotationMatrix3[9] = this._gainNodeMatrix[0][7].gain.value;
-  rotationMatrix3[10] = -this._gainNodeMatrix[0][8].gain.value;
-  return rotationMatrix3;
+  // Invert the sign mapping applied by setRotationMatrix3() when converting
+  // between WebGL/Three.js right-handed Cartesian coordinates and the l=1
+  // spherical harmonic basis used by the Ivanic-Ruedenberg recurrence ([2]):
+  // indices {0, 2, 3, 5, 6, 8} are negated; {1, 4, 7} keep their sign.
+  // Pack into contiguous 3x3 column-major indices 0..8 (not the 4x4 stride).
+  return new Float32Array([
+    -this._gainNodeMatrix[0][0].gain.value,
+    this._gainNodeMatrix[0][1].gain.value,
+    -this._gainNodeMatrix[0][2].gain.value,
+    -this._gainNodeMatrix[0][3].gain.value,
+    this._gainNodeMatrix[0][4].gain.value,
+    -this._gainNodeMatrix[0][5].gain.value,
+    -this._gainNodeMatrix[0][6].gain.value,
+    this._gainNodeMatrix[0][7].gain.value,
+    -this._gainNodeMatrix[0][8].gain.value,
+  ]);
 };
 
 
@@ -393,6 +398,8 @@ HOARotator.prototype.getRotationMatrix4 = function() {
   rotationMatrix4[8] = -this._gainNodeMatrix[0][6].gain.value;
   rotationMatrix4[9] = this._gainNodeMatrix[0][7].gain.value;
   rotationMatrix4[10] = -this._gainNodeMatrix[0][8].gain.value;
+  // Homogeneous coordinate scale factor w=1 for 4x4 affine transforms.
+  rotationMatrix4[15] = 1;
   return rotationMatrix4;
 };
 

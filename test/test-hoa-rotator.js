@@ -421,4 +421,42 @@ describe('HOARotator', function() {
 
   for (var index = 0; index < numberOfSphericalDirections; ++index)
     computeRotationAndTest(index);
+
+  // Verify that the 3x3 and 4x4 rotation matrix getters return well-formed
+  // column-major matrices and invert setRotationMatrix3() without index skew.
+  describe('getRotationMatrix3 / getRotationMatrix4', function() {
+    it('returns identity by default', function() {
+      var ctx = new OfflineAudioContext(4, 1, sampleRate);
+      var rotator = Omnitone.createHOARotator(ctx, 1);
+
+      // A newly constructed rotator is initialized to the 3x3 identity matrix:
+      //   [ 1, 0, 0 ]
+      //   [ 0, 1, 0 ]
+      //   [ 0, 0, 1 ]
+      // Previously, writing with a 4x4 stride skipped indices 3 & 7 and dropped
+      // 9 & 10, returning a singular matrix [1, 0, 0, 0, 0, 1, 0, 0, 0] with
+      // determinant 0.
+      expect(Array.from(rotator.getRotationMatrix3())).to.deep.equal(
+          [1, 0, 0, 0, 1, 0, 0, 0, 1]);
+
+      // The 4x4 getter embeds the 3x3 rotation in the upper-left block and
+      // must set index 15 (homogeneous coordinate w) to 1.
+      var m4 = rotator.getRotationMatrix4();
+      expect(m4[15]).to.equal(1);
+    });
+
+    it('round-trips an arbitrary 3x3 matrix exactly', function() {
+      var ctx = new OfflineAudioContext(4, 1, sampleRate);
+      var rotator = Omnitone.createHOARotator(ctx, 1);
+
+      // Distinct non-zero entries in every slot ensure that each element i in
+      // [0..8] is written to and read back from the same index, verifying both
+      // contiguous indexing and the sign-flip round-trip.
+      var input = new Float32Array(
+          [0.5, -0.25, 0.125, -0.0625, 0.75, -0.375, 0.875, -0.5, 0.25]);
+      rotator.setRotationMatrix3(input);
+      expect(Array.from(rotator.getRotationMatrix3())).to.deep.equal(
+          Array.from(input));
+    });
+  });
 });
