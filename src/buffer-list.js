@@ -128,10 +128,10 @@ BufferList.prototype._launchAsyncLoadTask = function(taskId) {
       },
       function(errorMessage) {
         that._updateProgress(taskId, null);
-        const message = 'BufferList: decoding ArrayByffer("' + taskId +
-            '" from Base64-encoded data failed. (' + errorMessage + ')';
-        that._rejectHandler(message);
-        Utils.throw(message);
+        const message = 'BufferList: decoding ArrayBuffer("' + taskId +
+            '" from Base64-encoded data) failed. (' + errorMessage + ')';
+        Utils.log(message);
+        that._rejectHandler(new Error(message));
       });
 };
 

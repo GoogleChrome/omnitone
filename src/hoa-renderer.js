@@ -163,10 +163,11 @@ HOARenderer.prototype._initializeCallback = function(resolve, reject) {
         Utils.log('HOARenderer: HRIRs loaded successfully. Ready.');
         resolve();
       }.bind(this),
-      function() {
-        const errorMessage = 'HOARenderer: HRIR loading/decoding failed.';
-        reject(errorMessage);
-        Utils.throw(errorMessage);
+      function(reason) {
+        const errorMessage = 'HOARenderer: HRIR loading/decoding failed.' +
+            (reason ? ' (' + reason + ')' : '');
+        Utils.log(errorMessage);
+        reject(new Error(errorMessage));
       });
 };
 
