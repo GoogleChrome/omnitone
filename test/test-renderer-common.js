@@ -54,3 +54,39 @@ describe('Constructor', () => {
   });
 
 });
+
+// Verify that passing renderingMode ('off' or 'bypass') in the constructor
+// options disables the convolver upon initialization, rather than being
+// skipped by setRenderingMode's early-return guard.
+describe('RenderingMode (constructor-supplied)', () => {
+  it('FOARenderer honors renderingMode: "off" and "bypass"', (done) => {
+    const context = new AudioContext();
+    const offRenderer =
+        Omnitone.createFOARenderer(context, {renderingMode: 'off'});
+    const bypassRenderer =
+        Omnitone.createFOARenderer(context, {renderingMode: 'bypass'});
+
+    Promise.all([offRenderer.initialize(), bypassRenderer.initialize()])
+        .then(() => {
+          expect(offRenderer._foaConvolver._active).to.equal(false);
+          expect(bypassRenderer._foaConvolver._active).to.equal(false);
+
+          // Re-applying the same mode must remain idempotent.
+          bypassRenderer.setRenderingMode('bypass');
+          expect(bypassRenderer._foaConvolver._active).to.equal(false);
+          done();
+        })
+        .catch(done);
+  });
+
+  it('HOARenderer honors renderingMode: "off"', (done) => {
+    const context = new AudioContext();
+    const renderer =
+        Omnitone.createHOARenderer(context, {renderingMode: 'off'});
+
+    renderer.initialize().then(() => {
+      expect(renderer._hoaConvolver._active).to.equal(false);
+      done();
+    }).catch(done);
+  });
+});

@@ -109,6 +109,8 @@ function HOARenderer(context, config) {
   }
 
   this._buildAudioGraph();
+  // Audio graph is constructed with the convolver enabled ('ambisonic').
+  this._renderingMode = RenderingMode.AMBISONIC;
 
   this._isRendererReady = false;
 }
@@ -217,7 +219,7 @@ HOARenderer.prototype.setRotationMatrix4 = function(rotationMatrix4) {
  *  - 'off': all the processing off saving the CPU power.
  */
 HOARenderer.prototype.setRenderingMode = function(mode) {
-  if (mode === this._config.renderingMode) {
+  if (mode === this._renderingMode) {
     return;
   }
 
@@ -241,7 +243,7 @@ HOARenderer.prototype.setRenderingMode = function(mode) {
       return;
   }
 
-  this._config.renderingMode = mode;
+  this._renderingMode = mode;
   Utils.log('HOARenderer: Rendering mode changed. (' + mode + ')');
 };
 
