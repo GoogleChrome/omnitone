@@ -102,6 +102,8 @@ function FOARenderer(context, config) {
   }
 
   this._buildAudioGraph();
+  // Audio graph is constructed with the convolver enabled ('ambisonic').
+  this._renderingMode = RenderingMode.AMBISONIC;
 
   this._tempMatrix4 = new Float32Array(16);
   this._isRendererReady = false;
@@ -243,7 +245,7 @@ FOARenderer.prototype.setRotationMatrixFromCamera = function(cameraMatrix) {
  *  - 'off': all the processing off saving the CPU power.
  */
 FOARenderer.prototype.setRenderingMode = function(mode) {
-  if (mode === this._config.renderingMode) {
+  if (mode === this._renderingMode) {
     return;
   }
 
@@ -267,7 +269,7 @@ FOARenderer.prototype.setRenderingMode = function(mode) {
       return;
   }
 
-  this._config.renderingMode = mode;
+  this._renderingMode = mode;
   Utils.log('FOARenderer: Rendering mode changed. (' + mode + ')');
 };
 
