@@ -21,6 +21,9 @@
  */
 
 
+import Utils from './utils.js';
+
+
 /**
  * A convolver network for N-channel HOA stream.
  * @constructor
@@ -137,6 +140,12 @@ HOAConvolver.prototype.setHRIRBufferList = function(hrirBufferList) {
   // an exception will be thrown.
   if (this._isBufferLoaded) {
     return;
+  }
+
+  for (let i = 0; i < hrirBufferList.length; ++i) {
+    if (!Utils.isAudioBuffer(hrirBufferList[i])) {
+      Utils.throw('HOAConvolver: Invalid AudioBuffer at index ' + i);
+    }
   }
 
   for (let i = 0; i < hrirBufferList.length; ++i) {

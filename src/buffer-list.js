@@ -72,10 +72,6 @@ function BufferList(context, bufferData, options) {
   this._bufferData = this._options.dataType === BufferDataType.BASE64
       ? bufferData
       : bufferData.slice(0);
-  this._numberOfTasks = this._bufferData.length;
-
-  this._resolveHandler = null;
-  this._rejectHandler = new Function();
 }
 
 
@@ -85,32 +81,19 @@ function BufferList(context, bufferData, options) {
  * AudioBuffer.
  */
 BufferList.prototype.load = function() {
-  return new Promise(this._promiseGenerator.bind(this));
-};
+  const tasks = this._bufferData.map((_, i) =>
+      this._options.dataType === BufferDataType.BASE64
+          ? this._launchAsyncLoadTask(i)
+          : this._launchAsyncLoadTaskXHR(i));
 
-
-/**
- * Promise argument generator. Internally starts multiple async loading tasks.
- * @private
- * @param {function} resolve Promise resolver.
- * @param {function} reject Promise reject.
- */
-BufferList.prototype._promiseGenerator = function(resolve, reject) {
-  if (typeof resolve !== 'function') {
-    Utils.throw('BufferList: Invalid Promise resolver.');
-  } else {
-    this._resolveHandler = resolve;
-  }
-
-  if (typeof reject === 'function') {
-    this._rejectHandler = reject;
-  }
-
-  for (let i = 0; i < this._bufferData.length; ++i) {
-    this._options.dataType === BufferDataType.BASE64
-        ? this._launchAsyncLoadTask(i)
-        : this._launchAsyncLoadTaskXHR(i);
-  }
+  return Promise.all(tasks).then((buffers) => {
+    this._bufferList = buffers;
+    const messageString = this._options.dataType === BufferDataType.BASE64
+        ? this._bufferData.length + ' AudioBuffers from Base64-encoded HRIRs'
+        : this._bufferData.length + ' files via XHR';
+    Utils.log('BufferList: ' + messageString + ' loaded successfully.');
+    return buffers;
+  });
 };
 
 
@@ -118,21 +101,35 @@ BufferList.prototype._promiseGenerator = function(resolve, reject) {
  * Run async loading task for Base64-encoded string.
  * @private
  * @param {Number} taskId Task ID number from the ordered list |bufferData|.
+ * @return {Promise<AudioBuffer>}
  */
 BufferList.prototype._launchAsyncLoadTask = function(taskId) {
-  const that = this;
-  this._context.decodeAudioData(
-      Utils.getArrayBufferFromBase64String(this._bufferData[taskId]),
-      function(audioBuffer) {
-        that._updateProgress(taskId, audioBuffer);
-      },
-      function(errorMessage) {
-        that._updateProgress(taskId, null);
-        const message = 'BufferList: decoding ArrayBuffer("' + taskId +
-            '" from Base64-encoded data) failed. (' + errorMessage + ')';
-        Utils.log(message);
-        that._rejectHandler(new Error(message));
-      });
+  return new Promise((resolve, reject) => {
+    let arrayBuffer;
+    try {
+      arrayBuffer =
+          Utils.getArrayBufferFromBase64String(this._bufferData[taskId]);
+    } catch (err) {
+      reject(new Error('BufferList: invalid Base64 at index ' + taskId));
+      return;
+    }
+
+    this._context.decodeAudioData(
+        arrayBuffer,
+        (audioBuffer) => {
+          if (this._options.verbose) {
+            Utils.log('BufferList: ArrayBuffer(' + taskId +
+                ') from Base64-encoded HRIR successfully loaded.');
+          }
+          resolve(audioBuffer);
+        },
+        (errorMessage) => {
+          const message = 'BufferList: decoding ArrayBuffer("' + taskId +
+              '" from Base64-encoded data) failed. (' + errorMessage + ')';
+          Utils.log(message);
+          reject(new Error(message));
+        });
+  });
 };
 
 
@@ -140,70 +137,49 @@ BufferList.prototype._launchAsyncLoadTask = function(taskId) {
  * Run async loading task via XHR for audio file URLs.
  * @private
  * @param {Number} taskId Task ID number from the ordered list |bufferData|.
+ * @return {Promise<AudioBuffer>}
  */
 BufferList.prototype._launchAsyncLoadTaskXHR = function(taskId) {
-  const xhr = new XMLHttpRequest();
-  xhr.open('GET', this._bufferData[taskId]);
-  xhr.responseType = 'arraybuffer';
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', this._bufferData[taskId]);
+    xhr.responseType = 'arraybuffer';
 
-  const that = this;
-  xhr.onload = function() {
-    if (xhr.status === 200) {
-      that._context.decodeAudioData(
-          xhr.response,
-          function(audioBuffer) {
-            that._updateProgress(taskId, audioBuffer);
-          },
-          function(errorMessage) {
-            that._updateProgress(taskId, null);
-            const message = 'BufferList: decoding "' +
-                that._bufferData[taskId] + '" failed. (' + errorMessage + ')';
-            that._rejectHandler(message);
-            Utils.log(message);
-          });
-    } else {
-      const message = 'BufferList: XHR error while loading "' +
-          that._bufferData[taskId] + '". (' + xhr.status + ' ' +
-          xhr.statusText + ')';
-      that._rejectHandler(message);
+    xhr.onload = () => {
+      if (xhr.status === 200) {
+        this._context.decodeAudioData(
+            xhr.response,
+            (audioBuffer) => {
+              if (this._options.verbose) {
+                Utils.log('BufferList: "' + this._bufferData[taskId] +
+                    '" successfully loaded.');
+              }
+              resolve(audioBuffer);
+            },
+            (errorMessage) => {
+              const message = 'BufferList: decoding "' +
+                  this._bufferData[taskId] + '" failed. (' + errorMessage + ')';
+              Utils.log(message);
+              reject(new Error(message));
+            });
+      } else {
+        const message = 'BufferList: XHR error while loading "' +
+            this._bufferData[taskId] + '". (' + xhr.status + ' ' +
+            xhr.statusText + ')';
+        Utils.log(message);
+        reject(new Error(message));
+      }
+    };
+
+    xhr.onerror = () => {
+      const message = 'BufferList: XHR network failed on loading "' +
+          this._bufferData[taskId] + '".';
       Utils.log(message);
-    }
-  };
+      reject(new Error(message));
+    };
 
-  xhr.onerror = function(event) {
-    that._updateProgress(taskId, null);
-    that._rejectHandler();
-    Utils.log(
-        'BufferList: XHR network failed on loading "' +
-        that._bufferData[taskId] + '".');
-  };
-
-  xhr.send();
-};
-
-
-/**
- * Updates the overall progress on loading tasks.
- * @param {Number} taskId Task ID number.
- * @param {AudioBuffer} audioBuffer Decoded AudioBuffer object.
- */
-BufferList.prototype._updateProgress = function(taskId, audioBuffer) {
-  this._bufferList[taskId] = audioBuffer;
-
-  if (this._options.verbose) {
-    const messageString = this._options.dataType === BufferDataType.BASE64
-        ? 'ArrayBuffer(' + taskId + ') from Base64-encoded HRIR'
-        : '"' + this._bufferData[taskId] + '"';
-    Utils.log('BufferList: ' + messageString + ' successfully loaded.');
-  }
-
-  if (--this._numberOfTasks === 0) {
-    const messageString = this._options.dataType === BufferDataType.BASE64
-        ? this._bufferData.length + ' AudioBuffers from Base64-encoded HRIRs'
-        : this._bufferData.length + ' files via XHR';
-    Utils.log('BufferList: ' + messageString + ' loaded successfully.');
-    this._resolveHandler(this._bufferList);
-  }
+    xhr.send();
+  });
 };
 
 
