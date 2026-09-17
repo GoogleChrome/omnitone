@@ -21,11 +21,12 @@ describe('BufferList and Convolver validation', function() {
       'with null', function(done) {
     var context = new OfflineAudioContext(2, 16, 48000);
     var corrupt = btoa('not-a-valid-audio-file');
-    var bufferList = Omnitone.createBufferList(
+    // Note: createBufferList() already invokes load() and returns its promise.
+    var loading = Omnitone.createBufferList(
         context, [corrupt], {dataType: 'base64'});
 
     var resolved = false;
-    bufferList.load().then(
+    loading.then(
         function() {
           resolved = true;
           done(new Error('Expected rejection, but load() resolved'));

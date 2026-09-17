@@ -16,7 +16,6 @@
   "devDependencies": {
     "@rollup/plugin-terser": "^0.4.4",
     "@web/test-runner": "^0.18.0",
-    "@web/test-runner-playwright": "^0.11.0",
     "chai": "^4.4.1",
     "eslint": "^8.57.0",
     "jsdoc": "^4.0.3",
@@ -26,7 +25,7 @@
     "build": "rollup -c",
     "build-hrir": "node src/resources/build-hrir-base64.js",
     "build-doc": "jsdoc src/omnitone.js -d doc/",
-    "eslint": "eslint src/",
+    "eslint": "eslint src/ test/",
     "pretest": "npm run build",
     "test": "web-test-runner"
   },

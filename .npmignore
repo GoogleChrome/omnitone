@@ -10,6 +10,7 @@ test/
 .eslintignore
 .eslintrc.js
 .gitignore
+.npmrc
 CONTRIBUTING.md
-rollup.config.js
+rollup.config.mjs
 web-test-runner.config.mjs

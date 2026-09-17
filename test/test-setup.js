@@ -79,7 +79,7 @@ function isConstantValueOf(channelData, value) {
   }
 
   return Object.keys(mismatches).length === 0;
-};
+}
 
 
 /**
@@ -119,6 +119,7 @@ function kernel_IIRFIlter (channelData, feedforward, feedback) {
 
   for (var index = paddingSize; index < workSize; ++index) {
     var yn = 0;
+    var k;
     for (k = 0; k < feedforward.length; ++k)
       yn += feedforward[k] * x[index - k];
     for (k = 0; k < feedback.length; ++k)

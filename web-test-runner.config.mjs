@@ -14,11 +14,25 @@
  * limitations under the License.
  */
 
-import {playwrightLauncher} from '@web/test-runner-playwright';
+import {chromeLauncher} from '@web/test-runner';
+
+// The suite needs the real Web Audio API (OfflineAudioContext, ConvolverNode,
+// decodeAudioData), so it runs in a locally installed Chrome. This is the same
+// "bring your own Chrome" contract the previous Karma setup used.
+const launchArgs = [
+  // Web Audio tests must not wait for a user gesture to start a context.
+  '--autoplay-policy=no-user-gesture-required',
+];
+
+// Hosted CI runners execute in a container where the setuid sandbox is
+// unavailable.
+if (process.env.CI) {
+  launchArgs.push('--no-sandbox');
+}
 
 export default {
   files: ['test/test-*.js', '!test/test-setup.js'],
-  browsers: [playwrightLauncher({product: 'chromium'})],
+  browsers: [chromeLauncher({launchOptions: {args: launchArgs}})],
   testRunnerHtml: (testFramework) => `<!DOCTYPE html>
 <html>
   <head>

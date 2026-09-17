@@ -48,7 +48,7 @@ describe('FOARouter', function() {
        var expectedValues = [2, 0, 1, 3];
        var passed = false;
        context.startRendering().then(function(renderedBuffer) {
-         for (c = 0; c < renderedBuffer.numberOfChannels; c++) {
+         for (var c = 0; c < renderedBuffer.numberOfChannels; c++) {
            passed = isConstantValueOf(
                renderedBuffer.getChannelData(c), expectedValues[c]);
            expect(passed).to.equal(true);
@@ -78,7 +78,7 @@ describe('FOARouter', function() {
     var expectedValues = [0, 2, 3, 1];
     var passed = false;
     context.startRendering().then(function(renderedBuffer) {
-      for (c = 0; c < renderedBuffer.numberOfChannels; c++) {
+      for (var c = 0; c < renderedBuffer.numberOfChannels; c++) {
         passed = isConstantValueOf(
             renderedBuffer.getChannelData(c), expectedValues[c]);
         expect(passed).to.equal(true);

@@ -161,13 +161,21 @@ npm run eslint      # run ESLint against source files.
 Omnitone uses [GitHub Actions](https://github.com/features/actions) and
 [Web Test Runner](https://modern-web.dev/docs/test-runner/overview/) for
 automated testing. The test suite requires the promisified version of
-`OfflineAudioContext`, so it runs against Chromium via
-[Playwright](https://playwright.dev/). Running `npm test` rebuilds the bundles
-first, so the tests can never run against a stale `build/omnitone.min.js`.
+`OfflineAudioContext`, so it runs in a locally installed Chrome. Running
+`npm test` rebuilds the bundles first, so the tests can never run against a
+stale `build/omnitone.min.js`.
 
 ```bash
-npx playwright install --with-deps chromium  # one-time browser setup.
 npm test
+```
+
+#### Local Testing on Linux
+
+The test suite requires a Chromium-based browser, so the following setup might
+be necessary on Linux distros without one installed.
+
+```bash
+sudo apt install google-chrome-stable
 ```
 
 
