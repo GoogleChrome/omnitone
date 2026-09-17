@@ -1,14 +1,15 @@
 # Omnitone NPM module must include only the production build and resource files.
 
+.github/
 doc/
 examples/
 pvt/
 src/
+test/
 
 .eslintignore
 .eslintrc.js
 .gitignore
-.travis.yml
 CONTRIBUTING.md
-webpack.config.all.js
-webpack.config.js
+rollup.config.js
+web-test-runner.config.mjs

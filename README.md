@@ -1,6 +1,8 @@
 # Omnitone: Spatial Audio Rendering on the Web
 
-[![Travis](https://img.shields.io/travis/GoogleChrome/omnitone.svg)](https://travis-ci.org/GoogleChrome/omnitone) [![npm](https://img.shields.io/npm/v/omnitone.svg?colorB=4bc51d)](https://www.npmjs.com/package/omnitone) [![GitHub license](https://img.shields.io/badge/license-Apache%202-brightgreen.svg)](https://raw.githubusercontent.com/GoogleChrome/omnitone/master/LICENSE)
+[![ci](https://github.com/GoogleChrome/omnitone/actions/workflows/ci.yml/badge.svg)](https://github.com/GoogleChrome/omnitone/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/omnitone.svg?colorB=4bc51d)](https://www.npmjs.com/package/omnitone)
+[![GitHub license](https://img.shields.io/badge/license-Apache%202-brightgreen.svg)](https://raw.githubusercontent.com/GoogleChrome/omnitone/master/LICENSE)
 
 Omnitone is a robust implementation of [ambisonic](https://en.wikipedia.org/wiki/Ambisonics) decoding and binaural rendering written in Web Audio API. Its rendering process is powered by the fast native features from Web Audio API (GainNode and Convolver), ensuring the optimum performance.
 
@@ -143,31 +145,31 @@ renderer.setRenderingMode('off');
 
 ### Building Omnitone Locally
 
-For the development, get a copy of the repository first and run the following script to build the library. Omnitone uses [WebPack](https://webpack.github.io/) to compile the sources.
+For the development, get a copy of the repository first and run the following
+script to build the library. Omnitone uses
+[Rollup](https://rollupjs.org/) to bundle the sources.
 
 ```bash
+npm ci              # install dependencies.
 npm run build       # build omnitone library files.
 npm run build-doc   # build JSDoc3 documentation.
-npm run eslint      # Run ESLint against source files.
+npm run eslint      # run ESLint against source files.
 ```
 
 ### Test
 
-Omnitone uses [Travis](https://travis-ci.org/) and [Karma](https://karma-runner.github.io/1.0/index.html) test runner for the automated testing.  To run the test suite locally, make sure to install dependencies before launch the local test runner. The test suite requires the promisifed version of OfflineAudioContext, so the Karma test runner will choose Chrome as a default test runner.
+Omnitone uses [GitHub Actions](https://github.com/features/actions) and
+[Web Test Runner](https://modern-web.dev/docs/test-runner/overview/) for
+automated testing. The test suite requires the promisified version of
+`OfflineAudioContext`, so it runs against Chromium via
+[Playwright](https://playwright.dev/). Running `npm test` rebuilds the bundles
+first, so the tests can never run against a stale `build/omnitone.min.js`.
 
 ```bash
+npx playwright install --with-deps chromium  # one-time browser setup.
 npm test
 ```
 
-#### Local Testing on Linux
-
-Since the test suite requires Chromium-based browser, the following set up might be necessary for Karma to run properly on Linux distros without Chromium-based browser.
-
-```bash
-# Tested with Ubuntu 16.04
-sudo apt install chromium-browser
-export CHROME_BIN=chromium-browser
-```
 
 
 ## Audio Codec Compatibility

@@ -1,15 +1,15 @@
 module.exports = {
-  "env": {
-    "es6": true,
+  env: {
+    es6: true,
+    browser: true,
   },
-  "extends": "google",
-  "rules": {
-    // the 'rest' parameter for |arguments| might not be supported in some
-    // old version of browsers. See also:
-    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/rest_parameters#Browser_compatibility
-    "prefer-rest-params": 0,
+  parserOptions: {
+    ecmaVersion: 2020,
+    sourceType: 'module',
   },
-  "parserOptions": {
-    "sourceType": "module"
-  }
+  extends: ['eslint:recommended'],
+  rules: {
+    'max-len': ['error', {code: 80, ignoreUrls: true}],
+    'no-unused-vars': ['error', {args: 'none', caughtErrors: 'none'}],
+  },
 };
