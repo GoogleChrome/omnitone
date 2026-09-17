@@ -32,7 +32,7 @@ const Polyfill = {};
 Polyfill.getBrowserInfo = function() {
   const ua = navigator.userAgent;
   let M = ua.match(
-      /(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*([\d\.]+)/i) ||
+      /(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*([\d.]+)/i) ||
       [];
   let tem;
 

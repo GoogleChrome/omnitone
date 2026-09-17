@@ -54,8 +54,8 @@ describe('HOAConvolver (3rd order ambisonic)', function() {
 
     // Get pointers to each buffer.
     var acnChannelData = [];
-    for (var i = 0; i < buffer.numberOfChannels; i++)
-      acnChannelData[i] = buffer.getChannelData(i);
+    for (var channel = 0; channel < buffer.numberOfChannels; channel++)
+      acnChannelData[channel] = buffer.getChannelData(channel);
 
     var generatedBus = new AudioBus(2, buffer.length, buffer.sampleRate);
     var L = generatedBus.getChannelData(0);

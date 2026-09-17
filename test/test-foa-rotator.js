@@ -52,8 +52,8 @@ describe('FOARotator', function () {
         var expectedValues = [0, -2, 1, 3];
 
         context.startRendering().then(function (renderedBuffer) {
-          for (c = 0; c < renderedBuffer.numberOfChannels; c++) {
-            passed = isConstantValueOf(
+          for (var c = 0; c < renderedBuffer.numberOfChannels; c++) {
+            var passed = isConstantValueOf(
               renderedBuffer.getChannelData(c), expectedValues[c]);
             expect(passed).to.equal(true);
           }
@@ -87,8 +87,8 @@ describe('FOARotator', function () {
         var expectedValues = [0, 2, -1, 3];
 
         context.startRendering().then(function (renderedBuffer) {
-          for (c = 0; c < renderedBuffer.numberOfChannels; c++) {
-            passed = isConstantValueOf(
+          for (var c = 0; c < renderedBuffer.numberOfChannels; c++) {
+            var passed = isConstantValueOf(
               renderedBuffer.getChannelData(c), expectedValues[c]);
             expect(passed).to.equal(true);
           }

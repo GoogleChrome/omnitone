@@ -14,19 +14,59 @@
  * limitations under the License.
  */
 
+/**
+ * @license
+ * Copyright 2016 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @file Omnitone library common utilities.
+ */
+
+
+/**
+ * Utility namespace.
+ * @namespace
+ */
 const Utils = {};
+
+
+/**
+ * Omnitone library logging function.
+ * @param {any} Message to be printed out.
+ */
 Utils.log = function() {
   const message = `[Omnitone] \
 ${Array.prototype.slice.call(arguments).join(' ')} \
 (${performance.now().toFixed(2)}ms)`;
   window.console.log(message);
 };
+
+
+/**
+ * Omnitone library error-throwing function.
+ * @param {any} Message to be printed out.
+ */
 Utils.throw = function() {
   const message = `[Omnitone] \
 ${Array.prototype.slice.call(arguments).join(' ')} \
 (${performance.now().toFixed(2)}ms)`;
   throw new Error(message);
 };
+
+
+// Static temp storage for matrix inversion.
 let a00;
 let a01;
 let a02;
@@ -56,6 +96,15 @@ let b09;
 let b10;
 let b11;
 let det;
+
+
+/**
+ * A 4x4 matrix inversion utility. This does not handle the case when the
+ * arguments are not proper 4x4 matrices.
+ * @param {Float32Array} out   The inverted result.
+ * @param {Float32Array} a     The source matrix.
+ * @return {Float32Array} out
+ */
 Utils.invertMatrix4 = function(out, a) {
   a00 = a[0];
   a01 = a[1];
@@ -86,9 +135,11 @@ Utils.invertMatrix4 = function(out, a) {
   b10 = a21 * a33 - a23 * a31;
   b11 = a22 * a33 - a23 * a32;
   det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
+
   if (!det) {
     return null;
   }
+
   det = 1.0 / det;
   out[0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;
   out[1] = (a02 * b10 - a01 * b11 - a03 * b09) * det;
@@ -106,8 +157,17 @@ Utils.invertMatrix4 = function(out, a) {
   out[13] = (a00 * b09 - a01 * b07 + a02 * b06) * det;
   out[14] = (a31 * b01 - a30 * b03 - a32 * b00) * det;
   out[15] = (a20 * b03 - a21 * b01 + a22 * b00) * det;
+
   return out;
 };
+
+
+/**
+ * Check if a value is defined in the ENUM dictionary.
+ * @param {Object} enumDictionary - ENUM dictionary.
+ * @param {Number|String} entryValue - a value to probe.
+ * @return {Boolean}
+ */
 Utils.isDefinedENUMEntry = function(enumDictionary, entryValue) {
   for (const enumKey in enumDictionary) {
     if (entryValue === enumDictionary[enumKey]) {
@@ -116,17 +176,44 @@ Utils.isDefinedENUMEntry = function(enumDictionary, entryValue) {
   }
   return false;
 };
+
+
+/**
+ * Check if the given object is an instance of BaseAudioContext.
+ * @param {AudioContext} context - A context object to be checked.
+ * @return {Boolean}
+ */
 Utils.isAudioContext = function(context) {
+  // TODO(hoch): Update this when BaseAudioContext is available for all
+  // browsers.
   return context instanceof AudioContext ||
     context instanceof OfflineAudioContext;
 };
+
+
+/**
+ * Check if the given object is a valid AudioBuffer.
+ * @param {Object} audioBuffer An AudioBuffer object to be checked.
+ * @return {Boolean}
+ */
 Utils.isAudioBuffer = function(audioBuffer) {
   return audioBuffer instanceof AudioBuffer;
 };
+
+
+/**
+ * Perform channel-wise merge on multiple AudioBuffers. The sample rate and
+ * the length of buffers to be merged must be identical.
+ * @param {BaseAudioContext} context - Associated BaseAudioContext.
+ * @param {AudioBuffer[]} bufferList - An array of AudioBuffers to be merged
+ * channel-wise.
+ * @return {AudioBuffer} - A single merged AudioBuffer.
+ */
 Utils.mergeBufferListByChannel = function(context, bufferList) {
   const bufferLength = bufferList[0].length;
   const bufferSampleRate = bufferList[0].sampleRate;
   let bufferNumberOfChannel = 0;
+
   for (let i = 0; i < bufferList.length; ++i) {
     if (bufferNumberOfChannel > 32) {
       Utils.throw('Utils.mergeBuffer: Number of channels cannot exceed 32.' +
@@ -144,6 +231,7 @@ Utils.mergeBufferListByChannel = function(context, bufferList) {
     }
     bufferNumberOfChannel += bufferList[i].numberOfChannels;
   }
+
   const buffer = context.createBuffer(
       bufferNumberOfChannel, bufferLength, bufferSampleRate);
   let destinationChannelIndex = 0;
@@ -153,13 +241,26 @@ Utils.mergeBufferListByChannel = function(context, bufferList) {
           bufferList[i].getChannelData(j));
     }
   }
+
   return buffer;
 };
-Utils.splitBufferbyChannel = function(context, audioBuffer, splitBy) {
+
+
+/**
+ * Perform channel-wise split by the given channel count. For example,
+ * 1 x AudioBuffer(8) -> splitBuffer(context, buffer, 2) -> 4 x AudioBuffer(2).
+ * @param {BaseAudioContext} context - Associated BaseAudioContext.
+ * @param {AudioBuffer} audioBuffer - An AudioBuffer to be splitted.
+ * @param {Number} splitBy - Number of channels to be splitted.
+ * @return {AudioBuffer[]} - An array of splitted AudioBuffers.
+ */
+Utils.splitBufferByChannel = function(context, audioBuffer, splitBy) {
   if (audioBuffer.numberOfChannels <= splitBy) {
     Utils.throw('Utils.splitBuffer: Insufficient number of channels. (' +
         audioBuffer.numberOfChannels + ' splitted by ' + splitBy + ')');
   }
+
+  const bufferList = [];
   let sourceChannelIndex = 0;
   const numberOfSplittedBuffer =
       Math.ceil(audioBuffer.numberOfChannels / splitBy);
@@ -172,9 +273,18 @@ Utils.splitBufferbyChannel = function(context, audioBuffer, splitBy) {
             audioBuffer.getChannelData(sourceChannelIndex++));
       }
     }
+    bufferList.push(buffer);
   }
+
   return bufferList;
 };
+
+
+/**
+ * Converts Base64-encoded string to ArrayBuffer.
+ * @param {string} base64String - Base64-encdoed string.
+ * @return {ArrayByuffer} Converted ArrayBuffer object.
+ */
 Utils.getArrayBufferFromBase64String = function(base64String) {
   const binaryString = window.atob(base64String);
   const byteArray = new Uint8Array(binaryString.length);
@@ -183,18 +293,60 @@ Utils.getArrayBufferFromBase64String = function(base64String) {
   return byteArray.buffer;
 };
 
+/**
+ * @license
+ * Copyright 2017 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+/**
+ * @typedef {string} BufferDataType
+ */
+
+/**
+ * Buffer data type for ENUM.
+ * @enum {BufferDataType}
+ */
 const BufferDataType = {
+  /** @type {string} The data contains Base64-encoded string.. */
   BASE64: 'base64',
+  /** @type {string} The data is a URL for audio file. */
   URL: 'url',
 };
+
+
+/**
+ * BufferList object mananges the async loading/decoding of multiple
+ * AudioBuffers from multiple URLs.
+ * @constructor
+ * @param {BaseAudioContext} context - Associated BaseAudioContext.
+ * @param {string[]} bufferData - An ordered list of URLs.
+ * @param {Object} options - Options
+ * @param {string} [options.dataType='base64'] - BufferDataType specifier.
+ * @param {Boolean} [options.verbose=false] - Log verbosity. |true| prints the
+ * individual message from each URL and AudioBuffer.
+ */
 function BufferList(context, bufferData, options) {
   this._context = Utils.isAudioContext(context) ?
       context :
       Utils.throw('BufferList: Invalid BaseAudioContext.');
+
   this._options = {
     dataType: BufferDataType.BASE64,
     verbose: false,
   };
+
   if (options) {
     if (options.dataType &&
         Utils.isDefinedENUMEntry(BufferDataType, options.dataType)) {
@@ -204,117 +356,190 @@ function BufferList(context, bufferData, options) {
       this._options.verbose = Boolean(options.verbose);
     }
   }
+
   this._bufferList = [];
   this._bufferData = this._options.dataType === BufferDataType.BASE64
       ? bufferData
       : bufferData.slice(0);
-  this._numberOfTasks = this._bufferData.length;
-  this._resolveHandler = null;
-  this._rejectHandler = new Function();
 }
+
+
+/**
+ * Starts AudioBuffer loading tasks.
+ * @return {Promise<AudioBuffer[]>} The promise resolves with an array of
+ * AudioBuffer.
+ */
 BufferList.prototype.load = function() {
-  return new Promise(this._promiseGenerator.bind(this));
-};
-BufferList.prototype._promiseGenerator = function(resolve, reject) {
-  if (typeof resolve !== 'function') {
-    Utils.throw('BufferList: Invalid Promise resolver.');
-  } else {
-    this._resolveHandler = resolve;
-  }
-  if (typeof reject === 'function') {
-    this._rejectHandler = reject;
-  }
-  for (let i = 0; i < this._bufferData.length; ++i) {
-    this._options.dataType === BufferDataType.BASE64
-        ? this._launchAsyncLoadTask(i)
-        : this._launchAsyncLoadTaskXHR(i);
-  }
-};
-BufferList.prototype._launchAsyncLoadTask = function(taskId) {
-  const that = this;
-  this._context.decodeAudioData(
-      Utils.getArrayBufferFromBase64String(this._bufferData[taskId]),
-      function(audioBuffer) {
-        that._updateProgress(taskId, audioBuffer);
-      },
-      function(errorMessage) {
-        that._updateProgress(taskId, null);
-        const message = 'BufferList: decoding ArrayByffer("' + taskId +
-            '" from Base64-encoded data failed. (' + errorMessage + ')';
-        that._rejectHandler(message);
-        Utils.throw(message);
-      });
-};
-BufferList.prototype._launchAsyncLoadTaskXHR = function(taskId) {
-  const xhr = new XMLHttpRequest();
-  xhr.open('GET', this._bufferData[taskId]);
-  xhr.responseType = 'arraybuffer';
-  const that = this;
-  xhr.onload = function() {
-    if (xhr.status === 200) {
-      that._context.decodeAudioData(
-          xhr.response,
-          function(audioBuffer) {
-            that._updateProgress(taskId, audioBuffer);
-          },
-          function(errorMessage) {
-            that._updateProgress(taskId, null);
-            const message = 'BufferList: decoding "' +
-                that._bufferData[taskId] + '" failed. (' + errorMessage + ')';
-            that._rejectHandler(message);
-            Utils.log(message);
-          });
-    } else {
-      const message = 'BufferList: XHR error while loading "' +
-          that._bufferData[taskId] + '". (' + xhr.status + ' ' +
-          xhr.statusText + ')';
-      that._rejectHandler(message);
-      Utils.log(message);
-    }
-  };
-  xhr.onerror = function(event) {
-    that._updateProgress(taskId, null);
-    that._rejectHandler();
-    Utils.log(
-        'BufferList: XHR network failed on loading "' +
-        that._bufferData[taskId] + '".');
-  };
-  xhr.send();
-};
-BufferList.prototype._updateProgress = function(taskId, audioBuffer) {
-  this._bufferList[taskId] = audioBuffer;
-  if (this._options.verbose) {
-    const messageString = this._options.dataType === BufferDataType.BASE64
-        ? 'ArrayBuffer(' + taskId + ') from Base64-encoded HRIR'
-        : '"' + this._bufferData[taskId] + '"';
-    Utils.log('BufferList: ' + messageString + ' successfully loaded.');
-  }
-  if (--this._numberOfTasks === 0) {
+  const tasks = this._bufferData.map((_, i) =>
+      this._options.dataType === BufferDataType.BASE64
+          ? this._launchAsyncLoadTask(i)
+          : this._launchAsyncLoadTaskXHR(i));
+
+  return Promise.all(tasks).then((buffers) => {
+    this._bufferList = buffers;
     const messageString = this._options.dataType === BufferDataType.BASE64
         ? this._bufferData.length + ' AudioBuffers from Base64-encoded HRIRs'
         : this._bufferData.length + ' files via XHR';
     Utils.log('BufferList: ' + messageString + ' loaded successfully.');
-    this._resolveHandler(this._bufferList);
-  }
+    return buffers;
+  });
 };
 
+
+/**
+ * Run async loading task for Base64-encoded string.
+ * @private
+ * @param {Number} taskId Task ID number from the ordered list |bufferData|.
+ * @return {Promise<AudioBuffer>}
+ */
+BufferList.prototype._launchAsyncLoadTask = function(taskId) {
+  return new Promise((resolve, reject) => {
+    let arrayBuffer;
+    try {
+      arrayBuffer =
+          Utils.getArrayBufferFromBase64String(this._bufferData[taskId]);
+    } catch (err) {
+      reject(new Error('BufferList: invalid Base64 at index ' + taskId));
+      return;
+    }
+
+    this._context.decodeAudioData(
+        arrayBuffer,
+        (audioBuffer) => {
+          if (this._options.verbose) {
+            Utils.log('BufferList: ArrayBuffer(' + taskId +
+                ') from Base64-encoded HRIR successfully loaded.');
+          }
+          resolve(audioBuffer);
+        },
+        (errorMessage) => {
+          const message = 'BufferList: decoding ArrayBuffer("' + taskId +
+              '" from Base64-encoded data) failed. (' + errorMessage + ')';
+          Utils.log(message);
+          reject(new Error(message));
+        });
+  });
+};
+
+
+/**
+ * Run async loading task via XHR for audio file URLs.
+ * @private
+ * @param {Number} taskId Task ID number from the ordered list |bufferData|.
+ * @return {Promise<AudioBuffer>}
+ */
+BufferList.prototype._launchAsyncLoadTaskXHR = function(taskId) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', this._bufferData[taskId]);
+    xhr.responseType = 'arraybuffer';
+
+    xhr.onload = () => {
+      if (xhr.status === 200) {
+        this._context.decodeAudioData(
+            xhr.response,
+            (audioBuffer) => {
+              if (this._options.verbose) {
+                Utils.log('BufferList: "' + this._bufferData[taskId] +
+                    '" successfully loaded.');
+              }
+              resolve(audioBuffer);
+            },
+            (errorMessage) => {
+              const message = 'BufferList: decoding "' +
+                  this._bufferData[taskId] + '" failed. (' + errorMessage + ')';
+              Utils.log(message);
+              reject(new Error(message));
+            });
+      } else {
+        const message = 'BufferList: XHR error while loading "' +
+            this._bufferData[taskId] + '". (' + xhr.status + ' ' +
+            xhr.statusText + ')';
+        Utils.log(message);
+        reject(new Error(message));
+      }
+    };
+
+    xhr.onerror = () => {
+      const message = 'BufferList: XHR network failed on loading "' +
+          this._bufferData[taskId] + '".';
+      Utils.log(message);
+      reject(new Error(message));
+    };
+
+    xhr.send();
+  });
+};
+
+/**
+ * @license
+ * Copyright 2016 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @file An audio channel router to resolve different channel layouts between
+ * browsers.
+ */
+
+
+/**
+ * @typedef {Number[]} ChannelMap
+ */
+
+/**
+ * Channel map dictionary ENUM.
+ * @enum {ChannelMap}
+ */
 const ChannelMap = {
+  /** @type {Number[]} - ACN channel map for Chrome and FireFox. (FFMPEG) */
   DEFAULT: [0, 1, 2, 3],
+  /** @type {Number[]} - Safari's 4-channel map for AAC codec. */
   SAFARI: [2, 0, 1, 3],
+  /** @type {Number[]} - ACN > FuMa conversion map. */
   FUMA: [0, 3, 1, 2],
 };
+
+
+/**
+ * Channel router for FOA stream.
+ * @constructor
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {Number[]} channelMap - Routing destination array.
+ */
 function FOARouter(context, channelMap) {
   this._context = context;
+
   this._splitter = this._context.createChannelSplitter(4);
   this._merger = this._context.createChannelMerger(4);
+
+  // input/output proxy.
   this.input = this._splitter;
   this.output = this._merger;
+
   this.setChannelMap(channelMap || ChannelMap.DEFAULT);
 }
+
+
+/**
+ * Sets channel map.
+ * @param {Number[]} channelMap - A new channel map for FOA stream.
+ */
 FOARouter.prototype.setChannelMap = function(channelMap) {
   if (!Array.isArray(channelMap)) {
     return;
   }
+
   this._channelMap = channelMap;
   this._splitter.disconnect();
   this._splitter.connect(this._merger, 0, this._channelMap[0]);
@@ -322,10 +547,44 @@ FOARouter.prototype.setChannelMap = function(channelMap) {
   this._splitter.connect(this._merger, 2, this._channelMap[2]);
   this._splitter.connect(this._merger, 3, this._channelMap[3]);
 };
+
+
+/**
+ * Static channel map ENUM.
+ * @static
+ * @type {ChannelMap}
+ */
 FOARouter.ChannelMap = ChannelMap;
 
+/**
+ * @license
+ * Copyright 2016 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @file Sound field rotator for first-order-ambisonics decoding.
+ */
+
+
+/**
+ * First-order-ambisonic decoder based on gain node network.
+ * @constructor
+ * @param {AudioContext} context - Associated AudioContext.
+ */
 function FOARotator(context) {
   this._context = context;
+
   this._splitter = this._context.createChannelSplitter(4);
   this._inY = this._context.createGain();
   this._inZ = this._context.createGain();
@@ -343,11 +602,21 @@ function FOARotator(context) {
   this._outZ = this._context.createGain();
   this._outX = this._context.createGain();
   this._merger = this._context.createChannelMerger(4);
+
+  // ACN channel ordering: [1, 2, 3] => [-Y, Z, -X]
+  // Y (from channel 1)
   this._splitter.connect(this._inY, 1);
+  // Z (from channel 2)
   this._splitter.connect(this._inZ, 2);
+  // X (from channel 3)
   this._splitter.connect(this._inX, 3);
   this._inY.gain.value = -1;
   this._inX.gain.value = -1;
+
+  // Apply the rotation in the world space.
+  // |Y|   | m0  m3  m6 |   | Y * m0 + Z * m3 + X * m6 |   | Yr |
+  // |Z| * | m1  m4  m7 | = | Y * m1 + Z * m4 + X * m7 | = | Zr |
+  // |X|   | m2  m5  m8 |   | Y * m2 + Z * m5 + X * m8 |   | Xr |
   this._inY.connect(this._m0);
   this._inY.connect(this._m1);
   this._inY.connect(this._m2);
@@ -366,16 +635,31 @@ function FOARotator(context) {
   this._m6.connect(this._outY);
   this._m7.connect(this._outZ);
   this._m8.connect(this._outX);
+
+  // Transform 3: world space to audio space.
+  // W -> W (to channel 0)
   this._splitter.connect(this._merger, 0, 0);
+  // Y (to channel 1)
   this._outY.connect(this._merger, 0, 1);
+  // Z (to channel 2)
   this._outZ.connect(this._merger, 0, 2);
+  // X (to channel 3)
   this._outX.connect(this._merger, 0, 3);
   this._outY.gain.value = -1;
   this._outX.gain.value = -1;
+
   this.setRotationMatrix3(new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]));
+
+  // input/output proxy.
   this.input = this._splitter;
   this.output = this._merger;
 }
+
+
+/**
+ * Updates the rotation matrix with 3x3 matrix.
+ * @param {Number[]} rotationMatrix3 - A 3x3 rotation matrix. (column-major)
+ */
 FOARotator.prototype.setRotationMatrix3 = function(rotationMatrix3) {
   this._m0.gain.value = rotationMatrix3[0];
   this._m1.gain.value = rotationMatrix3[1];
@@ -387,6 +671,12 @@ FOARotator.prototype.setRotationMatrix3 = function(rotationMatrix3) {
   this._m7.gain.value = rotationMatrix3[7];
   this._m8.gain.value = rotationMatrix3[8];
 };
+
+
+/**
+ * Updates the rotation matrix with 4x4 matrix.
+ * @param {Number[]} rotationMatrix4 - A 4x4 rotation matrix. (column-major)
+ */
 FOARotator.prototype.setRotationMatrix4 = function(rotationMatrix4) {
   this._m0.gain.value = rotationMatrix4[0];
   this._m1.gain.value = rotationMatrix4[1];
@@ -398,6 +688,12 @@ FOARotator.prototype.setRotationMatrix4 = function(rotationMatrix4) {
   this._m7.gain.value = rotationMatrix4[9];
   this._m8.gain.value = rotationMatrix4[10];
 };
+
+
+/**
+ * Returns the current 3x3 rotation matrix.
+ * @return {Number[]} - A 3x3 rotation matrix. (column-major)
+ */
 FOARotator.prototype.getRotationMatrix3 = function() {
   return [
     this._m0.gain.value, this._m1.gain.value, this._m2.gain.value,
@@ -405,6 +701,12 @@ FOARotator.prototype.getRotationMatrix3 = function() {
     this._m6.gain.value, this._m7.gain.value, this._m8.gain.value,
   ];
 };
+
+
+/**
+ * Returns the current 4x4 rotation matrix.
+ * @return {Number[]} - A 4x4 rotation matrix. (column-major)
+ */
 FOARotator.prototype.getRotationMatrix4 = function() {
   const rotationMatrix4 = new Float32Array(16);
   rotationMatrix4[0] = this._m0.gain.value;
@@ -416,19 +718,57 @@ FOARotator.prototype.getRotationMatrix4 = function() {
   rotationMatrix4[8] = this._m6.gain.value;
   rotationMatrix4[9] = this._m7.gain.value;
   rotationMatrix4[10] = this._m8.gain.value;
+  // Homogeneous coordinate scale factor w=1 for 4x4 affine transforms.
+  rotationMatrix4[15] = 1;
   return rotationMatrix4;
 };
 
+/**
+ * @license
+ * Copyright 2017 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+
+/**
+ * FOAConvolver. A collection of 2 stereo convolvers for 4-channel FOA stream.
+ * @constructor
+ * @param {BaseAudioContext} context The associated AudioContext.
+ * @param {AudioBuffer[]} [hrirBufferList] - An ordered-list of stereo
+ * AudioBuffers for convolution. (i.e. 2 stereo AudioBuffers for FOA)
+ */
 function FOAConvolver(context, hrirBufferList) {
   this._context = context;
+
   this._active = false;
   this._isBufferLoaded = false;
+
   this._buildAudioGraph();
+
   if (hrirBufferList) {
     this.setHRIRBufferList(hrirBufferList);
   }
+
   this.enable();
 }
+
+
+/**
+ * Build the internal audio graph.
+ *
+ * @private
+ */
 FOAConvolver.prototype._buildAudioGraph = function() {
   this._splitterWYZX = this._context.createChannelSplitter(4);
   this._mergerWY = this._context.createChannelMerger(2);
@@ -440,10 +780,14 @@ FOAConvolver.prototype._buildAudioGraph = function() {
   this._inverter = this._context.createGain();
   this._mergerBinaural = this._context.createChannelMerger(2);
   this._summingBus = this._context.createGain();
+
+  // Group W and Y, then Z and X.
   this._splitterWYZX.connect(this._mergerWY, 0, 0);
   this._splitterWYZX.connect(this._mergerWY, 1, 1);
   this._splitterWYZX.connect(this._mergerZX, 2, 0);
   this._splitterWYZX.connect(this._mergerZX, 3, 1);
+
+  // Create a network of convolvers using splitter/merger.
   this._mergerWY.connect(this._convolverWY);
   this._mergerZX.connect(this._convolverZX);
   this._convolverWY.connect(this._splitterWY);
@@ -457,24 +801,65 @@ FOAConvolver.prototype._buildAudioGraph = function() {
   this._splitterZX.connect(this._mergerBinaural, 0, 1);
   this._splitterZX.connect(this._mergerBinaural, 1, 0);
   this._splitterZX.connect(this._mergerBinaural, 1, 1);
+
+  // By default, WebAudio's convolver does the normalization based on IR's
+  // energy. For the precise convolution, it must be disabled before the buffer
+  // assignment.
   this._convolverWY.normalize = false;
   this._convolverZX.normalize = false;
+
+  // For asymmetric degree.
   this._inverter.gain.value = -1;
+
+  // Input/output proxy.
   this.input = this._splitterWYZX;
   this.output = this._summingBus;
 };
+
+
+/**
+ * Assigns 2 HRIR AudioBuffers to 2 convolvers: Note that we use 2 stereo
+ * convolutions for 4-channel direct convolution. Using mono convolver or
+ * 4-channel convolver is not viable because mono convolution wastefully
+ * produces the stereo outputs, and the 4-ch convolver does cross-channel
+ * convolution. (See Web Audio API spec)
+ * @param {AudioBuffer[]} hrirBufferList - An array of stereo AudioBuffers for
+ * convolvers.
+ */
 FOAConvolver.prototype.setHRIRBufferList = function(hrirBufferList) {
+  // After these assignments, the channel data in the buffer is immutable in
+  // FireFox. (i.e. neutered) So we should avoid re-assigning buffers, otherwise
+  // an exception will be thrown.
   if (this._isBufferLoaded) {
     return;
   }
+
+  for (let i = 0; i < hrirBufferList.length; ++i) {
+    if (!Utils.isAudioBuffer(hrirBufferList[i])) {
+      Utils.throw('FOAConvolver: Invalid AudioBuffer at index ' + i);
+    }
+  }
+
   this._convolverWY.buffer = hrirBufferList[0];
   this._convolverZX.buffer = hrirBufferList[1];
   this._isBufferLoaded = true;
 };
+
+
+/**
+ * Enable FOAConvolver instance. The audio graph will be activated and pulled by
+ * the WebAudio engine. (i.e. consume CPU cycle)
+ */
 FOAConvolver.prototype.enable = function() {
   this._mergerBinaural.connect(this._summingBus);
   this._active = true;
 };
+
+
+/**
+ * Disable FOAConvolver instance. The inner graph will be disconnected from the
+ * audio destination, thus no CPU cycle will be consumed.
+ */
 FOAConvolver.prototype.disable = function() {
   this._mergerBinaural.disconnect();
   this._active = false;
@@ -485,19 +870,63 @@ const OmnitoneFOAHrirBase64 = [
 "UklGRiQEAABXQVZFZm10IBAAAAABAAIAgLsAAADuAgAEABAAZGF0YQAEAAAAAAAA/f8CAP//AQD//wEA//8BAP3/AAACAP7/+f8AAAIA/P8FAAQA8/8AABoA+f/V/wQAHQDO/xoAQQBO/ocA0Px1/ucHW/4UCm8HLO6kAjv8/fCRDdAAYfPiBIgFXveUCM0GBvh6/nz7rf0J/QcQSRVdBgoBSgFR62r9NP8m+LoEAvriBVAAiAPmABEGMf2l+SwBjva6/G4A//8P/CYDMgXm/R0CKAE6/fcBBwAtAND+kQA0A5UDhwFs/8IB8fydAEP/A/8v/e7/mP8j/2YBIwE3Av0AYv+uAOD8lgAg/wwAIf/L/n0Ae//OAJMB3P/XAF//XwCM/08AB/8NAEf/rf4jAT3/lgAJAP4AHgDpAO8AUf9L/07/Qf8KAOD/x/+D/3sATQCDAMoA0f79/+L/EQDt/7EAqv+S/7IAuv/o/wgAc//X//H/SwCm/+3/Yf/B/yoAAADI/7X/AwBg/5EATgCX/xYA/P+q/00AVACY/6v/BADD/zwALQCN/8z/KQDu/ygAEgCZ/6f/VQDC//T/KQCs/7P/UgAfAO7/NgC8/57/awAZAPP/+P/V/8z/bQBBAL//DgD0/+T/TABBAMz/CwAxAPz/SQBqALn/BgALAPz/EAA7AIz/3/8iAAUA//8kALf/y/9VABQA+v81AOj/0P9cAB4A+f8WAOr/vv83ABgAw/8JAOj/4f8nACIAsf/y/w4A3v8gACQAxP/n/ycA7P8WAC0Ayf/U/ycA9v/7/yUA0P/P/zUABADc/xUA5P/J/zcACwDS/xUA9P/m/zAACQDX/+3/9v/2/yQACgDZ/+P/AwAKABYA///b/9j/EQALABkADgD6/+7/GwD4/w4A8P/w//j/EgAEAAUA9f/1/wQAGgD4/wAA5////wAAGQD1////7f8FAAUAFQDv/wAA6v8LAAcAFQDs/wEA9P8SAAYACwDr//7/AQASAAYABQDv/wIAAwAWAAIAAgDv/wAABgATAAEA/f/u/wQABgAQAPr/+P/z/wUACQALAPj/9//4/wgABwAKAPT/+f/5/w4ABwAIAPT/+//9/w4AAwADAPH//f///w8A//8BAPP///8BAA0A/f/+//X/AgACAA0A+//8//b/BAADAAoA+f/7//n/BgADAAcA+P/7//v/BwABAAQA+P/8//3/CQABAAIA9//9////CQD/////+P///wAACAD9//7/+f8AAAAABwD8//3/+v8CAAAABgD7//z//P8EAAAABAD6//3//P8FAP//AgD6//7//v8FAP7/AQD7//////8GAP7/AAD7/wEA//8EAP3/AAD9/wEA/v8DAP3/AAD9/wIA/v8CAP3/AQD9/wIA/v8CAP7/AQD+/wEA",
 ];
 
-const RenderingMode = {
+/**
+ * @license
+ * Copyright 2017 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+
+/**
+ * @typedef {string} RenderingMode
+ */
+
+/**
+ * Rendering mode ENUM.
+ * @enum {RenderingMode}
+ */
+const RenderingMode$1 = {
+  /** @type {string} Use ambisonic rendering. */
   AMBISONIC: 'ambisonic',
+  /** @type {string} Bypass. No ambisonic rendering. */
   BYPASS: 'bypass',
+  /** @type {string} Disable audio output. */
   OFF: 'off',
 };
+
+
+/**
+ * Omnitone FOA renderer class. Uses the optimized convolution technique.
+ * @constructor
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {Object} config
+ * @param {Array} [config.channelMap] - Custom channel routing map. Useful for
+ * handling the inconsistency in browser's multichannel audio decoding.
+ * @param {Array} [config.hrirPathList] - A list of paths to HRIR files. It
+ * overrides the internal HRIR list if given.
+ * @param {RenderingMode} [config.renderingMode='ambisonic'] - Rendering mode.
+ */
 function FOARenderer(context, config) {
   this._context = Utils.isAudioContext(context) ?
       context :
       Utils.throw('FOARenderer: Invalid BaseAudioContext.');
+
   this._config = {
     channelMap: FOARouter.ChannelMap.DEFAULT,
-    renderingMode: RenderingMode.AMBISONIC,
+    renderingMode: RenderingMode$1.AMBISONIC,
   };
+
   if (config) {
     if (config.channelMap) {
       if (Array.isArray(config.channelMap) && config.channelMap.length === 4) {
@@ -508,6 +937,7 @@ function FOARenderer(context, config) {
             + ')');
       }
     }
+
     if (config.hrirPathList) {
       if (Array.isArray(config.hrirPathList) &&
           config.hrirPathList.length === 2) {
@@ -518,8 +948,9 @@ function FOARenderer(context, config) {
             '2 URLs to HRIR files. (got ' + config.hrirPathList + ')');
       }
     }
+
     if (config.renderingMode) {
-      if (Object.values(RenderingMode).includes(config.renderingMode)) {
+      if (Object.values(RenderingMode$1).includes(config.renderingMode)) {
         this._config.renderingMode = config.renderingMode;
       } else {
         Utils.log(
@@ -528,10 +959,20 @@ function FOARenderer(context, config) {
       }
     }
   }
+
   this._buildAudioGraph();
+  // Audio graph is constructed with the convolver enabled ('ambisonic').
+  this._renderingMode = RenderingMode$1.AMBISONIC;
+
   this._tempMatrix4 = new Float32Array(16);
   this._isRendererReady = false;
 }
+
+
+/**
+ * Builds the internal audio graph.
+ * @private
+ */
 FOARenderer.prototype._buildAudioGraph = function() {
   this.input = this._context.createGain();
   this.output = this._context.createGain();
@@ -544,10 +985,19 @@ FOARenderer.prototype._buildAudioGraph = function() {
   this._foaRouter.output.connect(this._foaRotator.input);
   this._foaRotator.output.connect(this._foaConvolver.input);
   this._foaConvolver.output.connect(this.output);
+
   this.input.channelCount = 4;
   this.input.channelCountMode = 'explicit';
   this.input.channelInterpretation = 'discrete';
 };
+
+
+/**
+ * Internal callback handler for |initialize| method.
+ * @private
+ * @param {function} resolve - Resolution handler.
+ * @param {function} reject - Rejection handler.
+ */
 FOARenderer.prototype._initializeCallback = function(resolve, reject) {
   const bufferList = this._config.pathList
       ? new BufferList(this._context, this._config.pathList, {dataType: 'url'})
@@ -560,22 +1010,37 @@ FOARenderer.prototype._initializeCallback = function(resolve, reject) {
         Utils.log('FOARenderer: HRIRs loaded successfully. Ready.');
         resolve();
       }.bind(this),
-      function() {
-        const errorMessage = 'FOARenderer: HRIR loading/decoding failed.';
-        reject(errorMessage);
-        Utils.throw(errorMessage);
+      function(reason) {
+        const errorMessage = 'FOARenderer: HRIR loading/decoding failed.' +
+            (reason ? ' (' + reason + ')' : '');
+        Utils.log(errorMessage);
+        reject(new Error(errorMessage));
       });
 };
+
+
+/**
+ * Initializes and loads the resource for the renderer.
+ * @return {Promise}
+ */
 FOARenderer.prototype.initialize = function() {
   Utils.log(
       'FOARenderer: Initializing... (mode: ' + this._config.renderingMode +
       ')');
+
   return new Promise(this._initializeCallback.bind(this));
 };
+
+
+/**
+ * Set the channel map.
+ * @param {Number[]} channelMap - Custom channel routing for FOA stream.
+ */
 FOARenderer.prototype.setChannelMap = function(channelMap) {
   if (!this._isRendererReady) {
     return;
   }
+
   if (channelMap.toString() !== this._config.channelMap.toString()) {
     Utils.log(
         'Remapping channels ([' + this._config.channelMap.toString() +
@@ -584,39 +1049,76 @@ FOARenderer.prototype.setChannelMap = function(channelMap) {
     this._foaRouter.setChannelMap(this._config.channelMap);
   }
 };
+
+
+/**
+ * Updates the rotation matrix with 3x3 matrix.
+ * @param {Number[]} rotationMatrix3 - A 3x3 rotation matrix. (column-major)
+ */
 FOARenderer.prototype.setRotationMatrix3 = function(rotationMatrix3) {
   if (!this._isRendererReady) {
     return;
   }
+
   this._foaRotator.setRotationMatrix3(rotationMatrix3);
 };
+
+
+/**
+ * Updates the rotation matrix with 4x4 matrix.
+ * @param {Number[]} rotationMatrix4 - A 4x4 rotation matrix. (column-major)
+ */
 FOARenderer.prototype.setRotationMatrix4 = function(rotationMatrix4) {
   if (!this._isRendererReady) {
     return;
   }
+
   this._foaRotator.setRotationMatrix4(rotationMatrix4);
 };
+
+
+/**
+ * Set the rotation matrix from a Three.js camera object. Depreated in V1, and
+ * this exists only for the backward compatiblity. Instead, use
+ * |setRotatationMatrix4()| with Three.js |camera.worldMatrix.elements|.
+ * @deprecated
+ * @param {Object} cameraMatrix - Matrix4 from Three.js |camera.matrix|.
+ */
 FOARenderer.prototype.setRotationMatrixFromCamera = function(cameraMatrix) {
   if (!this._isRendererReady) {
     return;
   }
+
+  // Extract the inner array elements and inverse. (The actual view rotation is
+  // the opposite of the camera movement.)
   Utils.invertMatrix4(this._tempMatrix4, cameraMatrix.elements);
   this._foaRotator.setRotationMatrix4(this._tempMatrix4);
 };
+
+
+/**
+ * Set the rendering mode.
+ * @param {RenderingMode} mode - Rendering mode.
+ *  - 'ambisonic': activates the ambisonic decoding/binaurl rendering.
+ *  - 'bypass': bypasses the input stream directly to the output. No ambisonic
+ *    decoding or encoding.
+ *  - 'off': all the processing off saving the CPU power.
+ */
 FOARenderer.prototype.setRenderingMode = function(mode) {
-  if (mode === this._config.renderingMode) {
+  if (mode === this._renderingMode) {
     return;
   }
+
   switch (mode) {
-    case RenderingMode.AMBISONIC:
+    case RenderingMode$1.AMBISONIC:
       this._foaConvolver.enable();
       this._bypass.disconnect();
       break;
-    case RenderingMode.BYPASS:
+    case RenderingMode$1.BYPASS:
       this._foaConvolver.disable();
       this._bypass.connect(this.output);
       break;
-    case RenderingMode.OFF:
+    case RenderingMode$1.OFF:
       this._foaConvolver.disable();
       this._bypass.disconnect();
       break;
@@ -626,25 +1128,68 @@ FOARenderer.prototype.setRenderingMode = function(mode) {
           'supported.');
       return;
   }
-  this._config.renderingMode = mode;
+
+  this._renderingMode = mode;
   Utils.log('FOARenderer: Rendering mode changed. (' + mode + ')');
 };
 
+/**
+ * @license
+ * Copyright 2017 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+
+/**
+ * A convolver network for N-channel HOA stream.
+ * @constructor
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {Number} ambisonicOrder - Ambisonic order. (2 or 3)
+ * @param {AudioBuffer[]} [hrirBufferList] - An ordered-list of stereo
+ * AudioBuffers for convolution. (SOA: 5 AudioBuffers, TOA: 8 AudioBuffers)
+ */
 function HOAConvolver(context, ambisonicOrder, hrirBufferList) {
   this._context = context;
+
   this._active = false;
   this._isBufferLoaded = false;
+
+  // The number of channels K based on the ambisonic order N where K = (N+1)^2.
   this._ambisonicOrder = ambisonicOrder;
   this._numberOfChannels =
       (this._ambisonicOrder + 1) * (this._ambisonicOrder + 1);
+
   this._buildAudioGraph();
   if (hrirBufferList) {
     this.setHRIRBufferList(hrirBufferList);
   }
+
   this.enable();
 }
+
+
+/**
+ * Build the internal audio graph.
+ * For TOA convolution:
+ *   input -> splitter(16) -[0,1]-> merger(2) -> convolver(2) -> splitter(2)
+ *                         -[2,3]-> merger(2) -> convolver(2) -> splitter(2)
+ *                         -[4,5]-> ... (6 more, 8 branches total)
+ * @private
+ */
 HOAConvolver.prototype._buildAudioGraph = function() {
   const numberOfStereoChannels = Math.ceil(this._numberOfChannels / 2);
+
   this._inputSplitter =
       this._context.createChannelSplitter(this._numberOfChannels);
   this._stereoMergers = [];
@@ -655,20 +1200,33 @@ HOAConvolver.prototype._buildAudioGraph = function() {
   this._inverter = this._context.createGain();
   this._binauralMerger = this._context.createChannelMerger(2);
   this._outputGain = this._context.createGain();
+
   for (let i = 0; i < numberOfStereoChannels; ++i) {
     this._stereoMergers[i] = this._context.createChannelMerger(2);
     this._convolvers[i] = this._context.createConvolver();
     this._stereoSplitters[i] = this._context.createChannelSplitter(2);
     this._convolvers[i].normalize = false;
   }
+
   for (let l = 0; l <= this._ambisonicOrder; ++l) {
     for (let m = -l; m <= l; m++) {
+      // We compute the ACN index (k) of ambisonics channel using the degree (l)
+      // and index (m): k = l^2 + l + m
       const acnIndex = l * l + l + m;
       const stereoIndex = Math.floor(acnIndex / 2);
+
+      // Split channels from input into array of stereo convolvers.
+      // Then create a network of mergers that produces the stereo output.
       this._inputSplitter.connect(
           this._stereoMergers[stereoIndex], acnIndex, acnIndex % 2);
       this._stereoMergers[stereoIndex].connect(this._convolvers[stereoIndex]);
       this._convolvers[stereoIndex].connect(this._stereoSplitters[stereoIndex]);
+
+      // Positive index (m >= 0) spherical harmonics are symmetrical around the
+      // front axis, while negative index (m < 0) spherical harmonics are
+      // anti-symmetrical around the front axis. We will exploit this symmetry
+      // to reduce the number of convolutions required when rendering to a
+      // symmetrical binaural renderer.
       if (m >= 0) {
         this._stereoSplitters[stereoIndex].connect(
             this._positiveIndexSphericalHarmonics, acnIndex % 2);
@@ -678,44 +1236,152 @@ HOAConvolver.prototype._buildAudioGraph = function() {
       }
     }
   }
+
   this._positiveIndexSphericalHarmonics.connect(this._binauralMerger, 0, 0);
   this._positiveIndexSphericalHarmonics.connect(this._binauralMerger, 0, 1);
   this._negativeIndexSphericalHarmonics.connect(this._binauralMerger, 0, 0);
   this._negativeIndexSphericalHarmonics.connect(this._inverter);
   this._inverter.connect(this._binauralMerger, 0, 1);
+
+  // For asymmetric index.
   this._inverter.gain.value = -1;
+
+  // Input/Output proxy.
   this.input = this._inputSplitter;
   this.output = this._outputGain;
 };
+
+
+/**
+ * Assigns N HRIR AudioBuffers to N convolvers: Note that we use 2 stereo
+ * convolutions for 4-channel direct convolution. Using mono convolver or
+ * 4-channel convolver is not viable because mono convolution wastefully
+ * produces the stereo outputs, and the 4-ch convolver does cross-channel
+ * convolution. (See Web Audio API spec)
+ * @param {AudioBuffer[]} hrirBufferList - An array of stereo AudioBuffers for
+ * convolvers.
+ */
 HOAConvolver.prototype.setHRIRBufferList = function(hrirBufferList) {
+  // After these assignments, the channel data in the buffer is immutable in
+  // FireFox. (i.e. neutered) So we should avoid re-assigning buffers, otherwise
+  // an exception will be thrown.
   if (this._isBufferLoaded) {
     return;
   }
+
+  for (let i = 0; i < hrirBufferList.length; ++i) {
+    if (!Utils.isAudioBuffer(hrirBufferList[i])) {
+      Utils.throw('HOAConvolver: Invalid AudioBuffer at index ' + i);
+    }
+  }
+
   for (let i = 0; i < hrirBufferList.length; ++i) {
     this._convolvers[i].buffer = hrirBufferList[i];
   }
+
   this._isBufferLoaded = true;
 };
+
+
+/**
+ * Enable HOAConvolver instance. The audio graph will be activated and pulled by
+ * the WebAudio engine. (i.e. consume CPU cycle)
+ */
 HOAConvolver.prototype.enable = function() {
   this._binauralMerger.connect(this._outputGain);
   this._active = true;
 };
+
+
+/**
+ * Disable HOAConvolver instance. The inner graph will be disconnected from the
+ * audio destination, thus no CPU cycle will be consumed.
+ */
 HOAConvolver.prototype.disable = function() {
   this._binauralMerger.disconnect();
   this._active = false;
 };
 
+/**
+ * @license
+ * Copyright 2016 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @file Sound field rotator for higher-order-ambisonics decoding.
+ */
+
+
+/**
+ * Kronecker Delta function.
+ * @param {Number} i
+ * @param {Number} j
+ * @return {Number}
+ */
 function getKroneckerDelta(i, j) {
   return i === j ? 1 : 0;
 }
+
+
+/**
+ * A helper function to allow us to access a matrix array in the same
+ * manner, assuming it is a (2l+1)x(2l+1) matrix. [2] uses an odd convention of
+ * referring to the rows and columns using centered indices, so the middle row
+ * and column are (0, 0) and the upper left would have negative coordinates.
+ * @param {Number[]} matrix - N matrices of gainNodes, each with (2n+1) x (2n+1)
+ * elements, where n=1,2,...,N.
+ * @param {Number} l
+ * @param {Number} i
+ * @param {Number} j
+ * @param {Number} gainValue
+ */
 function setCenteredElement(matrix, l, i, j, gainValue) {
   const index = (j + l) * (2 * l + 1) + (i + l);
+  // Row-wise indexing.
   matrix[l - 1][index].gain.value = gainValue;
 }
+
+
+/**
+ * This is a helper function to allow us to access a matrix array in the same
+ * manner, assuming it is a (2l+1) x (2l+1) matrix.
+ * @param {Number[]} matrix - N matrices of gainNodes, each with (2n+1) x (2n+1)
+ * elements, where n=1,2,...,N.
+ * @param {Number} l
+ * @param {Number} i
+ * @param {Number} j
+ * @return {Number}
+ */
 function getCenteredElement(matrix, l, i, j) {
+  // Row-wise indexing.
   const index = (j + l) * (2 * l + 1) + (i + l);
   return matrix[l - 1][index].gain.value;
 }
+
+
+/**
+ * Helper function defined in [2] that is used by the functions U, V, W.
+ * This should not be called on its own, as U, V, and W (and their coefficients)
+ * select the appropriate matrix elements to access arguments |a| and |b|.
+ * @param {Number[]} matrix - N matrices of gainNodes, each with (2n+1) x (2n+1)
+ * elements, where n=1,2,...,N.
+ * @param {Number} i
+ * @param {Number} a
+ * @param {Number} b
+ * @param {Number} l
+ * @return {Number}
+ */
 function getP(matrix, i, a, b, l) {
   if (b === l) {
     return getCenteredElement(matrix, 1, i, 1) *
@@ -732,9 +1398,41 @@ function getP(matrix, i, a, b, l) {
         getCenteredElement(matrix, l - 1, a, b);
   }
 }
+
+
+/**
+ * The functions U, V, and W should only be called if the correspondingly
+ * named coefficient u, v, w from the function ComputeUVWCoeff() is non-zero.
+ * When the coefficient is 0, these would attempt to access matrix elements that
+ * are out of bounds. The vector of rotations, |r|, must have the |l - 1|
+ * previously completed band rotations. These functions are valid for |l >= 2|.
+ * @param {Number[]} matrix - N matrices of gainNodes, each with (2n+1) x (2n+1)
+ * elements, where n=1,2,...,N.
+ * @param {Number} m
+ * @param {Number} n
+ * @param {Number} l
+ * @return {Number}
+ */
 function getU(matrix, m, n, l) {
+  // Although [1, 2] split U into three cases for m == 0, m < 0, m > 0
+  // the actual values are the same for all three cases.
   return getP(matrix, 0, m, n, l);
 }
+
+
+/**
+ * The functions U, V, and W should only be called if the correspondingly
+ * named coefficient u, v, w from the function ComputeUVWCoeff() is non-zero.
+ * When the coefficient is 0, these would attempt to access matrix elements that
+ * are out of bounds. The vector of rotations, |r|, must have the |l - 1|
+ * previously completed band rotations. These functions are valid for |l >= 2|.
+ * @param {Number[]} matrix - N matrices of gainNodes, each with (2n+1) x (2n+1)
+ * elements, where n=1,2,...,N.
+ * @param {Number} m
+ * @param {Number} n
+ * @param {Number} l
+ * @return {Number}
+ */
 function getV(matrix, m, n, l) {
   if (m === 0) {
     return getP(matrix, 1, 1, n, l) + getP(matrix, -1, -1, n, l);
@@ -743,22 +1441,55 @@ function getV(matrix, m, n, l) {
     return getP(matrix, 1, m - 1, n, l) * Math.sqrt(1 + d) -
         getP(matrix, -1, -m + 1, n, l) * (1 - d);
   } else {
+    // Note there is apparent errata in [1,2,2b] dealing with this particular
+    // case. [2b] writes it should be P*(1-d)+P*(1-d)^0.5
+    // [1] writes it as P*(1+d)+P*(1-d)^0.5, but going through the math by hand,
+    // you must have it as P*(1-d)+P*(1+d)^0.5 to form a 2^.5 term, which
+    // parallels the case where m > 0.
     const d = getKroneckerDelta(m, -1);
     return getP(matrix, 1, m + 1, n, l) * (1 - d) +
         getP(matrix, -1, -m - 1, n, l) * Math.sqrt(1 + d);
   }
 }
+
+
+/**
+ * The functions U, V, and W should only be called if the correspondingly
+ * named coefficient u, v, w from the function ComputeUVWCoeff() is non-zero.
+ * When the coefficient is 0, these would attempt to access matrix elements that
+ * are out of bounds. The vector of rotations, |r|, must have the |l - 1|
+ * previously completed band rotations. These functions are valid for |l >= 2|.
+ * @param {Number[]} matrix N matrices of gainNodes, each with (2n+1) x (2n+1)
+ * elements, where n=1,2,...,N.
+ * @param {Number} m
+ * @param {Number} n
+ * @param {Number} l
+ * @return {Number}
+ */
 function getW(matrix, m, n, l) {
+  // Whenever this happens, w is also 0 so W can be anything.
   if (m === 0) {
     return 0;
   }
+
   return m > 0 ? getP(matrix, 1, m + 1, n, l) + getP(matrix, -1, -m - 1, n, l) :
                  getP(matrix, 1, m - 1, n, l) - getP(matrix, -1, -m + 1, n, l);
 }
+
+
+/**
+ * Calculates the coefficients applied to the U, V, and W functions. Because
+ * their equations share many common terms they are computed simultaneously.
+ * @param {Number} m
+ * @param {Number} n
+ * @param {Number} l
+ * @return {Array} 3 coefficients for U, V and W functions.
+ */
 function computeUVWCoeff(m, n, l) {
   const d = getKroneckerDelta(m, 0);
   const reciprocalDenominator =
       Math.abs(n) === l ? 1 / (2 * l * (2 * l - 1)) : 1 / ((l + n) * (l - n));
+
   return [
     Math.sqrt((l + m) * (l - m) * reciprocalDenominator),
     0.5 * (1 - 2 * d) * Math.sqrt((1 + d) *
@@ -769,10 +1500,28 @@ function computeUVWCoeff(m, n, l) {
         reciprocalDenominator,
   ];
 }
+
+
+/**
+ * Calculates the (2l+1) x (2l+1) rotation matrix for the band l.
+ * This uses the matrices computed for band 1 and band l-1 to compute the
+ * matrix for band l. |rotations| must contain the previously computed l-1
+ * rotation matrices.
+ * This implementation comes from p. 5 (6346), Table 1 and 2 in [2] taking
+ * into account the corrections from [2b].
+ * @param {Number[]} matrix - N matrices of gainNodes, each with where
+ * n=1,2,...,N.
+ * @param {Number} l
+ */
 function computeBandRotation(matrix, l) {
+  // The lth band rotation matrix has rows and columns equal to the number of
+  // coefficients within that band (-l <= m <= l implies 2l + 1 coefficients).
   for (let m = -l; m <= l; m++) {
     for (let n = -l; n <= l; n++) {
       const uvwCoefficients = computeUVWCoeff(m, n, l);
+
+      // The functions U, V, W are only safe to call if the coefficients
+      // u, v, w are not zero.
       if (Math.abs(uvwCoefficients[0]) > 0) {
         uvwCoefficients[0] *= getU(matrix, m, n, l);
       }
@@ -782,23 +1531,57 @@ function computeBandRotation(matrix, l) {
       if (Math.abs(uvwCoefficients[2]) > 0) {
         uvwCoefficients[2] *= getW(matrix, m, n, l);
       }
+
       setCenteredElement(
           matrix, l, m, n,
           uvwCoefficients[0] + uvwCoefficients[1] + uvwCoefficients[2]);
     }
   }
 }
+
+
+/**
+ * Compute the HOA rotation matrix after setting the transform matrix.
+ * @param {Array} matrix - N matrices of gainNodes, each with (2n+1) x (2n+1)
+ * elements, where n=1,2,...,N.
+ */
 function computeHOAMatrices(matrix) {
+  // We start by computing the 2nd-order matrix from the 1st-order matrix.
   for (let i = 2; i <= matrix.length; i++) {
     computeBandRotation(matrix, i);
   }
 }
+
+
+/**
+ * Higher-order-ambisonic decoder based on gain node network. We expect
+ * the order of the channels to conform to ACN ordering. Below are the helper
+ * methods to compute SH rotation using recursion. The code uses maths described
+ * in the following papers:
+ *  [1] R. Green, "Spherical Harmonic Lighting: The Gritty Details", GDC 2003,
+ *      http://www.research.scea.com/gdc2003/spherical-harmonic-lighting.pdf
+ *  [2] J. Ivanic and K. Ruedenberg, "Rotation Matrices for Real
+ *      Spherical Harmonics. Direct Determination by Recursion", J. Phys.
+ *      Chem., vol. 100, no. 15, pp. 6342-6347, 1996.
+ *      http://pubs.acs.org/doi/pdf/10.1021/jp953350u
+ *  [2b] Corrections to initial publication:
+ *       http://pubs.acs.org/doi/pdf/10.1021/jp9833350
+ * @constructor
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {Number} ambisonicOrder - Ambisonic order.
+ */
 function HOARotator(context, ambisonicOrder) {
   this._context = context;
   this._ambisonicOrder = ambisonicOrder;
+
+  // We need to determine the number of channels K based on the ambisonic order
+  // N where K = (N + 1)^2.
   const numberOfChannels = (ambisonicOrder + 1) * (ambisonicOrder + 1);
+
   this._splitter = this._context.createChannelSplitter(numberOfChannels);
   this._merger = this._context.createChannelMerger(numberOfChannels);
+
+  // Create a set of per-order rotation matrices using gain nodes.
   this._gainNodeMatrix = [];
   let orderOffset;
   let rows;
@@ -806,8 +1589,17 @@ function HOARotator(context, ambisonicOrder) {
   let outputIndex;
   let matrixIndex;
   for (let i = 1; i <= ambisonicOrder; i++) {
+    // Each ambisonic order requires a separate (2l + 1) x (2l + 1) rotation
+    // matrix. We compute the offset value as the first channel index of the
+    // current order where
+    //   k_last = l^2 + l + m,
+    // and m = -l
+    //   k_last = l^2
     orderOffset = i * i;
+
+    // Uses row-major indexing.
     rows = (2 * i + 1);
+
     this._gainNodeMatrix[i - 1] = [];
     for (let j = 0; j < rows; j++) {
       inputIndex = orderOffset + j;
@@ -822,11 +1614,23 @@ function HOARotator(context, ambisonicOrder) {
       }
     }
   }
+
+  // W-channel is not involved in rotation, skip straight to ouput.
   this._splitter.connect(this._merger, 0, 0);
+
+  // Default Identity matrix.
   this.setRotationMatrix3(new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]));
+
+  // Input/Output proxy.
   this.input = this._splitter;
   this.output = this._merger;
 }
+
+
+/**
+ * Updates the rotation matrix with 3x3 matrix.
+ * @param {Number[]} rotationMatrix3 - A 3x3 rotation matrix. (column-major)
+ */
 HOARotator.prototype.setRotationMatrix3 = function(rotationMatrix3) {
   this._gainNodeMatrix[0][0].gain.value = -rotationMatrix3[0];
   this._gainNodeMatrix[0][1].gain.value = rotationMatrix3[1];
@@ -839,6 +1643,12 @@ HOARotator.prototype.setRotationMatrix3 = function(rotationMatrix3) {
   this._gainNodeMatrix[0][8].gain.value = -rotationMatrix3[8];
   computeHOAMatrices(this._gainNodeMatrix);
 };
+
+
+/**
+ * Updates the rotation matrix with 4x4 matrix.
+ * @param {Number[]} rotationMatrix4 - A 4x4 rotation matrix. (column-major)
+ */
 HOARotator.prototype.setRotationMatrix4 = function(rotationMatrix4) {
   this._gainNodeMatrix[0][0].gain.value = -rotationMatrix4[0];
   this._gainNodeMatrix[0][1].gain.value = rotationMatrix4[1];
@@ -851,19 +1661,36 @@ HOARotator.prototype.setRotationMatrix4 = function(rotationMatrix4) {
   this._gainNodeMatrix[0][8].gain.value = -rotationMatrix4[10];
   computeHOAMatrices(this._gainNodeMatrix);
 };
+
+
+/**
+ * Returns the current 3x3 rotation matrix.
+ * @return {Number[]} - A 3x3 rotation matrix. (column-major)
+ */
 HOARotator.prototype.getRotationMatrix3 = function() {
-  const rotationMatrix3 = new Float32Array(9);
-  rotationMatrix3[0] = -this._gainNodeMatrix[0][0].gain.value;
-  rotationMatrix3[1] = this._gainNodeMatrix[0][1].gain.value;
-  rotationMatrix3[2] = -this._gainNodeMatrix[0][2].gain.value;
-  rotationMatrix3[4] = -this._gainNodeMatrix[0][3].gain.value;
-  rotationMatrix3[5] = this._gainNodeMatrix[0][4].gain.value;
-  rotationMatrix3[6] = -this._gainNodeMatrix[0][5].gain.value;
-  rotationMatrix3[8] = -this._gainNodeMatrix[0][6].gain.value;
-  rotationMatrix3[9] = this._gainNodeMatrix[0][7].gain.value;
-  rotationMatrix3[10] = -this._gainNodeMatrix[0][8].gain.value;
-  return rotationMatrix3;
+  // Invert the sign mapping applied by setRotationMatrix3() when converting
+  // between WebGL/Three.js right-handed Cartesian coordinates and the l=1
+  // spherical harmonic basis used by the Ivanic-Ruedenberg recurrence ([2]):
+  // indices {0, 2, 3, 5, 6, 8} are negated; {1, 4, 7} keep their sign.
+  // Pack into contiguous 3x3 column-major indices 0..8 (not the 4x4 stride).
+  return new Float32Array([
+    -this._gainNodeMatrix[0][0].gain.value,
+    this._gainNodeMatrix[0][1].gain.value,
+    -this._gainNodeMatrix[0][2].gain.value,
+    -this._gainNodeMatrix[0][3].gain.value,
+    this._gainNodeMatrix[0][4].gain.value,
+    -this._gainNodeMatrix[0][5].gain.value,
+    -this._gainNodeMatrix[0][6].gain.value,
+    this._gainNodeMatrix[0][7].gain.value,
+    -this._gainNodeMatrix[0][8].gain.value,
+  ]);
 };
+
+
+/**
+ * Returns the current 4x4 rotation matrix.
+ * @return {Number[]} - A 4x4 rotation matrix. (column-major)
+ */
 HOARotator.prototype.getRotationMatrix4 = function() {
   const rotationMatrix4 = new Float32Array(16);
   rotationMatrix4[0] = -this._gainNodeMatrix[0][0].gain.value;
@@ -875,8 +1702,16 @@ HOARotator.prototype.getRotationMatrix4 = function() {
   rotationMatrix4[8] = -this._gainNodeMatrix[0][6].gain.value;
   rotationMatrix4[9] = this._gainNodeMatrix[0][7].gain.value;
   rotationMatrix4[10] = -this._gainNodeMatrix[0][8].gain.value;
+  // Homogeneous coordinate scale factor w=1 for 4x4 affine transforms.
+  rotationMatrix4[15] = 1;
   return rotationMatrix4;
 };
+
+
+/**
+ * Get the current ambisonic order.
+ * @return {Number}
+ */
 HOARotator.prototype.getAmbisonicOrder = function() {
   return this._ambisonicOrder;
 };
@@ -900,20 +1735,66 @@ const OmnitoneSOAHrirBase64 = [
 "UklGRiQEAABXQVZFZm10IBAAAAABAAIAgLsAAADuAgAEABAAZGF0YQAEAAD+/wAA+v8AAPz/AAD//wAA/f8AAAEAAAD+/wAACQAAAAQAAAAZAAAAtgAAAFsBAABW/gAAH/oAAGcBAABoBwAAlAAAAO3/AAARAQAA+wIAAEoEAACe/gAAiv4AALD0AADJ8wAAkQQAAF34AABi8QAAPQAAAAH2AAD19AAADAMAAJwGAACTEAAA0AwAAJkHAACOBwAAuQEAANcDAAC6AgAAHwUAAHEFAAB0AwAAbgEAADz+AADYAQAAGAAAAJwCAADgAAAA//0AAMn+AAAT/AAAwP8AAOn9AAAJAAAAewEAAOn+AACN/wAAOv0AAO3+AADN/gAAcP8AACj/AACq/gAA+f4AAML9AACa/wAA/f4AAN7/AABo/wAA6/4AAE//AAAC/wAAEQAAAHX/AAB0AAAA5f8AAEwAAAB3AAAA5/8AAMIAAABCAAAAzgAAAE8AAAB3AAAAKAAAADMAAACqAAAALwAAAK4AAAASAAAAVgAAACgAAAAtAAAATAAAAP3/AAA7AAAA2/8AACQAAADw/wAALQAAADEAAAAlAAAAbAAAADMAAABUAAAAEAAAACgAAAD1/wAA9v8AAPr/AADu/wAALgAAABIAAABUAAAARAAAAGUAAABGAAAAOAAAAGAAAAAuAAAARQAAACEAAAAfAAAAAAAAAAkAAAAQAAAAAwAAABIAAADs/wAAEAAAAAYAAAASAAAAIgAAABEAAAADAAAABAAAAA8AAAD4/wAAHQAAAAsAAAAIAAAADgAAAP//AAAcAAAADwAAAAYAAAASAAAAFwAAAAMAAAAYAAAAEgAAAPr/AAAQAAAADQAAAAoAAAD3/wAABgAAAPb/AADf/wAA/v8AAPL/AAD6/wAAFAAAAAQAAAAEAAAAGwAAAAEAAAAMAAAAIAAAAAIAAAAdAAAAGAAAAAIAAAAcAAAAEgAAAAcAAAAeAAAADwAAAAQAAAAeAAAABAAAAAYAAAAZAAAAAQAAAA4AAAATAAAA/v8AAAoAAAAOAAAA+/8AAAsAAAAJAAAA+f8AAAsAAAABAAAA+f8AAAoAAAD9/wAA+v8AAAcAAAD5/wAA+v8AAAUAAAD3/wAA/f8AAAQAAAD2/wAAAAAAAAEAAAD3/wAAAgAAAAAAAAD4/wAAAwAAAP7/AAD6/wAABAAAAP3/AAD8/wAABAAAAPv/AAD+/wAAAwAAAPv/AAD//wAAAQAAAPv/AAAAAAAAAAAAAPv/AAACAAAA//8AAPz/AAACAAAA/v8AAP3/AAACAAAA/f8AAP7/AAABAAAA/f8AAP//AAABAAAA/f8AAAAAAAAAAAAA/v8AAAEAAAAAAAAA//8AAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
 ];
 
-const RenderingMode$1 = {
+/**
+ * @license
+ * Copyright 2017 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+
+/**
+ * @typedef {string} RenderingMode
+ */
+
+/**
+ * Rendering mode ENUM.
+ * @enum {RenderingMode}
+ */
+const RenderingMode = {
+  /** @type {string} Use ambisonic rendering. */
   AMBISONIC: 'ambisonic',
+  /** @type {string} Bypass. No ambisonic rendering. */
   BYPASS: 'bypass',
+  /** @type {string} Disable audio output. */
   OFF: 'off',
 };
+
+
+// Currently SOA and TOA are only supported.
 const SupportedAmbisonicOrder = [2, 3];
+
+
+/**
+ * Omnitone HOA renderer class. Uses the optimized convolution technique.
+ * @constructor
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {Object} config
+ * @param {Number} [config.ambisonicOrder=3] - Ambisonic order.
+ * @param {Array} [config.hrirPathList] - A list of paths to HRIR files. It
+ * overrides the internal HRIR list if given.
+ * @param {RenderingMode} [config.renderingMode='ambisonic'] - Rendering mode.
+ */
 function HOARenderer(context, config) {
   this._context = Utils.isAudioContext(context) ?
       context :
       Utils.throw('HOARenderer: Invalid BaseAudioContext.');
+
   this._config = {
     ambisonicOrder: 3,
-    renderingMode: RenderingMode$1.AMBISONIC,
+    renderingMode: RenderingMode.AMBISONIC,
   };
+
   if (config && config.ambisonicOrder) {
     if (SupportedAmbisonicOrder.includes(config.ambisonicOrder)) {
       this._config.ambisonicOrder = config.ambisonicOrder;
@@ -923,10 +1804,12 @@ function HOARenderer(context, config) {
           config.ambisonicOrder + ') Fallbacks to 3rd-order ambisonic.');
     }
   }
+
   this._config.numberOfChannels =
       (this._config.ambisonicOrder + 1) * (this._config.ambisonicOrder + 1);
   this._config.numberOfStereoChannels =
       Math.ceil(this._config.numberOfChannels / 2);
+
   if (config && config.hrirPathList) {
     if (Array.isArray(config.hrirPathList) &&
         config.hrirPathList.length === this._config.numberOfStereoChannels) {
@@ -938,8 +1821,9 @@ function HOARenderer(context, config) {
           ' (got ' + config.hrirPathList + ')');
     }
   }
+
   if (config && config.renderingMode) {
-    if (Object.values(RenderingMode$1).includes(config.renderingMode)) {
+    if (Object.values(RenderingMode).includes(config.renderingMode)) {
       this._config.renderingMode = config.renderingMode;
     } else {
       Utils.log(
@@ -947,9 +1831,19 @@ function HOARenderer(context, config) {
           config.renderingMode + ') Fallbacks to "ambisonic".');
     }
   }
+
   this._buildAudioGraph();
+  // Audio graph is constructed with the convolver enabled ('ambisonic').
+  this._renderingMode = RenderingMode.AMBISONIC;
+
   this._isRendererReady = false;
 }
+
+
+/**
+ * Builds the internal audio graph.
+ * @private
+ */
 HOARenderer.prototype._buildAudioGraph = function() {
   this.input = this._context.createGain();
   this.output = this._context.createGain();
@@ -961,10 +1855,19 @@ HOARenderer.prototype._buildAudioGraph = function() {
   this.input.connect(this._bypass);
   this._hoaRotator.output.connect(this._hoaConvolver.input);
   this._hoaConvolver.output.connect(this.output);
+
   this.input.channelCount = this._config.numberOfChannels;
   this.input.channelCountMode = 'explicit';
   this.input.channelInterpretation = 'discrete';
 };
+
+
+/**
+ * Internal callback handler for |initialize| method.
+ * @private
+ * @param {function} resolve - Resolution handler.
+ * @param {function} reject - Rejection handler.
+ */
 HOARenderer.prototype._initializeCallback = function(resolve, reject) {
   let bufferList;
   if (this._config.pathList) {
@@ -975,6 +1878,7 @@ HOARenderer.prototype._initializeCallback = function(resolve, reject) {
         ? new BufferList(this._context, OmnitoneSOAHrirBase64)
         : new BufferList(this._context, OmnitoneTOAHrirBase64);
   }
+
   bufferList.load().then(
       function(hrirBufferList) {
         this._hoaConvolver.setHRIRBufferList(hrirBufferList);
@@ -983,44 +1887,77 @@ HOARenderer.prototype._initializeCallback = function(resolve, reject) {
         Utils.log('HOARenderer: HRIRs loaded successfully. Ready.');
         resolve();
       }.bind(this),
-      function() {
-        const errorMessage = 'HOARenderer: HRIR loading/decoding failed.';
-        reject(errorMessage);
-        Utils.throw(errorMessage);
+      function(reason) {
+        const errorMessage = 'HOARenderer: HRIR loading/decoding failed.' +
+            (reason ? ' (' + reason + ')' : '');
+        Utils.log(errorMessage);
+        reject(new Error(errorMessage));
       });
 };
+
+
+/**
+ * Initializes and loads the resource for the renderer.
+ * @return {Promise}
+ */
 HOARenderer.prototype.initialize = function() {
   Utils.log(
       'HOARenderer: Initializing... (mode: ' + this._config.renderingMode +
       ', ambisonic order: ' + this._config.ambisonicOrder + ')');
+
   return new Promise(this._initializeCallback.bind(this));
 };
+
+
+/**
+ * Updates the rotation matrix with 3x3 matrix.
+ * @param {Number[]} rotationMatrix3 - A 3x3 rotation matrix. (column-major)
+ */
 HOARenderer.prototype.setRotationMatrix3 = function(rotationMatrix3) {
   if (!this._isRendererReady) {
     return;
   }
+
   this._hoaRotator.setRotationMatrix3(rotationMatrix3);
 };
+
+
+/**
+ * Updates the rotation matrix with 4x4 matrix.
+ * @param {Number[]} rotationMatrix4 - A 4x4 rotation matrix. (column-major)
+ */
 HOARenderer.prototype.setRotationMatrix4 = function(rotationMatrix4) {
   if (!this._isRendererReady) {
     return;
   }
+
   this._hoaRotator.setRotationMatrix4(rotationMatrix4);
 };
+
+
+/**
+ * Set the decoding mode.
+ * @param {RenderingMode} mode - Decoding mode.
+ *  - 'ambisonic': activates the ambisonic decoding/binaurl rendering.
+ *  - 'bypass': bypasses the input stream directly to the output. No ambisonic
+ *    decoding or encoding.
+ *  - 'off': all the processing off saving the CPU power.
+ */
 HOARenderer.prototype.setRenderingMode = function(mode) {
-  if (mode === this._config.renderingMode) {
+  if (mode === this._renderingMode) {
     return;
   }
+
   switch (mode) {
-    case RenderingMode$1.AMBISONIC:
+    case RenderingMode.AMBISONIC:
       this._hoaConvolver.enable();
       this._bypass.disconnect();
       break;
-    case RenderingMode$1.BYPASS:
+    case RenderingMode.BYPASS:
       this._hoaConvolver.disable();
       this._bypass.connect(this.output);
       break;
-    case RenderingMode$1.OFF:
+    case RenderingMode.OFF:
       this._hoaConvolver.disable();
       this._bypass.disconnect();
       break;
@@ -1030,41 +1967,82 @@ HOARenderer.prototype.setRenderingMode = function(mode) {
           'supported.');
       return;
   }
-  this._config.renderingMode = mode;
+
+  this._renderingMode = mode;
   Utils.log('HOARenderer: Rendering mode changed. (' + mode + ')');
 };
 
+/**
+ * @license
+ * Copyright 2017 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @file Cross-browser support polyfill for Omnitone library.
+ */
+
+/**
+ * Compat utility namespace.
+ * @namespace
+ */
 const Polyfill = {};
+
+
+/**
+ * Detects browser type and version.
+ * @return {string[]} - An array contains the detected browser name and version.
+ */
 Polyfill.getBrowserInfo = function() {
   const ua = navigator.userAgent;
   let M = ua.match(
-      /(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*([\d\.]+)/i) ||
+      /(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*([\d.]+)/i) ||
       [];
   let tem;
+
   if (/trident/i.test(M[1])) {
     tem = /\brv[ :]+(\d+)/g.exec(ua) || [];
     return {name: 'IE', version: (tem[1] || '')};
   }
+
   if (M[1] === 'Chrome') {
     tem = ua.match(/\bOPR|Edge\/(\d+)/);
     if (tem != null) {
       return {name: 'Opera', version: tem[1]};
     }
   }
+
   M = M[2] ? [M[1], M[2]] : [navigator.appName, navigator.appVersion, '-?'];
   if ((tem = ua.match(/version\/([\d.]+)/i)) != null) {
     M.splice(1, 1, tem[1]);
   }
+
   let platform = ua.match(/android|ipad|iphone/i);
   if (!platform) {
     platform = ua.match(/cros|linux|mac os x|windows/i);
   }
+
   return {
     name: M[0],
     version: M[1],
     platform: platform ? platform[0] : 'unknown',
   };
 };
+
+
+/**
+ * Patches AudioContext if the prefixed API is found.
+ */
 Polyfill.patchSafari = function() {
   if (window.webkitAudioContext && window.webkitOfflineAudioContext) {
     window.AudioContext = window.webkitAudioContext;
@@ -1072,39 +2050,211 @@ Polyfill.patchSafari = function() {
   }
 };
 
-const Version = '1.3.0';
+/**
+ * @license
+ * Copyright 2016 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
+/**
+ * @file Omnitone version.
+ */
+
+
+/**
+ * Omnitone library version
+ * @type {String}
+ */
+const Version = '1.4.0';
+
+/**
+ * @license
+ * Copyright 2016 Google Inc. All Rights Reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+
+/**
+ * Omnitone namespace.
+ * @namespace
+ */
 const Omnitone = {};
+
+
+/**
+ * @typedef {Object} BrowserInfo
+ * @property {string} name - Browser name.
+ * @property {string} version - Browser version.
+ */
+
+/**
+ * An object contains the detected browser name and version.
+ * @memberOf Omnitone
+ * @static {BrowserInfo}
+ */
 Omnitone.browserInfo = Polyfill.getBrowserInfo();
+
+
+/**
+ * Performs the async loading/decoding of multiple AudioBuffers from multiple
+ * URLs.
+ * @param {BaseAudioContext} context - Associated BaseAudioContext.
+ * @param {string[]} bufferData - An ordered list of URLs.
+ * @param {Object} [options] - BufferList options.
+ * @param {String} [options.dataType='url'] - BufferList data type.
+ * @return {Promise<AudioBuffer[]>} - The promise resolves with an array of
+ * AudioBuffer.
+ */
 Omnitone.createBufferList = function(context, bufferData, options) {
   const bufferList =
       new BufferList(context, bufferData, options || {dataType: 'url'});
   return bufferList.load();
 };
+
+
+/**
+ * Perform channel-wise merge on multiple AudioBuffers. The sample rate and
+ * the length of buffers to be merged must be identical.
+ * @static
+ * @function
+ * @param {BaseAudioContext} context - Associated BaseAudioContext.
+ * @param {AudioBuffer[]} bufferList - An array of AudioBuffers to be merged
+ * channel-wise.
+ * @return {AudioBuffer} - A single merged AudioBuffer.
+ */
 Omnitone.mergeBufferListByChannel = Utils.mergeBufferListByChannel;
-Omnitone.splitBufferbyChannel = Utils.splitBufferbyChannel;
+
+
+/**
+ * Perform channel-wise split by the given channel count. For example,
+ * 1 x AudioBuffer(8) -> splitBuffer(context, buffer, 2) -> 4 x AudioBuffer(2).
+ * @static
+ * @function
+ * @param {BaseAudioContext} context - Associated BaseAudioContext.
+ * @param {AudioBuffer} audioBuffer - An AudioBuffer to be splitted.
+ * @param {Number} splitBy - Number of channels to be splitted.
+ * @return {AudioBuffer[]} - An array of splitted AudioBuffers.
+ */
+Omnitone.splitBufferByChannel = Utils.splitBufferByChannel;
+
+
+/**
+ * Creates an instance of FOA Convolver.
+ * @see FOAConvolver
+ * @param {BaseAudioContext} context The associated AudioContext.
+ * @param {AudioBuffer[]} [hrirBufferList] - An ordered-list of stereo
+ * @return {FOAConvolver}
+ */
 Omnitone.createFOAConvolver = function(context, hrirBufferList) {
   return new FOAConvolver(context, hrirBufferList);
 };
+
+
+/**
+ * Create an instance of FOA Router.
+ * @see FOARouter
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {Number[]} channelMap - Routing destination array.
+ * @return {FOARouter}
+ */
 Omnitone.createFOARouter = function(context, channelMap) {
   return new FOARouter(context, channelMap);
 };
+
+
+/**
+ * Create an instance of FOA Rotator.
+ * @see FOARotator
+ * @param {AudioContext} context - Associated AudioContext.
+ * @return {FOARotator}
+ */
 Omnitone.createFOARotator = function(context) {
   return new FOARotator(context);
 };
+
+
+/**
+ * Creates HOARotator for higher-order ambisonics rotation.
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {Number} ambisonicOrder - Ambisonic order.
+ * @return {HOARotator}
+ */
 Omnitone.createHOARotator = function(context, ambisonicOrder) {
   return new HOARotator(context, ambisonicOrder);
 };
+
+
+/**
+ * Creates HOAConvolver performs the multi-channel convolution for the optmized
+ * binaural rendering.
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {Number} ambisonicOrder - Ambisonic order. (2 or 3)
+ * @param {AudioBuffer[]} [hrirBufferList] - An ordered-list of stereo
+ * AudioBuffers for convolution. (SOA: 5 AudioBuffers, TOA: 8 AudioBuffers)
+ * @return {HOAConvovler}
+ */
 Omnitone.createHOAConvolver = function(
     context, ambisonicOrder, hrirBufferList) {
   return new HOAConvolver(context, ambisonicOrder, hrirBufferList);
 };
+
+
+/**
+ * Create a FOARenderer, the first-order ambisonic decoder and the optimized
+ * binaural renderer.
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {Object} config
+ * @param {Array} [config.channelMap] - Custom channel routing map. Useful for
+ * handling the inconsistency in browser's multichannel audio decoding.
+ * @param {Array} [config.hrirPathList] - A list of paths to HRIR files. It
+ * overrides the internal HRIR list if given.
+ * @param {RenderingMode} [config.renderingMode='ambisonic'] - Rendering mode.
+ * @return {FOARenderer}
+ */
 Omnitone.createFOARenderer = function(context, config) {
   return new FOARenderer(context, config);
 };
+
+
+/**
+ * Creates HOARenderer for higher-order ambisonic decoding and the optimized
+ * binaural rendering.
+ * @param {AudioContext} context - Associated AudioContext.
+ * @param {Object} config
+ * @param {Number} [config.ambisonicOrder=3] - Ambisonic order.
+ * @param {Array} [config.hrirPathList] - A list of paths to HRIR files. It
+ * overrides the internal HRIR list if given.
+ * @param {RenderingMode} [config.renderingMode='ambisonic'] - Rendering mode.
+ * @return {HOARenderer}
+ */
 Omnitone.createHOARenderer = function(context, config) {
   return new HOARenderer(context, config);
 };
+
+
+// Handle Pre-load Tasks: detects the browser information and prints out the
+// version number. If the browser is Safari, patch prefixed interfaces.
 (function() {
   Utils.log(`Version ${Version} (running ${Omnitone.browserInfo.name} \
 ${Omnitone.browserInfo.version} on ${Omnitone.browserInfo.platform})`);
@@ -1114,4 +2264,4 @@ ${Omnitone.browserInfo.version} on ${Omnitone.browserInfo.platform})`);
   }
 })();
 
-export default Omnitone;
+export { Omnitone as default };

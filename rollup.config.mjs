@@ -19,15 +19,13 @@
  */
 
 import fs from 'fs';
-import cleanup from 'rollup-plugin-cleanup';
-import { terser } from 'rollup-plugin-terser';
+import terser from '@rollup/plugin-terser';
 
 const licenseBanner = fs.readFileSync('src/LICENSE', 'utf8');
-const cleanupOptions = {comments: 'none'};
 const terserOptions = {
-  output: {
-    preamble: licenseBanner
-  }
+  format: {
+    preamble: licenseBanner,
+  },
 };
 
 export default [
@@ -40,7 +38,6 @@ export default [
       name: 'Omnitone',
       banner: licenseBanner,
     },
-    plugins: [cleanup(cleanupOptions)],
   },
 
   // ES6 module style
@@ -51,7 +48,6 @@ export default [
       format: 'esm',
       banner: licenseBanner,
     },
-    plugins: [cleanup(cleanupOptions)],
   },
 
   // ES5: legacy IIFE style, minified

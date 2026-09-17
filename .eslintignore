@@ -1,3 +1,6 @@
 src/resources/omnitone-foa-hrir-base64.js
 src/resources/omnitone-soa-hrir-base64.js
 src/resources/omnitone-toa-hrir-base64.js
+test/resources/omnitone-foa-hrir-base64.js
+test/resources/omnitone-soa-hrir-base64.js
+test/resources/omnitone-toa-hrir-base64.js
