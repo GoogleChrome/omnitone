@@ -21,6 +21,9 @@
  */
 
 
+import Utils from './utils.js';
+
+
 /**
  * FOAConvolver. A collection of 2 stereo convolvers for 4-channel FOA stream.
  * @constructor
@@ -112,6 +115,12 @@ FOAConvolver.prototype.setHRIRBufferList = function(hrirBufferList) {
   // an exception will be thrown.
   if (this._isBufferLoaded) {
     return;
+  }
+
+  for (let i = 0; i < hrirBufferList.length; ++i) {
+    if (!Utils.isAudioBuffer(hrirBufferList[i])) {
+      Utils.throw('FOAConvolver: Invalid AudioBuffer at index ' + i);
+    }
   }
 
   this._convolverWY.buffer = hrirBufferList[0];
