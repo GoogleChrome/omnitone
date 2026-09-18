@@ -39,6 +39,35 @@ describe('BufferList and Convolver validation', function() {
         });
   });
 
+  it('does not emit an unhandledrejection when decoding fails',
+      function(done) {
+    var context = new OfflineAudioContext(2, 16, 48000);
+    var corrupt = btoa('not-a-valid-audio-file');
+    var unhandled = [];
+    var onUnhandled = function(event) {
+      unhandled.push(String(event.reason));
+    };
+
+    window.addEventListener('unhandledrejection', onUnhandled);
+
+    Omnitone.createBufferList(context, [corrupt], {dataType: 'base64'})
+        .catch(function() {
+          // The BufferList promise rejected as expected. Modern browsers
+          // also return a promise from the callback form of
+          // decodeAudioData; if that one is left unhandled the event fires
+          // on a later task, so yield before asserting.
+          setTimeout(function() {
+            window.removeEventListener('unhandledrejection', onUnhandled);
+            try {
+              expect(unhandled).to.deep.equal([]);
+              done();
+            } catch (assertionError) {
+              done(assertionError);
+            }
+          }, 100);
+        });
+  });
+
   it('rejects FOAConvolver and HOAConvolver when passed null or invalid ' +
       'AudioBuffers', function() {
     var context = new OfflineAudioContext(2, 16, 48000);

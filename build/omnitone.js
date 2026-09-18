@@ -330,6 +330,33 @@ ${Array.prototype.slice.call(arguments).join(' ')} \
 
 
   /**
+   * Decodes an ArrayBuffer using the legacy callback form of decodeAudioData.
+   *
+   * The callback form is retained for older Safari, which does not implement
+   * the promise-based overload. Browsers that implement both return a promise
+   * from this same call, and on a decode failure that promise rejects with no
+   * handler attached, surfacing a spurious `unhandledrejection` even though
+   * the error callback already reported the failure. The callbacks are the
+   * single source of truth here, so the duplicate rejection is swallowed.
+   *
+   * @private
+   * @param {BaseAudioContext} context - Associated BaseAudioContext.
+   * @param {ArrayBuffer} arrayBuffer - Encoded audio data to decode.
+   * @param {function(AudioBuffer)} onSuccess - Decode success callback.
+   * @param {function(!Error)} onError - Decode failure callback.
+   */
+  function decodeAudioDataWithCallbacks(
+      context, arrayBuffer, onSuccess, onError) {
+    const decoding = context.decodeAudioData(arrayBuffer, onSuccess, onError);
+
+    // Older Safari returns undefined from the callback overload.
+    if (decoding && typeof decoding.catch === 'function') {
+      decoding.catch(() => {});
+    }
+  }
+
+
+  /**
    * BufferList object mananges the async loading/decoding of multiple
    * AudioBuffers from multiple URLs.
    * @constructor
@@ -406,7 +433,8 @@ ${Array.prototype.slice.call(arguments).join(' ')} \
         return;
       }
 
-      this._context.decodeAudioData(
+      decodeAudioDataWithCallbacks(
+          this._context,
           arrayBuffer,
           (audioBuffer) => {
             if (this._options.verbose) {
@@ -439,7 +467,8 @@ ${Array.prototype.slice.call(arguments).join(' ')} \
 
       xhr.onload = () => {
         if (xhr.status === 200) {
-          this._context.decodeAudioData(
+          decodeAudioDataWithCallbacks(
+              this._context,
               xhr.response,
               (audioBuffer) => {
                 if (this._options.verbose) {
