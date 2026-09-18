@@ -42,9 +42,12 @@ Polyfill.getBrowserInfo = function() {
   }
 
   if (M[1] === 'Chrome') {
-    tem = ua.match(/\bOPR|Edge\/(\d+)/);
+    tem = ua.match(/\b(OPR|Edg(?:e)?)\/(\d+)/);
     if (tem != null) {
-      return {name: 'Opera', version: tem[1]};
+      return {
+        name: tem[1] === 'OPR' ? 'Opera' : 'Edge',
+        version: tem[2],
+      };
     }
   }
 
