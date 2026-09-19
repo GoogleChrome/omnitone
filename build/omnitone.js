@@ -2097,7 +2097,7 @@ ${Array.prototype.slice.call(arguments).join(' ')} \
    * Omnitone library version
    * @type {String}
    */
-  const Version = '1.4.0';
+  const Version = '2.0.0';
 
   /**
    * @license

@@ -1,6 +1,6 @@
 {
   "name": "omnitone",
-  "version": "1.4.0",
+  "version": "2.0.0",
   "description": "Spatial Audio Decoder in Web Audio API",
   "main": "build/omnitone.js",
   "module": "build/omnitone.esm.js",
@@ -12,6 +12,9 @@
     "./build/*": "./build/*",
     "./package.json": "./package.json"
   },
+  "files": [
+    "build/"
+  ],
   "keywords": [
     "spatial audio",
     "ambisonic",
@@ -36,7 +39,8 @@
     "build-doc": "jsdoc src/omnitone.js -d doc/",
     "eslint": "eslint src/ test/",
     "pretest": "npm run build",
-    "test": "web-test-runner"
+    "test": "web-test-runner",
+    "prepublishOnly": "npm run eslint && npm test"
   },
   "homepage": "https://github.com/GoogleChrome/omnitone",
   "repository": {
