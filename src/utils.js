@@ -34,7 +34,9 @@ Utils.log = function() {
   const message = `[Omnitone] \
 ${Array.prototype.slice.call(arguments).join(' ')} \
 (${performance.now().toFixed(2)}ms)`;
-  window.console.log(message);
+  if (typeof window !== 'undefined' && window.console) {
+    window.console.log(message);
+  }
 };
 
 

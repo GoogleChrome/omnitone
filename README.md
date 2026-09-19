@@ -60,10 +60,11 @@ Alternatively, you can install Omnitone as a part of your local development via 
 npm install omnitone
 ```
 
-As of version 1.3.0, Omnitone library includes an ES6 module. This is convenient when you integrate Omnitone into your project.
+Omnitone provides both ES module and UMD/CommonJS entry points for bundlers:
 
 ```js
-import Omnitone from './omnitone/build/omnitone.min.esm.js';
+import Omnitone from 'omnitone';
+// or: const Omnitone = require('omnitone');
 
 const audioContext = new AudioContext();
 const foaRenderer = Omnitone.createFOARenderer(audioContext);

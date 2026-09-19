@@ -29,12 +29,12 @@ const terserOptions = {
 };
 
 export default [
-  // ES5: legacy IIFE style
+  // UMD style (browser global + CommonJS/Browserify/AMD)
   {
     input: 'src/omnitone.js',
     output: {
       file: 'build/omnitone.js',
-      format: 'iife',
+      format: 'umd',
       name: 'Omnitone',
       banner: licenseBanner,
     },
@@ -50,12 +50,12 @@ export default [
     },
   },
 
-  // ES5: legacy IIFE style, minified
+  // UMD style, minified
   {
     input: 'src/omnitone.js',
     output: {
       file: 'build/omnitone.min.js',
-      format: 'iife',
+      format: 'umd',
       name: 'Omnitone',
     },
     plugins: [terser(terserOptions)],
