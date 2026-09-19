@@ -3,6 +3,15 @@
   "version": "1.4.0",
   "description": "Spatial Audio Decoder in Web Audio API",
   "main": "build/omnitone.js",
+  "module": "build/omnitone.esm.js",
+  "exports": {
+    ".": {
+      "import": "./build/omnitone.esm.js",
+      "require": "./build/omnitone.js"
+    },
+    "./build/*": "./build/*",
+    "./package.json": "./package.json"
+  },
   "keywords": [
     "spatial audio",
     "ambisonic",

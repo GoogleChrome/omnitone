@@ -50,7 +50,9 @@ Utils.log = function() {
   const message = `[Omnitone] \
 ${Array.prototype.slice.call(arguments).join(' ')} \
 (${performance.now().toFixed(2)}ms)`;
-  window.console.log(message);
+  if (typeof window !== 'undefined' && window.console) {
+    window.console.log(message);
+  }
 };
 
 
@@ -2013,6 +2015,10 @@ const Polyfill = {};
  * @return {string[]} - An array contains the detected browser name and version.
  */
 Polyfill.getBrowserInfo = function() {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+    return {name: 'unknown', version: '0', platform: 'unknown'};
+  }
+
   const ua = navigator.userAgent;
   let M = ua.match(
       /(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*([\d.]+)/i) ||
@@ -2053,7 +2059,8 @@ Polyfill.getBrowserInfo = function() {
  * Patches AudioContext if the prefixed API is found.
  */
 Polyfill.patchSafari = function() {
-  if (window.webkitAudioContext && window.webkitOfflineAudioContext) {
+  if (typeof window !== 'undefined' &&
+      window.webkitAudioContext && window.webkitOfflineAudioContext) {
     window.AudioContext = window.webkitAudioContext;
     window.OfflineAudioContext = window.webkitOfflineAudioContext;
   }

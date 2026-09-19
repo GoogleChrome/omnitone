@@ -39,3 +39,18 @@ describe('Utils.splitBufferByChannel', function() {
     }
   });
 });
+
+describe('Module exports and browserInfo', function() {
+  it('exposes the Omnitone API on the ESM and UMD builds', function(done) {
+    expect(Omnitone.browserInfo.name).to.be.a('string');
+    expect(Omnitone.browserInfo.version).to.be.a('string');
+
+    import('/build/omnitone.esm.js').then(function(mod) {
+      expect(mod.default).to.be.an('object');
+      expect(mod.default.createFOARenderer).to.be.a('function');
+      expect(mod.default.createHOARenderer).to.be.a('function');
+      done();
+    }).catch(done);
+  });
+});
+
