@@ -110,3 +110,68 @@ describe('RenderingMode (constructor-supplied)', () => {
     }).catch(done);
   });
 });
+
+// Verify that setter methods called before initialize() resolves take effect
+// immediately and are not overwritten when initialize() finishes.
+// ISSUE: https://github.com/GoogleChrome/omnitone/issues/102
+describe('Setters before initialize() resolves', () => {
+  it('FOARenderer setters apply before initialize() and persist', (done) => {
+    const context = new AudioContext();
+    const renderer = Omnitone.createFOARenderer(context);
+    const channelMap = [0, 3, 1, 2];
+    const matrix3 = [0, -1, 0, 1, 0, 0, 0, 0, 1];
+    const matrix4 = [0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+
+    renderer.setChannelMap(channelMap);
+    expect(renderer._foaRouter._channelMap).to.deep.equal(channelMap);
+
+    renderer.setRotationMatrix3(matrix3);
+    expect(Array.from(renderer._foaRotator.getRotationMatrix3()))
+        .to.deep.equal(matrix3);
+
+    renderer.setRotationMatrix4(matrix4);
+    expect(Array.from(renderer._foaRotator.getRotationMatrix4()))
+        .to.deep.equal(matrix4);
+
+    renderer.setRotationMatrixFromCamera({elements: matrix4});
+    expect(Array.from(renderer._foaRotator.getRotationMatrix3()))
+        .to.deep.equal(matrix3);
+
+    renderer.setRenderingMode('bypass');
+    expect(renderer._foaConvolver._active).to.equal(false);
+
+    renderer.initialize().then(() => {
+      expect(renderer._foaRouter._channelMap).to.deep.equal(channelMap);
+      expect(Array.from(renderer._foaRotator.getRotationMatrix3()))
+          .to.deep.equal(matrix3);
+      expect(renderer._foaConvolver._active).to.equal(false);
+      done();
+    }).catch(done);
+  });
+
+  it('HOARenderer setters apply before initialize() and persist', (done) => {
+    const context = new AudioContext();
+    const renderer = Omnitone.createHOARenderer(context);
+    const matrix3 = [0, -1, 0, 1, 0, 0, 0, 0, 1];
+    const matrix4 = [0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+
+    renderer.setRotationMatrix4(matrix4);
+    expect(Array.from(renderer._hoaRotator.getRotationMatrix4()))
+        .to.deep.equal(matrix4);
+
+    renderer.setRotationMatrix3(matrix3);
+    expect(Array.from(renderer._hoaRotator.getRotationMatrix3()))
+        .to.deep.equal(matrix3);
+
+    renderer.setRenderingMode('off');
+    expect(renderer._hoaConvolver._active).to.equal(false);
+
+    renderer.initialize().then(() => {
+      expect(Array.from(renderer._hoaRotator.getRotationMatrix3()))
+          .to.deep.equal(matrix3);
+      expect(renderer._hoaConvolver._active).to.equal(false);
+      done();
+    }).catch(done);
+  });
+});
+
