@@ -111,6 +111,7 @@ function HOARenderer(context, config) {
   this._buildAudioGraph();
   // Audio graph is constructed with the convolver enabled ('ambisonic').
   this._renderingMode = RenderingMode.AMBISONIC;
+  this.setRenderingMode(this._config.renderingMode);
 
   this._isRendererReady = false;
 }
@@ -190,10 +191,6 @@ HOARenderer.prototype.initialize = function() {
  * @param {Number[]} rotationMatrix3 - A 3x3 rotation matrix. (column-major)
  */
 HOARenderer.prototype.setRotationMatrix3 = function(rotationMatrix3) {
-  if (!this._isRendererReady) {
-    return;
-  }
-
   this._hoaRotator.setRotationMatrix3(rotationMatrix3);
 };
 
@@ -203,10 +200,6 @@ HOARenderer.prototype.setRotationMatrix3 = function(rotationMatrix3) {
  * @param {Number[]} rotationMatrix4 - A 4x4 rotation matrix. (column-major)
  */
 HOARenderer.prototype.setRotationMatrix4 = function(rotationMatrix4) {
-  if (!this._isRendererReady) {
-    return;
-  }
-
   this._hoaRotator.setRotationMatrix4(rotationMatrix4);
 };
 
@@ -245,6 +238,7 @@ HOARenderer.prototype.setRenderingMode = function(mode) {
   }
 
   this._renderingMode = mode;
+  this._config.renderingMode = mode;
   Utils.log('HOARenderer: Rendering mode changed. (' + mode + ')');
 };
 

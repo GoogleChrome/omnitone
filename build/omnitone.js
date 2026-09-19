@@ -995,6 +995,7 @@ ${Array.prototype.slice.call(arguments).join(' ')} \
     this._buildAudioGraph();
     // Audio graph is constructed with the convolver enabled ('ambisonic').
     this._renderingMode = RenderingMode$1.AMBISONIC;
+    this.setRenderingMode(this._config.renderingMode);
 
     this._tempMatrix4 = new Float32Array(16);
     this._isRendererReady = false;
@@ -1069,10 +1070,6 @@ ${Array.prototype.slice.call(arguments).join(' ')} \
    * @param {Number[]} channelMap - Custom channel routing for FOA stream.
    */
   FOARenderer.prototype.setChannelMap = function(channelMap) {
-    if (!this._isRendererReady) {
-      return;
-    }
-
     if (channelMap.toString() !== this._config.channelMap.toString()) {
       Utils.log(
           'Remapping channels ([' + this._config.channelMap.toString() +
@@ -1088,10 +1085,6 @@ ${Array.prototype.slice.call(arguments).join(' ')} \
    * @param {Number[]} rotationMatrix3 - A 3x3 rotation matrix. (column-major)
    */
   FOARenderer.prototype.setRotationMatrix3 = function(rotationMatrix3) {
-    if (!this._isRendererReady) {
-      return;
-    }
-
     this._foaRotator.setRotationMatrix3(rotationMatrix3);
   };
 
@@ -1101,10 +1094,6 @@ ${Array.prototype.slice.call(arguments).join(' ')} \
    * @param {Number[]} rotationMatrix4 - A 4x4 rotation matrix. (column-major)
    */
   FOARenderer.prototype.setRotationMatrix4 = function(rotationMatrix4) {
-    if (!this._isRendererReady) {
-      return;
-    }
-
     this._foaRotator.setRotationMatrix4(rotationMatrix4);
   };
 
@@ -1117,10 +1106,6 @@ ${Array.prototype.slice.call(arguments).join(' ')} \
    * @param {Object} cameraMatrix - Matrix4 from Three.js |camera.matrix|.
    */
   FOARenderer.prototype.setRotationMatrixFromCamera = function(cameraMatrix) {
-    if (!this._isRendererReady) {
-      return;
-    }
-
     // Extract the inner array elements and inverse. (The actual view rotation is
     // the opposite of the camera movement.)
     Utils.invertMatrix4(this._tempMatrix4, cameraMatrix.elements);
@@ -1162,6 +1147,7 @@ ${Array.prototype.slice.call(arguments).join(' ')} \
     }
 
     this._renderingMode = mode;
+    this._config.renderingMode = mode;
     Utils.log('FOARenderer: Rendering mode changed. (' + mode + ')');
   };
 
@@ -1867,6 +1853,7 @@ ${Array.prototype.slice.call(arguments).join(' ')} \
     this._buildAudioGraph();
     // Audio graph is constructed with the convolver enabled ('ambisonic').
     this._renderingMode = RenderingMode.AMBISONIC;
+    this.setRenderingMode(this._config.renderingMode);
 
     this._isRendererReady = false;
   }
@@ -1946,10 +1933,6 @@ ${Array.prototype.slice.call(arguments).join(' ')} \
    * @param {Number[]} rotationMatrix3 - A 3x3 rotation matrix. (column-major)
    */
   HOARenderer.prototype.setRotationMatrix3 = function(rotationMatrix3) {
-    if (!this._isRendererReady) {
-      return;
-    }
-
     this._hoaRotator.setRotationMatrix3(rotationMatrix3);
   };
 
@@ -1959,10 +1942,6 @@ ${Array.prototype.slice.call(arguments).join(' ')} \
    * @param {Number[]} rotationMatrix4 - A 4x4 rotation matrix. (column-major)
    */
   HOARenderer.prototype.setRotationMatrix4 = function(rotationMatrix4) {
-    if (!this._isRendererReady) {
-      return;
-    }
-
     this._hoaRotator.setRotationMatrix4(rotationMatrix4);
   };
 
@@ -2001,6 +1980,7 @@ ${Array.prototype.slice.call(arguments).join(' ')} \
     }
 
     this._renderingMode = mode;
+    this._config.renderingMode = mode;
     Utils.log('HOARenderer: Rendering mode changed. (' + mode + ')');
   };
 
