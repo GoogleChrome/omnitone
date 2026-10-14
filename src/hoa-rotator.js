@@ -192,8 +192,8 @@ function computeUVWCoeff(m, n, l) {
                                   (l + Math.abs(m) - 1) *
                                   (l + Math.abs(m)) *
                                   reciprocalDenominator),
-    -0.5 * (1 - d) * Math.sqrt((l - Math.abs(m) - 1) * (l - Math.abs(m))) *
-        reciprocalDenominator,
+    -0.5 * (1 - d) * Math.sqrt((l - Math.abs(m) - 1) * (l - Math.abs(m)) *
+                               reciprocalDenominator),
   ];
 }
 
